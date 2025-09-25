@@ -1,0 +1,13 @@
+*.exe
+*.pkg
+*.pyc 
+*.pyo 
+*.pyd
+*.script
+*.xml
+
+*.toc
+*.7z
+*.toc
+*.pyz
+*.zip

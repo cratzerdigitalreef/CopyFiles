@@ -1,0 +1,6 @@
+To create a requirements.txt file filled with the python libraries
+you need to run your project simply write the following cmd:
+
+pip freeze > [NAME_HERE]
+
+in our case, [NAME HERE] would end up being the requirements.txt file name
