@@ -5,7 +5,6 @@ import sys
 import os
 current = os.path.dirname(os.path.realpath(__file__))
 parent_directory = os.path.dirname(current)
-#sys.path.append(parent_directory+"/libs")
 sys.path.append(current+"/libs")
 
 # LIBS
@@ -19,7 +18,7 @@ sys.path.append(current+"/iu")
 # CONSTANTS
 from constants.general import *
 
-from iu.home import CopyFilesHomeScreen
+from iu.copyfiles import CopyFilesHomeScreen
 
 
 if __name__ == "__main__":
@@ -30,6 +29,7 @@ if __name__ == "__main__":
     str_log_file = log_setup_log_file(current, str_client)
     
     copyfiles = CopyFilesHomeScreen(str_client, str_log_file)
+
     
     copyfiles.run()
     

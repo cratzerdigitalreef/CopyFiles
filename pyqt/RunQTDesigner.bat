@@ -1,0 +1,1 @@
+C:\Users\Carlos\AppData\Local\Programs\Python\Python311\Lib\site-packages\QtDesigner\designer.exe
