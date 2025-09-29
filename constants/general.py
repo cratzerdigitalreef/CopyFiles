@@ -6,6 +6,12 @@ app_ver_date = "2025-10-31"
 app_name_des = "Copy Files"
 app_name = "CopyFiles"
 
+
+#Prepared with a Main Window
+app_ui_file_name = "\iu\copyfiles_main_wdw.ui"
+#Prepared with a Dialog
+#app_ui_file_name = "\iu\copyfiles.ui"
+
 # colors for light and dark mode
 # By default, first occurrence is light mode, and second occurrence is dark mode
 # https://htmlcolorcodes.com/colors/

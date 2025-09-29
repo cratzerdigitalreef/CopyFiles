@@ -3,13 +3,14 @@
 import sys
 import os
 
-#import tkinter as tk
+import tkinter as tk
 import customtkinter as ctk
 
 #pip install CTkMessagebox
 import CTkMessagebox
 from CTkMessagebox import CTkMessagebox
 from customtkinter import filedialog
+
 
 from str import *
 from bytes import *
@@ -571,3 +572,229 @@ def ctk_utils_open_files(filetypes, title="Select File(s)", initialdir=".", mult
         return filedialog.askopenfilename(initialdir=initialdir, title=title, filetypes=filetypes)
     
 #---------------------------------------------------------------------------------------------------------
+#-------CTkTextSearch-------------------------------------------------------------------------------------
+# USAGE:
+# self.history_search = CTkTextSearch(self, self.history_box) -> Add search dialog with Ctrl+F
+# self.history_search = CTkTextSearch(self, self.history_box, clear_highlight_on_close=False) -> Keep highlights after closing dialog
+# self.history_search = CTkTextSearch(self, self.history_box, inline_frame=self.search_frame) -> Inline search bar in existing frame
+#---------------------------------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------------------------------
+class CTkTextSearch:
+    """
+    Search and highlight text in a CTkTextbox.
+    Can work in:
+      - Dialog mode (Ctrl+F popup window)
+      - Inline mode (embedded in an existing frame)
+    """
+
+    def __init__(self, parent, textbox: ctk.CTkTextbox, clear_highlight_on_close=True, inline_frame=None):
+        self.parent = parent
+        self.textbox = textbox
+        self.clear_highlight_on_close = clear_highlight_on_close
+        self._tag_name = "search_highlight"
+
+        # setup highlight tag
+        try:
+            self.textbox.tag_config(self._tag_name, background="yellow", foreground="black")
+        except Exception:
+            pass
+
+        if inline_frame:
+            self._add_inline_search(inline_frame)
+        else:
+            self._add_bindings()
+
+    def _add_bindings(self):
+        # Ctrl+F triggers dialog
+        self.parent.bind("<Control-f>", self._open_search_dialog)
+
+    def _add_inline_search(self, frame):
+        """Attach inline search bar inside given frame"""
+        self.entry = ctk.CTkEntry(frame, placeholder_text="Search...")
+        self.entry.pack(side="left", padx=5)
+
+        def do_find(event=None):
+            self._clear_highlight()
+            word = self.entry.get()
+            if not word:
+                return
+            idx = "1.0"
+            first_match = None
+            while True:
+                idx = self.textbox.search(word, idx, nocase=1, stopindex="end")
+                if not idx:
+                    break
+                lastidx = f"{idx}+{len(word)}c"
+                self.textbox.tag_add(self._tag_name, idx, lastidx)
+                if first_match is None:
+                    first_match = idx
+                idx = lastidx
+            if first_match:
+                self.textbox.see(first_match)
+            else:
+                ctk_utils_MsgBoxInfo("Not found", f'"{word}" not found in text.')
+
+        self.search_button = ctk.CTkButton(frame, text="Find", width=60, command=do_find)
+        self.search_button.pack(side="left", padx=5)
+        self.entry.bind("<Return>", do_find)
+
+    def _open_search_dialog(self, event=None):
+        top = ctk.CTkToplevel(self.parent)
+        top.title("Find text")
+        top.geometry("300x100")
+        top.grab_set()
+
+        def on_close():
+            if self.clear_highlight_on_close:
+                self._clear_highlight()
+            top.destroy()
+        top.protocol("WM_DELETE_WINDOW", on_close)
+
+        entry = ctk.CTkEntry(top)
+        entry.pack(fill="x", padx=10, pady=10)
+        entry.focus_set()
+
+        def do_find(event=None):
+            self._clear_highlight()
+            word = entry.get()
+            if not word:
+                return
+            idx = "1.0"
+            first_match = None
+            while True:
+                idx = self.textbox.search(word, idx, nocase=1, stopindex="end")
+                if not idx:
+                    break
+                lastidx = f"{idx}+{len(word)}c"
+                self.textbox.tag_add(self._tag_name, idx, lastidx)
+                if first_match is None:
+                    first_match = idx
+                idx = lastidx
+            if first_match:
+                self.textbox.see(first_match)
+            else:
+                ctk_utils_MsgBoxInfo("Not found", f'"{word}" not found in text.')
+
+        ctk.CTkButton(top, text="Find", command=do_find).pack(pady=5)
+        entry.bind("<Return>", do_find)
+
+    def _clear_highlight(self):
+        self.textbox.tag_remove(self._tag_name, "1.0", "end")
+#---------------------------------------------------------------------------------------------------------
+#-------CTkTextWithLineNumbers--------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+# 1) Create and pack:
+#
+#   import customtkinter as ctk
+#   root = ctk.CTk()
+#   console = CTkTextWithLineNumbers(root, font=("Consolas", 12), height=320)
+#   console.pack(fill="both", expand=True, padx=10, pady=10)
+#
+# 2) Append one line (auto-scroll both panes):
+#
+#   def append_line(s: str):
+#       if not s.endswith("\n"):
+#           s += "\n"
+#       console.text.configure(state="normal")
+#       console.text.insert("end", s)
+#       console.text.configure(state="disabled")
+#       console.see_end()              # keeps line numbers in sync with content
+#
+#   append_line("hello world")
+#
+# 3) Bulk add lines efficiently:
+#
+#   console.text.configure(state="normal")
+#   console.text.insert("end", "\n".join(f"line {i}" for i in range(1, 101)) + "\n")
+#   console.text.configure(state="disabled")
+#   console.see_end()
+#
+# 4) Clear all content and refresh numbers:
+#
+#   console.text.configure(state="normal")
+#   console.text.delete("1.0", "end")
+#   console.text.configure(state="disabled")
+#   console._update_line_numbers()    # required after external edits
+#
+# 5) Replace entire content:
+#
+#   console.text.configure(state="normal")
+#   console.text.delete("1.0", "end")
+#   console.text.insert("1.0", "Header\n------\nA\nB\nC\n")
+#   console.text.configure(state="disabled")
+#   console.see_end()
+#
+# 6) Read current text:
+#
+#   data = console.text.get("1.0", "end-1c")
+#
+# 7) Programmatic scroll to bottom later:
+#
+#   console.see_end()
+#
+# 8) Optional: disable user edits (read-only view):
+#
+#   console.text.configure(state="disabled")    # re-enable with "normal" before inserts
+#
+# 9) Pack into an existing frame instead of root:
+#
+#   console = CTkTextWithLineNumbers(parent_frame, font=("Consolas", 12))
+#   console.pack(fill="both", expand=True)
+#
+# root.mainloop()
+# -----------------------------------------------------------------------------
+class CTkTextWithLineNumbers(ctk.CTkFrame):
+    def __init__(self, master, font=("Consolas", 12), **kwargs):
+        super().__init__(master)
+        self.font = font
+
+        # gutter
+        self.line_numbers = ctk.CTkTextbox(
+            self,
+            width=60,
+            state="disabled",
+            font=self.font,
+            wrap="none",
+            fg_color=("#f0f0f0", "#2b2b2b"),
+            text_color=("black", "white"),
+            activate_scrollbars=False
+        )
+        self.line_numbers.pack(side="left", fill="y")
+
+        # main text
+        self.text = ctk.CTkTextbox(self, font=self.font, wrap="none", **kwargs, activate_scrollbars=False)
+        self.text.pack(side="right", fill="both", expand=True)
+
+        # scroll sync
+        self.text.configure(yscrollcommand=self._on_scroll)
+        self.line_numbers.configure(yscrollcommand=self._on_scroll)
+
+        # events
+        self.text.bind("<<Modified>>", self._on_change)
+        self.text.bind("<KeyRelease>", self._on_change)
+
+    def _on_scroll(self, *args):
+        # keep both views aligned
+        self.line_numbers.yview_moveto(self.text.yview()[0])
+        return
+
+    def _on_change(self, event=None):
+        self.text.edit_modified(0)
+        self._update_line_numbers()
+
+    def _update_line_numbers(self):
+        self.line_numbers.configure(state="normal")
+        self.line_numbers.delete("1.0", "end")
+
+        last_line = int(self.text.index("end-1c").split(".")[0])
+        width = len(str(last_line))
+
+        for i in range(1, last_line + 1):
+            self.line_numbers.insert("end", f"{str(i).rjust(width)}\n")
+
+        self.line_numbers.configure(state="disabled")
+
+    def see_end(self):
+        """Scroll both text and line numbers to bottom."""
+        self.text.see("end")
+        self.line_numbers.yview_moveto(1.0)

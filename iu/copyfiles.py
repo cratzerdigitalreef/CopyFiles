@@ -9,8 +9,7 @@ import sys
 #from PyQt5.QtWidgets import QApplication
 #from PyQt5.QtWidgets import QPushButton
 from PySide6.QtUiTools import QUiLoader
-from PySide6.QtWidgets import QApplication
-from PySide6.QtWidgets import QPushButton
+from PySide6.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget, QLabel, QMessageBox, QTextEdit, QFileDialog 
 from PySide6.QtCore import QFile, QIODevice
 
 # from ..constants.general import color_dark_button, color_app_background_light, color_app_background_dark, \
@@ -37,7 +36,8 @@ from customtkinter import CTkCheckBox
 
 from pathlib import Path
 from str import *
-from ctk_utils import *
+from pyqt import *
+from general import *
 
 import sys
 
@@ -84,119 +84,134 @@ class CopyFilesHomeScreen:
         self.list_separa = sDef_Minus
         self.list_separaNroItem = sDef_list_separaNroItem
         
-        #FRAME BORDER WITH
-        self.FrameBorderWith = nDef_FrameBroderWidth
-
         # Crear la interfaz de usuario
-
-        # Crear la ventana principal
-        #self.main_window = ctk.CTk()
-        #self.main_window.title(app_name + " - Python")
-	
-        # GET WINDOW SIZE
-        #self.nWindowWidth, self.nWindowHeight = ctk_utils_GetWindowWidthHeight(self.main_window)
-        #print("Windows Height: " + str(self.nWindowHeight))
-        #print("Windows Width: " + str(self.nWindowWidth))
-
-        #self.create_widgets()
-
         self.app = QApplication(sys.argv) # Construct QApplication first
+        self.ui_file_name = parent_directory + app_ui_file_name
+        bReturn, self.window = pyqt_open_ui_file(self.ui_file_name)
 
-        print(f"Width: {self.app.primaryScreen().size().width()}")
-        print(f"Height: {self.app.primaryScreen().size().height()}")
-
-        self.ui_file_name = parent_directory + "\iu\copyfiles.ui"
-        print("ui_dile_name = " + self.ui_file_name)
-        self.ui_file = QFile(self.ui_file_name)
-        if not self.ui_file.open(QIODevice.ReadOnly):
-           print(f"Cannot open {self.ui_file_name}: {self.ui_file.errorString()}")
-           sys.exit(-1)
-        self.loader = QUiLoader()
-        self.window = self.loader.load(self.ui_file)
-        self.ui_file.close()
-        if not self.window:
-           print(self.loader.errorString())
+        if not (bReturn or self.window):
            sys.exit(-1)
 
-         # Inside MyWindow's __init__ or a method called after load_ui
-        self.btn_exit = self.window.findChild(QPushButton, "CmdExit") 
-        print("self.btn_exit = " + str(self.btn_exit))
+        self.nWindowWidth = self.app.primaryScreen().size().width()
+        self.nWindowHeight = self.app.primaryScreen().size().height()
+        print(f"Width: {self.nWindowWidth}")
+        print(f"Height: {self.nWindowHeight}")
+        self.create_widgets()
+
+        self.sPathSource = parent_directory
+        self.sPathDestination = parent_directory
         
-        #self.tButtons = self.window.findChildren(QPushButton)
-        #print("self.tButtons = " + str(self.tButtons))
-
-        # GET ALL OBJECTS FROM PYQT
-        self.pyqt_getAllObjects()
-
-          # Inside MyWindow's __init__ or a method called after load_ui and button access
-        if self.btn_exit: # Check if the button was found
-           self.btn_exit.clicked.connect(self.CmdExit_clicks)
-   
         self.window.show()
         
         sys.exit(self.app.exec()) # Start the event loop 
 
-
-    #---------------------------------------------------------------------------------------------------------
+        #---------------------------------------------------------------------------------------------------------
     def create_widgets(self):
+
+        # GET ALL OBJECTS FROM PYQT
+        pyqt_getAllObjectsFromMainWindow(self.window)
+
+        #---------------------------------------------------------------------------------------------------------
+        # BUTTON SOURCE 
+        self.btn_source = self.window.findChild(QPushButton, "pbSourceGet") 
+        if self.btn_source: # Check if the object exists
+           self.btn_source.clicked.connect(self.CmdSource_click)
+
+        #---------------------------------------------------------------------------------------------------------
+        # BUTTON DESTINATION
+        self.btn_destination = self.window.findChild(QPushButton, "pbDestinationGet") 
+        if self.btn_destination: # Check if the object exists
+           self.btn_destination.clicked.connect(self.CmdDestination_click)
+
+        #---------------------------------------------------------------------------------------------------------
+        # BUTTON PROCESS
+        self.btn_process = self.window.findChild(QPushButton, "pbProcess") 
+        if self.btn_process: # Check if the object exists
+           self.btn_process.clicked.connect(self.CmdProcess_click)
+
+        #---------------------------------------------------------------------------------------------------------
+        # BUTTON CLEAN
+        self.btn_clean = self.window.findChild(QPushButton, "pbClean") 
+        if self.btn_clean: # Check if the object exists
+           self.btn_clean.clicked.connect(self.CmdClean_click)
+
+        #---------------------------------------------------------------------------------------------------------
+        # TEXT SOURCE
+        self.txt_source = self.window.findChild(QTextEdit, "txtSource") 
+        if self.txt_source: # Check if the object exists
+           pyqt_TextEdit(self.txt_source, False)
+
+        #---------------------------------------------------------------------------------------------------------
+        # TEXT DESTINATION
+        self.txt_destination = self.window.findChild(QTextEdit, "txtDestination") 
+        if self.txt_destination: # Check if the object exists
+           pyqt_TextEdit(self.txt_destination, False)
+
+        #---------------------------------------------------------------------------------------------------------
+        # TEXT ABOUT
+        self.txt_about = self.window.findChild(QTextEdit, "txtAbout") 
+        if self.txt_about: # Check if the object exists
+           pyqt_TextEdit(self.txt_about)
+
+        #---------------------------------------------------------------------------------------------------------
+        # TEXT LOG
+        self.txt_log = self.window.findChild(QTextEdit, "txtLog") 
+        if self.txt_log: # Check if the object exists
+           pyqt_TextEdit(self.txt_log)
+
+        #---------------------------------------------------------------------------------------------------------
+        # EXIT BUTTON
+        # Inside MyWindow's __init__ or a method called after load_ui
+        self.btn_exit = self.window.findChild(QPushButton, "CmdExit") 
+        if self.btn_exit: # Check if the button was found
+           self.btn_exit.clicked.connect(self.CmdExit_click)
+
 
         #---------------------------------------------------------------------------------------------------------
         # APP DATA
         sHeader = "App Name: " + str(app_name) + " - " + str(app_name_des)
         sVersion = "Version: " + app_ver + " - " + app_ver_date + ". Window Size - Width: " + str(self.nWindowWidth) + " - Height: " + str(self.nWindowHeight)
 
-        #---------------------------------------------------------------------------------------------------------
-        # EXIT
-        
-        #self.button_exit = ctk.CTkButton(self.toolbar_frame_8, text="Exit", command=self.exit, fg_color=self.app_button_color, text_color=self.app_button_color_text, font=(self.sFont, self.nFontSizeButton))
-        #self.button_exit.pack(side="right", padx=self.nInnerFramePadxPady, pady=self.nInnerFramePadxPady)
-
-        #---------------------------------------------------------------------------------------------------------
-        # Actualiza tareas pendientes y ajusta el tamaño
-        self.main_window.update_idletasks()
-        width = self.nWindowWidth * self.nWindowWidthPor
-        height = self.nWindowHeight * self.nWindowHeightPor
-        print("width: " + str(width))
-        print("height: " + str(height))
-
-        #self.main_window.geometry(f"{width}x{height}")
-
-        x = 0
-        y = 0
-        self.main_window.geometry('%dx%d+%d+%d' % (width, height, x, y))
-
         #GET XML DATA
         self.xml(True)
 
-    #---------------------------------------------------------------------------------------------------------
-    def pyqt_getAllObjects(self):
-        tObjects = self.window.children()
-        n = 0
-        while n < len(tObjects):
-              print("self.tObjects[" + str(n) + "] = " + str(tObjects[n]))
-              n = n + 1
-        
-        return len(tObjects)
+        dateStart = datetime.now()
+        today_f = dateStart.strftime(self.sdtFormat)
+        print(self.sdtString + "\n" + "Started APP '" + self.str_client + "' at: " + today_f + "\n" + self.sdtString + "\n")
 
     #---------------------------------------------------------------------------------------------------------
-    def run(self):
+    def CmdSource_click(self):
+        sFile = self.openFilesDlg(True)
+        print("sFile = " + str(sFile))
+        pyqt_TextBoxSetText(self.txt_source, sFile)
+        return
 
-        """Inicia la interfaz gráfica."""
+    #---------------------------------------------------------------------------------------------------------
+    def CmdDestination_click(self):
+        sFile = self.openFilesDlg(False)
+        pyqt_TextBoxSetText(self.txt_destination, sFile)
+        return 
 
-        try:
+    #---------------------------------------------------------------------------------------------------------
+    def CmdProcess_click(self):
+        return 
 
-            dateStart = datetime.now()
-            today_f = dateStart.strftime(self.sdtFormat)
-            print(self.sdtString + "\n" + "Started APP '" + self.str_client + "' at: " + today_f + "\n" + self.sdtString + "\n")
+    #---------------------------------------------------------------------------------------------------------
+    def CmdClean_click(self):
+        return 
 
-            self.main_window.protocol("WM_DELETE_WINDOW", self.exit)
-            self.main_window.mainloop()
+    #---------------------------------------------------------------------------------------------------------
+    def openFilesDlg(self, bSource):
 
-        finally:
+        sPath = self.sPathSource
+        sTitle = "Source"
+        if not bSource:
+           sTitle = "Destination"
+           sPath = self.sPathDestination
 
-            dateStart = datetime.now()
-            today_f = dateStart.strftime(self.sdtFormat)
-            print(self.sdtString + "\n" + "Finished APP '" + self.str_client + "' at: " + today_f + "\n" + self.sdtString + "\n")
+        sFile = pyqt_OpenFileDlg(self.window, app_name_des + " - " + sTitle, sPath)
+
+        return sFile
 
 
     #---------------------------------------------------------------------------------------------------------
@@ -204,7 +219,7 @@ class CopyFilesHomeScreen:
 
         #self.util.util_XML_Save_Default_Value(self.util.sXML_APDU, self.apdu_input_GetValue(True))
         return
-           
+
     #---------------------------------------------------------------------------------------------------------
     def xml(self, bSetVersion=False):
     
@@ -221,8 +236,18 @@ class CopyFilesHomeScreen:
         return
 
     #---------------------------------------------------------------------------------------------------------
-    def CmdExit_clicks(self):
-        self.exit()
+    def CmdExit_click(self):
+
+        reply = pyqt_MsgBoxYesNo(self.window, app_name_des, "Are you sure you want to quit?")
+
+        if reply == QMessageBox.Yes:
+            print("Window to be closed.")
+            self.exit()
+        else:
+            print("Close event ignored.")
+
+        return reply
+        
     #---------------------------------------------------------------------------------------------------------
     def about(self):
         smpp_about = SMPPTransmitterScreenAbout(self.str_client, self.log_file)
@@ -231,9 +256,12 @@ class CopyFilesHomeScreen:
 
     #---------------------------------------------------------------------------------------------------------
     def exit(self):
+        dateStart = datetime.now()
+        today_f = dateStart.strftime(self.sdtFormat)
+        print(self.sdtString + "\n" + "Finished APP '" + self.str_client + "' at: " + today_f + "\n" + self.sdtString + "\n")
+
         self.save_ui_state()
         self.window.destroy()
-        print("Application finished!")
         sys.exit(0)
 
     #---------------------------------------------------------------------------------------------------------
