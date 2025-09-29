@@ -6,9 +6,11 @@ import os
 import sys
 
 #PYQT IMPORTS
-from PyQt5.QtWidgets import QApplication
+#from PyQt5.QtWidgets import QApplication
+#from PyQt5.QtWidgets import QPushButton
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QPushButton
 from PySide6.QtCore import QFile, QIODevice
 
 # from ..constants.general import color_dark_button, color_app_background_light, color_app_background_dark, \
@@ -98,26 +100,42 @@ class CopyFilesHomeScreen:
 
         #self.create_widgets()
 
-        app = QApplication(sys.argv) # Construct QApplication first
+        self.app = QApplication(sys.argv) # Construct QApplication first
 
-        print(f"Width: {app.primaryScreen().size().width()}")
-        print(f"Height: {app.primaryScreen().size().height()}")
+        print(f"Width: {self.app.primaryScreen().size().width()}")
+        print(f"Height: {self.app.primaryScreen().size().height()}")
 
-        ui_file_name = parent_directory + "\iu\copyfiles.ui"
-        print("ui_dile_name = " + ui_file_name)
-        ui_file = QFile(ui_file_name)
-        if not ui_file.open(QIODevice.ReadOnly):
-           print(f"Cannot open {ui_file_name}: {ui_file.errorString()}")
+        self.ui_file_name = parent_directory + "\iu\copyfiles.ui"
+        print("ui_dile_name = " + self.ui_file_name)
+        self.ui_file = QFile(self.ui_file_name)
+        if not self.ui_file.open(QIODevice.ReadOnly):
+           print(f"Cannot open {self.ui_file_name}: {self.ui_file.errorString()}")
            sys.exit(-1)
-        loader = QUiLoader()
-        window = loader.load(ui_file)
-        ui_file.close()
-        if not window:
-           print(loader.errorString())
+        self.loader = QUiLoader()
+        self.window = self.loader.load(self.ui_file)
+        self.ui_file.close()
+        if not self.window:
+           print(self.loader.errorString())
            sys.exit(-1)
-        window.show()
+
+         # Inside MyWindow's __init__ or a method called after load_ui
+        self.btn_exit = self.window.findChild(QPushButton, "CmdExit") 
+        print("self.btn_exit = " + str(self.btn_exit))
         
-        sys.exit(app.exec()) # Start the event loop
+        #self.tButtons = self.window.findChildren(QPushButton)
+        #print("self.tButtons = " + str(self.tButtons))
+
+        # GET ALL OBJECTS FROM PYQT
+        self.pyqt_getAllObjects()
+
+          # Inside MyWindow's __init__ or a method called after load_ui and button access
+        if self.btn_exit: # Check if the button was found
+           self.btn_exit.clicked.connect(self.CmdExit_clicks)
+   
+        self.window.show()
+        
+        sys.exit(self.app.exec()) # Start the event loop 
+
 
     #---------------------------------------------------------------------------------------------------------
     def create_widgets(self):
@@ -149,6 +167,16 @@ class CopyFilesHomeScreen:
 
         #GET XML DATA
         self.xml(True)
+
+    #---------------------------------------------------------------------------------------------------------
+    def pyqt_getAllObjects(self):
+        tObjects = self.window.children()
+        n = 0
+        while n < len(tObjects):
+              print("self.tObjects[" + str(n) + "] = " + str(tObjects[n]))
+              n = n + 1
+        
+        return len(tObjects)
 
     #---------------------------------------------------------------------------------------------------------
     def run(self):
@@ -193,6 +221,9 @@ class CopyFilesHomeScreen:
         return
 
     #---------------------------------------------------------------------------------------------------------
+    def CmdExit_clicks(self):
+        self.exit()
+    #---------------------------------------------------------------------------------------------------------
     def about(self):
         smpp_about = SMPPTransmitterScreenAbout(self.str_client, self.log_file)
         smpp_about.run()
@@ -201,7 +232,8 @@ class CopyFilesHomeScreen:
     #---------------------------------------------------------------------------------------------------------
     def exit(self):
         self.save_ui_state()
-        self.main_window.destroy()
+        self.window.destroy()
+        print("Application finished!")
         sys.exit(0)
 
     #---------------------------------------------------------------------------------------------------------
