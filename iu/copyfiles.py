@@ -9,7 +9,8 @@ import sys
 #from PyQt5.QtWidgets import QApplication
 #from PyQt5.QtWidgets import QPushButton
 from PySide6.QtUiTools import QUiLoader
-from PySide6.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget, QLabel, QMessageBox, QTextEdit, QFileDialog 
+from PySide6.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget, QLabel, QMessageBox, QTextEdit, QFileDialog
+
 from PySide6.QtCore import QFile, QIODevice
 
 # from ..constants.general import color_dark_button, color_app_background_light, color_app_background_dark, \
@@ -112,65 +113,82 @@ class CopyFilesHomeScreen:
         pyqt_getAllObjectsFromMainWindow(self.window)
 
         #---------------------------------------------------------------------------------------------------------
+        #---------------------------------------------------------------------------------------------------------
+        # SOURCE 
+        #---------------------------------------------------------------------------------------------------------
         # BUTTON SOURCE 
-        self.btn_source = self.window.findChild(QPushButton, "pbSourceGet") 
-        if self.btn_source: # Check if the object exists
-           self.btn_source.clicked.connect(self.CmdSource_click)
+        self.btn_source_get = self.window.findChild(QPushButton, "pbSourceGet") 
+        if self.btn_source_get: # Check if the object exists
+           self.btn_source_get.clicked.connect(self.CmdSource_get)
+
+        # BUTTON SOURCE REMOVE
+        self.btn_source_del = self.window.findChild(QPushButton, "pbSourceRemove") 
+        if self.btn_source_del: # Check if the object exists
+           self.btn_source_del.clicked.connect(self.CmdSource_del)
 
         #---------------------------------------------------------------------------------------------------------
+        #---------------------------------------------------------------------------------------------------------
+        # DESTINATION
+        #---------------------------------------------------------------------------------------------------------
         # BUTTON DESTINATION
-        self.btn_destination = self.window.findChild(QPushButton, "pbDestinationGet") 
-        if self.btn_destination: # Check if the object exists
-           self.btn_destination.clicked.connect(self.CmdDestination_click)
+        self.btn_destination_get = self.window.findChild(QPushButton, "pbDestinationGet") 
+        if self.btn_destination_get: # Check if the object exists
+           self.btn_destination_get.clicked.connect(self.CmdDestination_get)
+
+        # BUTTON SOURCE REMOVE
+        self.btn_destination_del = self.window.findChild(QPushButton, "pbDestinationRemove") 
+        if self.btn_destination_del: # Check if the object exists
+           self.btn_destination_del.clicked.connect(self.CmdDestination_del)
 
         #---------------------------------------------------------------------------------------------------------
         # BUTTON PROCESS
         self.btn_process = self.window.findChild(QPushButton, "pbProcess") 
         if self.btn_process: # Check if the object exists
-           self.btn_process.clicked.connect(self.CmdProcess_click)
+           self.btn_process.clicked.connect(self.CmdProcess)
 
         #---------------------------------------------------------------------------------------------------------
         # BUTTON CLEAN
         self.btn_clean = self.window.findChild(QPushButton, "pbClean") 
         if self.btn_clean: # Check if the object exists
-           self.btn_clean.clicked.connect(self.CmdClean_click)
+           self.btn_clean.clicked.connect(self.CmdClean)
 
         #---------------------------------------------------------------------------------------------------------
         # TEXT SOURCE
-        self.txt_source = self.window.findChild(QTextEdit, "txtSource") 
-        if self.txt_source: # Check if the object exists
-           pyqt_TextEdit(self.txt_source, False)
+        #self.txt_source = self.window.findChild(TableView, "tvSource") 
+        #if self.txt_source: # Check if the object exists
+        #   pyqt_TextEditable(self.txt_source, False)
 
         #---------------------------------------------------------------------------------------------------------
         # TEXT DESTINATION
-        self.txt_destination = self.window.findChild(QTextEdit, "txtDestination") 
-        if self.txt_destination: # Check if the object exists
-           pyqt_TextEdit(self.txt_destination, False)
+        #self.txt_destination = self.window.findChild(QTextEdit, "txtDestination") 
+        #if self.txt_destination: # Check if the object exists
+        #   pyqt_TextEdit(self.txt_destination, False)
 
         #---------------------------------------------------------------------------------------------------------
         # TEXT ABOUT
         self.txt_about = self.window.findChild(QTextEdit, "txtAbout") 
         if self.txt_about: # Check if the object exists
-           pyqt_TextEdit(self.txt_about)
+           pyqt_TextEditable(self.txt_about)
 
         #---------------------------------------------------------------------------------------------------------
         # TEXT LOG
         self.txt_log = self.window.findChild(QTextEdit, "txtLog") 
         if self.txt_log: # Check if the object exists
-           pyqt_TextEdit(self.txt_log)
+           pyqt_TextEditable(self.txt_log)
 
         #---------------------------------------------------------------------------------------------------------
         # EXIT BUTTON
         # Inside MyWindow's __init__ or a method called after load_ui
         self.btn_exit = self.window.findChild(QPushButton, "CmdExit") 
         if self.btn_exit: # Check if the button was found
-           self.btn_exit.clicked.connect(self.CmdExit_click)
+           self.btn_exit.clicked.connect(self.CmdExit)
 
 
         #---------------------------------------------------------------------------------------------------------
         # APP DATA
         sHeader = "App Name: " + str(app_name) + " - " + str(app_name_des)
         sVersion = "Version: " + app_ver + " - " + app_ver_date + ". Window Size - Width: " + str(self.nWindowWidth) + " - Height: " + str(self.nWindowHeight)
+        pyqt_TextBoxSetText(self.txt_about, sHeader + "\n" + sVersion)
 
         #GET XML DATA
         self.xml(True)
@@ -180,24 +198,33 @@ class CopyFilesHomeScreen:
         print(self.sdtString + "\n" + "Started APP '" + self.str_client + "' at: " + today_f + "\n" + self.sdtString + "\n")
 
     #---------------------------------------------------------------------------------------------------------
-    def CmdSource_click(self):
+    def CmdSource_get(self):
         sFile = self.openFilesDlg(True)
         print("sFile = " + str(sFile))
-        pyqt_TextBoxSetText(self.txt_source, sFile)
+        #pyqt_TextBoxSetText(self.txt_source, sFile)
         return
 
     #---------------------------------------------------------------------------------------------------------
-    def CmdDestination_click(self):
+    def CmdSource_del(self):
+        return
+
+    #---------------------------------------------------------------------------------------------------------
+    def CmdDestination_get(self):
         sFile = self.openFilesDlg(False)
-        pyqt_TextBoxSetText(self.txt_destination, sFile)
+        #pyqt_TextBoxSetText(self.txt_destination, sFile)
+        return 
+    
+    #---------------------------------------------------------------------------------------------------------
+    def CmdDestination_del(self):
+        return
+
+
+    #---------------------------------------------------------------------------------------------------------
+    def CmdProcess(self):
         return 
 
     #---------------------------------------------------------------------------------------------------------
-    def CmdProcess_click(self):
-        return 
-
-    #---------------------------------------------------------------------------------------------------------
-    def CmdClean_click(self):
+    def CmdClean(self):
         return 
 
     #---------------------------------------------------------------------------------------------------------
@@ -209,7 +236,9 @@ class CopyFilesHomeScreen:
            sTitle = "Destination"
            sPath = self.sPathDestination
 
-        sFile = pyqt_OpenFileDlg(self.window, app_name_des + " - " + sTitle, sPath)
+        sFile = pyqt_OpenFileDlgDirOnly(self.window, app_name_des + " - " + sTitle, sPath, "", True)
+
+        print("openFilesDlg = " + str(sFile))
 
         return sFile
 
@@ -236,7 +265,7 @@ class CopyFilesHomeScreen:
         return
 
     #---------------------------------------------------------------------------------------------------------
-    def CmdExit_click(self):
+    def CmdExit(self):
 
         reply = pyqt_MsgBoxYesNo(self.window, app_name_des, "Are you sure you want to quit?")
 

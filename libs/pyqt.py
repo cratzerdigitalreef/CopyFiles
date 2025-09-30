@@ -68,7 +68,7 @@ def pyqt_getAllObjectsFromMainWindow(main_window: QMainWindow):
     return len(tObjects)
 
 #---------------------------------------------------------------------------------------------------------
-def pyqt_TextEdit(txt, bReadOnly=True):
+def pyqt_TextEditable(txt, bReadOnly=True):
     if txt:
        if bReadOnly:
           txt.setReadOnly(True)
@@ -93,24 +93,103 @@ def pyqt_TextBoxGetText(obj):
     return txt   
 
 #---------------------------------------------------------------------------------------------------------
-def pyqt_OpenFileDlg(parent, sTitle, sPath, sFilters="All Files (*)"):
+def pyqt_OpenFileDlgForSave(parent, sTitle, sPath, sFilters="All Files (*)", bDirOnly=False):
+    return pyqt_OpenFileDlg(parent, sTitle, sPath, sFilters, bDirOnly, True, False)
+
+#---------------------------------------------------------------------------------------------------------
+def pyqt_OpenFileDlgDirOnly(parent, sTitle, sPath, sFilters="All Files (*)", bMoreFiles=False):
+    #print("sFilters = " + str(sFilters))
+    return pyqt_OpenFileDlg(parent, sTitle, sPath, sFilters, True, False, bMoreFiles)
+
+#---------------------------------------------------------------------------------------------------------
+def pyqt_OpenFileDlgMoreFiles(parent, sTitle, sPath, sFilters="All Files (*)"):
+    return pyqt_OpenFileDlg(parent, sTitle, sPath, sFilters, False, False, True)
+
+#---------------------------------------------------------------------------------------------------------
+# IT IS ALWAYS RETURNED A LIST WITH SELECTED FILES/DIRS
+# IF NOTHING IS SELECTED, THE LIST IS EMPTY WITH []
+def pyqt_OpenFileDlg(parent, sTitle, sPath, sFilters="All Files (*)", bDirOnly=False, bSave=False, bMoreFiles=False):
     # Open the file dialog
     # getOpenFileName returns a tuple: (filename, filter)
 
     if sFilters == "":
-       sFilters = "All Files (*);;Text Files (*.txt);;"
+       sFilters = "All Files (*);;"
+       if not bDirOnly:
+          sFilters = sFilters + "Text Files (*.txt);;"
 
-    filename = QFileDialog.getOpenFileName(
+    lstFiltes = sFilters.split(";;")
+    sFiltersDefault = str(lstFiltes[0])
+
+    #print("pyqt_OpenFileDlg - sFilters = " + str(sFilters) + " - bDirOnly = " + str(bDirOnly) + " - bMoreFiles = " + str(bMoreFiles))
+    option = 0
+    if bDirOnly:
+       option = QFileDialog.Option.ShowDirsOnly
+
+    if bSave:
+       if option == 0:
+          filename = QFileDialog.getSaveFileName(
                          parent,  # Parent widget
                          sTitle,  # Dialog title
                          sPath,  # Initial directory (empty string means current working directory)
-                         sFilters  # File filters
-                         )
+                         sFilters,  # File filters
+                         sFiltersDefault
+                  )
+       else:
+          filename = QFileDialog.getSaveFileName(
+                         parent,  # Parent widget
+                         sTitle,  # Dialog title
+                         sPath,  # Initial directory (empty string means current working directory)
+                         sFilters,  # File filters
+                         sFiltersDefault,
+                         options=option #Options
+                  )
+    else:    
+       if bMoreFiles:
+          if option == 0:
+             filename = QFileDialog.getOpenFileNames(
+                         parent,  # Parent widget
+                         sTitle,  # Dialog title
+                         sPath,  # Initial directory (empty string means current working directory)
+                         sFilters,  # File filters
+                         sFiltersDefault
+                  )
+          else:
+             filename = QFileDialog.getOpenFileNames(
+                         parent,  # Parent widget
+                         sTitle,  # Dialog title
+                         sPath,  # Initial directory (empty string means current working directory)
+                         sFilters,  # File filters
+                         sFiltersDefault,
+                         options=option #Options
+                  )
+       else:   
+          if option == 0:
+             filename = QFileDialog.getOpenFileName(
+                         parent,  # Parent widget
+                         sTitle,  # Dialog title
+                         sPath,  # Initial directory (empty string means current working directory)
+                         sFilters,  # File filters
+                         sFiltersDefault
+                  )
+          else:
+             filename = QFileDialog.getOpenFileName(
+                         parent,  # Parent widget
+                         sTitle,  # Dialog title
+                         sPath,  # Initial directory (empty string means current working directory)
+                         sFilters,  # File filters
+                         sFiltersDefault,
+                         options=option #Options
+                  )
+
+
+    tReturn = []
 
     if filename:  # If a file was selected (not cancelled)
-       return str(filename)
-    else:
-       return ""
+
+       #print("filename = " + str(filename))
+       tReturn = filename[0]
+
+    return tReturn
     
 #---------------------------------------------------------------------------------------------------------
 def pyqt_MsgBoxOk(parent, sHeader, sText):
