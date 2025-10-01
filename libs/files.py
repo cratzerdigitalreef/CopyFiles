@@ -194,10 +194,10 @@ def fFileOpenBinaryModeAndRead(sPathAndFile):
 # file_fFileIsExe => Check whether it is an exe file or script to be executed by run.bat
 #---------------------------------------------------------------------------------------------------------
 def file_fFileIsExe():
-    # Asegura que la ruta sea correcta si el ejecutable está empaquetado
+    # Asegura que la ruta sea correcta si el ejecutable estï¿½ empaquetado
     if hasattr(sys, '_MEIPASS'):  # Si es un ejecutable
        return True
-    else:  # Si está corriendo como script
+    else:  # Si estï¿½ corriendo como script
        return False
     
 #---------------------------------------------------------------------------------------------------------
@@ -263,7 +263,7 @@ def file_PathAndFile_GetSeparated(sPathAndFile):
     sPath = ""
     sFile = ""
     
-    sSepara = "//"
+    sSepara = "/"
     if sSepara in sPathAndFile:
        tFiles = sPathAndFile.split(sSepara)
     else:   

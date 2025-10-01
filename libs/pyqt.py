@@ -65,15 +65,29 @@ def pyqt_getAllObjectsFromMainWindow(main_window: QMainWindow):
 
         n = n + 1
 
-    return len(tObjects)
+    return tObjects
+
+#---------------------------------------------------------------------------------------------------------
+def pyqt_IsObjectInMainWindow(main_window: QMainWindow, objName):
+    lst = pyqt_getAllObjectsFromMainWindow(QMainWindow)
+    return pyqt_IsObjectInMainWindowList(lst, objName)
+
+#---------------------------------------------------------------------------------------------------------
+def pyqt_IsObjectInMainWindowList(lstQMainWindowObjList, objName):
+    bReturn = False
+    if len(lstQMainWindowObjList) > 0:
+        if objName != "" and objName in str(lstQMainWindowObjList):
+            bReturn = True
+
+    return bReturn  
 
 #---------------------------------------------------------------------------------------------------------
 def pyqt_TextEditable(txt, bReadOnly=True):
-    if txt:
-       if bReadOnly:
-          txt.setReadOnly(True)
-       else:
-          txt.setReadOnly(False)
+    #if txt:
+    if bReadOnly:
+       txt.setReadOnly(True)
+    else:
+       txt.setReadOnly(False)
 
 #---------------------------------------------------------------------------------------------------------
 def pyqt_EnableDisable(obj, bEnable=True):
@@ -186,9 +200,20 @@ def pyqt_OpenFileDlg(parent, sTitle, sPath, sFilters="All Files (*)", bDirOnly=F
 
     if filename:  # If a file was selected (not cancelled)
 
-       #print("filename = " + str(filename))
        tReturn = filename[0]
+       #print("tReturn length = " + str(len(tReturn)) + " - " + str(tReturn))
 
+       if bDirOnly:
+          n = 0
+          tDirs = tReturn
+          tReturn = []
+          while n < len(tDirs):
+                tDirs[n] = file_PathAndFile_GetPath(str(tDirs[n]))
+                if not str(tDirs[n]) in str(tReturn):
+                    tReturn.append(tDirs[n])
+                n = n + 1
+          #print("tReturn len = " + str(len(tReturn)) + " => " + str(tReturn))
+       
     return tReturn
     
 #---------------------------------------------------------------------------------------------------------

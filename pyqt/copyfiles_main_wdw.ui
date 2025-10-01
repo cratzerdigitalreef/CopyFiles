@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>868</width>
-    <height>414</height>
+    <width>883</width>
+    <height>433</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,10 +17,10 @@
    <widget class="QTextEdit" name="txtLog">
     <property name="geometry">
      <rect>
-      <x>460</x>
-      <y>20</y>
+      <x>480</x>
+      <y>30</y>
       <width>391</width>
-      <height>321</height>
+      <height>331</height>
      </rect>
     </property>
    </widget>
@@ -66,7 +66,7 @@
    <widget class="QLabel" name="label_4">
     <property name="geometry">
      <rect>
-      <x>460</x>
+      <x>470</x>
       <y>0</y>
       <width>171</width>
       <height>16</height>
@@ -79,8 +79,8 @@
    <widget class="QPushButton" name="CmdExit">
     <property name="geometry">
      <rect>
-      <x>780</x>
-      <y>350</y>
+      <x>800</x>
+      <y>370</y>
       <width>75</width>
       <height>23</height>
      </rect>
@@ -89,22 +89,12 @@
      <string>Exit</string>
     </property>
    </widget>
-   <widget class="QPlainTextEdit" name="txtAbout">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>300</y>
-      <width>441</width>
-      <height>41</height>
-     </rect>
-    </property>
-   </widget>
    <widget class="QGroupBox" name="groupBoxSource">
     <property name="geometry">
      <rect>
       <x>10</x>
       <y>10</y>
-      <width>441</width>
+      <width>461</width>
       <height>141</height>
      </rect>
     </property>
@@ -126,7 +116,7 @@
       <rect>
        <x>340</x>
        <y>20</y>
-       <width>101</width>
+       <width>111</width>
        <height>23</height>
       </rect>
      </property>
@@ -139,7 +129,7 @@
       <rect>
        <x>340</x>
        <y>110</y>
-       <width>101</width>
+       <width>111</width>
        <height>23</height>
       </rect>
      </property>
@@ -153,7 +143,7 @@
      <rect>
       <x>10</x>
       <y>160</y>
-      <width>441</width>
+      <width>461</width>
       <height>141</height>
      </rect>
     </property>
@@ -175,7 +165,7 @@
       <rect>
        <x>340</x>
        <y>20</y>
-       <width>101</width>
+       <width>111</width>
        <height>23</height>
       </rect>
      </property>
@@ -188,14 +178,37 @@
       <rect>
        <x>340</x>
        <y>110</y>
-       <width>101</width>
+       <width>111</width>
        <height>23</height>
       </rect>
      </property>
      <property name="text">
-      <string>Destination Delete</string>
+      <string>Destination Remove</string>
      </property>
     </widget>
+   </widget>
+   <widget class="QPushButton" name="pbClean">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>370</y>
+      <width>75</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Clean</string>
+    </property>
+   </widget>
+   <widget class="QTextEdit" name="txtAbout">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>300</y>
+      <width>461</width>
+      <height>61</height>
+     </rect>
+    </property>
    </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
@@ -203,7 +216,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>868</width>
+     <width>883</width>
      <height>21</height>
     </rect>
    </property>

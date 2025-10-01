@@ -9,7 +9,8 @@ import sys
 #from PyQt5.QtWidgets import QApplication
 #from PyQt5.QtWidgets import QPushButton
 from PySide6.QtUiTools import QUiLoader
-from PySide6.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget, QLabel, QMessageBox, QTextEdit, QFileDialog
+from PySide6.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget, QLabel
+from PySide6.QtWidgets import QMessageBox, QTextEdit, QFileDialog, QTableView
 
 from PySide6.QtCore import QFile, QIODevice
 
@@ -38,6 +39,7 @@ from customtkinter import CTkCheckBox
 from pathlib import Path
 from str import *
 from pyqt import *
+from pyqt_tv import *
 from general import *
 
 import sys
@@ -110,8 +112,9 @@ class CopyFilesHomeScreen:
     def create_widgets(self):
 
         # GET ALL OBJECTS FROM PYQT
-        pyqt_getAllObjectsFromMainWindow(self.window)
+        lstObjs = pyqt_getAllObjectsFromMainWindow(self.window)
 
+        sErrorNotExist = "ERROR in create_widgets taking into accout '" + self.ui_file_name + "'. The following object does not exist: "
         #---------------------------------------------------------------------------------------------------------
         #---------------------------------------------------------------------------------------------------------
         # SOURCE 
@@ -120,11 +123,15 @@ class CopyFilesHomeScreen:
         self.btn_source_get = self.window.findChild(QPushButton, "pbSourceGet") 
         if self.btn_source_get: # Check if the object exists
            self.btn_source_get.clicked.connect(self.CmdSource_get)
+        else:
+            print(sErrorNotExist + "QPushButton pbSourceGet")   
 
         # BUTTON SOURCE REMOVE
         self.btn_source_del = self.window.findChild(QPushButton, "pbSourceRemove") 
         if self.btn_source_del: # Check if the object exists
            self.btn_source_del.clicked.connect(self.CmdSource_del)
+        else:
+            print(sErrorNotExist + "QPushButton pbSourceRemove")   
 
         #---------------------------------------------------------------------------------------------------------
         #---------------------------------------------------------------------------------------------------------
@@ -134,33 +141,56 @@ class CopyFilesHomeScreen:
         self.btn_destination_get = self.window.findChild(QPushButton, "pbDestinationGet") 
         if self.btn_destination_get: # Check if the object exists
            self.btn_destination_get.clicked.connect(self.CmdDestination_get)
+        else:
+            print(sErrorNotExist + "QPushButton pbDestinationGet")   
 
         # BUTTON SOURCE REMOVE
         self.btn_destination_del = self.window.findChild(QPushButton, "pbDestinationRemove") 
         if self.btn_destination_del: # Check if the object exists
            self.btn_destination_del.clicked.connect(self.CmdDestination_del)
+        else:
+            print(sErrorNotExist + "QPushButton pbDestinationRemove")   
 
         #---------------------------------------------------------------------------------------------------------
         # BUTTON PROCESS
         self.btn_process = self.window.findChild(QPushButton, "pbProcess") 
         if self.btn_process: # Check if the object exists
            self.btn_process.clicked.connect(self.CmdProcess)
+        else:
+            print(sErrorNotExist + "QPushButton pbProcess")   
 
         #---------------------------------------------------------------------------------------------------------
         # BUTTON CLEAN
         self.btn_clean = self.window.findChild(QPushButton, "pbClean") 
         if self.btn_clean: # Check if the object exists
            self.btn_clean.clicked.connect(self.CmdClean)
+        else:
+            print(sErrorNotExist + "QPushButton pbClean")   
 
         #---------------------------------------------------------------------------------------------------------
-        # TEXT SOURCE
-        #self.txt_source = self.window.findChild(TableView, "tvSource") 
-        #if self.txt_source: # Check if the object exists
-        #   pyqt_TextEditable(self.txt_source, False)
+        # GRID SOURCE
+        # Sample data
+        data = [
+            ["Apple", 1.20, 100],
+            ["Banana", 0.75, 150],
+            ["Orange", 1.50, 80],
+            ["Grape", 2.10, 200]
+        ]
+        headers = ["Fruit", "Price ($)", "Quantity"]
+
+        # Create the model
+        self.model = MyTableModel(data, headers)
+
+        self.tv_source = self.window.findChild(QTableView, "tvSource") 
+        if self.tv_source: # Check if the object exists
+           #pyqt_TextEditable(self.txt_source, False)
+           self.tv_source.setModel(self.model)
+        else:
+            print(sErrorNotExist + "QPushButton pbClean")   
 
         #---------------------------------------------------------------------------------------------------------
         # TEXT DESTINATION
-        #self.txt_destination = self.window.findChild(QTextEdit, "txtDestination") 
+        #self.txt_destination = self.window.findChild(QTableView, "tvDestination") 
         #if self.txt_destination: # Check if the object exists
         #   pyqt_TextEdit(self.txt_destination, False)
 
@@ -169,12 +199,16 @@ class CopyFilesHomeScreen:
         self.txt_about = self.window.findChild(QTextEdit, "txtAbout") 
         if self.txt_about: # Check if the object exists
            pyqt_TextEditable(self.txt_about)
+        else:
+            print(sErrorNotExist + "QTextEdit txtAbout")   
 
         #---------------------------------------------------------------------------------------------------------
         # TEXT LOG
         self.txt_log = self.window.findChild(QTextEdit, "txtLog") 
         if self.txt_log: # Check if the object exists
            pyqt_TextEditable(self.txt_log)
+        else:
+            print(sErrorNotExist + "QTextEdit txtLog")   
 
         #---------------------------------------------------------------------------------------------------------
         # EXIT BUTTON
@@ -182,6 +216,8 @@ class CopyFilesHomeScreen:
         self.btn_exit = self.window.findChild(QPushButton, "CmdExit") 
         if self.btn_exit: # Check if the button was found
            self.btn_exit.clicked.connect(self.CmdExit)
+        else:
+            print(sErrorNotExist + "QPushButton CmdExit")   
 
 
         #---------------------------------------------------------------------------------------------------------
