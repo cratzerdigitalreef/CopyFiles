@@ -61,6 +61,10 @@ class CopyFilesHomeScreen:
         self.sdtFormat = sDef_dtFormat
         self.sdtString = str_RepeatString(100,sDef_Minus)
 
+        self.nSourceRows = 0
+        self.nDestinationRows = 0
+        self.nRowLen = 300
+
         ############################################################################
         # CHANGED these to 2‑tuples so each color can adapt in Light or Dark mode.
         # (left color is for Light, right color is for Dark)
@@ -170,29 +174,47 @@ class CopyFilesHomeScreen:
         #---------------------------------------------------------------------------------------------------------
         # GRID SOURCE
         # Sample data
-        data = [
-            ["Apple", 1.20, 100],
-            ["Banana", 0.75, 150],
-            ["Orange", 1.50, 80],
-            ["Grape", 2.10, 200]
-        ]
-        headers = ["Fruit", "Price ($)", "Quantity"]
+        #data = [
+        #    ["Apple", 1.20, 100],
+        #    ["Banana", 0.75, 150],
+        #    ["Orange", 1.50, 80],
+        #    ["Grape", 2.10, 200]
+        #]
+        #headers = ["Fruit", "Price ($)", "Quantity"]
+        data = []
+        headers = ["Path"]
 
         # Create the model
-        self.model = MyTableModel(data, headers)
+        self.modelSource = pyqtTableModel(data, headers)
+        self.modelDestination = pyqtTableModel(data, headers)
 
         self.tv_source = self.window.findChild(QTableView, "tvSource") 
         if self.tv_source: # Check if the object exists
            #pyqt_TextEditable(self.txt_source, False)
-           self.tv_source.setModel(self.model)
+           self.tv_source.setModel(self.modelSource)
+           self.modelSource.setGridSelectionSingle(self.tv_source)
+           self.tv_source.doubleClicked.connect(self.tvGrid_on_cell_double_clicked_Source)
+
+
         else:
-            print(sErrorNotExist + "QPushButton pbClean")   
+            print(sErrorNotExist + "QTableView tvSource")   
 
         #---------------------------------------------------------------------------------------------------------
         # TEXT DESTINATION
         #self.txt_destination = self.window.findChild(QTableView, "tvDestination") 
         #if self.txt_destination: # Check if the object exists
         #   pyqt_TextEdit(self.txt_destination, False)
+
+        self.tv_destination = self.window.findChild(QTableView, "tvDestination") 
+        if self.tv_destination: # Check if the object exists
+           #pyqt_TextEditable(self.txt_source, False)
+           self.tv_destination.setModel(self.modelDestination)
+           self.modelDestination.setGridSelectionSingle(self.tv_destination)
+           self.tv_destination.doubleClicked.connect(self.tvGrid_on_cell_double_clicked_Destination)
+
+
+        else:
+            print(sErrorNotExist + "QTableView tvDestination")   
 
         #---------------------------------------------------------------------------------------------------------
         # TEXT ABOUT
@@ -235,9 +257,16 @@ class CopyFilesHomeScreen:
 
     #---------------------------------------------------------------------------------------------------------
     def CmdSource_get(self):
-        sFile = self.openFilesDlg(True)
-        print("sFile = " + str(sFile))
+        lstFiles = self.openFilesDlg(True)
+        print("CmdSource_get - sFile = " + str(lstFiles))
         #pyqt_TextBoxSetText(self.txt_source, sFile)
+
+        if len(lstFiles) > 0:
+           lstFiles[0] = "pepe"
+           self.nSourceRows = self.modelSource.addRow(lstFiles)
+           print("CmdSource_get - New rows = " + str(self.nSourceRows))
+           pyqt_tv_setColumnWidth(self.tv_source, self.nSourceRows - 1, self.nRowLen) 
+
         return
 
     #---------------------------------------------------------------------------------------------------------
@@ -272,12 +301,51 @@ class CopyFilesHomeScreen:
            sTitle = "Destination"
            sPath = self.sPathDestination
 
-        sFile = pyqt_OpenFileDlgDirOnly(self.window, app_name_des + " - " + sTitle, sPath, "", True)
+        lstFiles = pyqt_OpenFileDlgDirOnly(self.window, app_name_des + " - " + sTitle, sPath, "", True)
 
-        print("openFilesDlg = " + str(sFile))
+        #print("openFilesDlg = " + str(lstFiles))
 
-        return sFile
+        return lstFiles
 
+    #---------------------------------------------------------------------------------------------------------
+    def tvGrid_on_cell_double_clicked_Source(self, index):
+
+        row = index.row()
+        column = index.column()
+
+        return self.tvGrid_on_cell_double_clicked(self.tv_source, index)
+
+    #---------------------------------------------------------------------------------------------------------
+    def tvGrid_on_cell_double_clicked_Destination(self, index):
+
+        row = index.row()
+        column = index.column()
+
+        return self.tvGrid_on_cell_double_clicked(self.tv_destination, index)
+
+    #---------------------------------------------------------------------------------------------------------
+    def tvGrid_on_cell_double_clicked(self, tv, index):
+            # Access the data using the model associated with the QTableView
+        model = tv.model()
+        cell_data = model.data(index)
+
+        # You can then use 'cell_data' as needed, e.g., display it in a dialog
+        print(f"tvGrid_on_cell_double_clicked_Source - cell at Row: {row}, Column: {column}. Data: {cell_data}")
+        return
+
+    #---------------------------------------------------------------------------------------------------------
+    def tvGrid_on_cell_double_clicked_Destination(self, index):
+
+        row = index.row()
+        column = index.column()
+
+        # Access the data using the model associated with the QTableView
+        model = self.modelDestination.model()
+        cell_data = model.data(index)
+
+        # You can then use 'cell_data' as needed, e.g., display it in a dialog
+        print(f"tvGrid_on_cell_double_clicked_Destination - cell at Row: {row}, Column: {column}. Data: {cell_data}")
+        return
 
     #---------------------------------------------------------------------------------------------------------
     def save_ui_state(self):
