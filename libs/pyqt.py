@@ -4,11 +4,14 @@ import sys
 import os
 
 #PYQT IMPORTS
-#from PyQt5.QtWidgets import QApplication
-#from PyQt5.QtWidgets import QPushButton
-from PySide6.QtUiTools import QUiLoader
-from PySide6.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget, QLabel, QMessageBox, QTextEdit, QFileDialog 
-from PySide6.QtCore import QFile, QIODevice
+#from PySide6.QtUiTools import QUiLoader
+#from PySide6.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget, QLabel, QMessageBox, QTextEdit, QFileDialog 
+#from PySide6.QtCore import QFile, QIODevice
+
+from PyQt5.uic import loadUi
+from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget, QLabel
+from PyQt5.QtWidgets import QMessageBox, QTextEdit, QFileDialog, QTableView
+from PyQt5.QtCore import QFile, QIODevice
 
 from str import *
 from bytes import *
@@ -27,8 +30,13 @@ def pyqt_open_ui_file(uiFilePathAndName):
        print(f"Cannot open {ui_file_name}: {ui_file.errorString()}")
        bReturn = False 
 
-    loader = QUiLoader()
-    window = loader.load(ui_file)
+    #PySide6
+    #loader = QUiLoader()
+    #window = loader.load(ui_file)
+    
+    #PyQt5
+    window = loadUi(ui_file)
+       
     ui_file.close()
     if not window:
        print(loader.errorString())
@@ -82,7 +90,7 @@ def pyqt_IsObjectInMainWindowList(lstQMainWindowObjList, objName):
     return bReturn  
 
 #---------------------------------------------------------------------------------------------------------
-def pyqt_TextEditable(txt, bReadOnly=True):
+def pyqt_TextEditableReadOnly(txt, bReadOnly=True):
     #if txt:
     if bReadOnly:
        txt.setReadOnly(True)

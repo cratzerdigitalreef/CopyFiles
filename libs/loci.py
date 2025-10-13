@@ -107,7 +107,7 @@ def loci_imeiFromHexa(sIMEIHex, bDes=False, bLuhnCheck=True):
        return sIMEIt
    
 
-# loci_imei ----------------------------------------------------------------------------------------------------------
+# loci_lociFromHexa ----------------------------------------------------------------------------------------------------------
 def loci_lociFromHexa(sLOCIHex, bDes=False):
 
     loci=str_SpacesOut(sLOCIHex)
@@ -152,7 +152,10 @@ def loci_lociFromHexa(sLOCIHex, bDes=False):
           subcellid = str_RemoveLastPattern(subcellid, sF)
       
        #print(subcellid)   
-       cell = cellid + subcellid   
+
+       cell = cellid  
+       if subcellid != str_RepeatString(len(subcellid),"0"):
+          cell = cell + subcellid   
     else:
        cell = cellid
 
@@ -170,6 +173,109 @@ def loci_lociFromHexa(sLOCIHex, bDes=False):
     else:
        return loci
        
+# loci_lociToHexa ----------------------------------------------------------------------------------------------------------
+def loci_lociToHexa(sMCCNro, sMNCNro, sAreaNro, sCellNro, bDes=False):
+
+    sMCC=str_SpacesOut(str(sMCCNro))
+    sMNC=str_SpacesOut(str(sMNCNro))
+    sArea=str_SpacesOut(str(sAreaNro))
+    sCell=str_SpacesOut(str(sCellNro))
+
+    sMCC=sMCC.upper()
+    sMNC=sMNC.upper()
+    sArea=sArea.upper()
+    sMCC=sMCC.upper()
+    sCell=sCell.upper()
+
+    sLog = "Data to be processed:"
+    sLog = sLog + "\nMCC (Mobile Country Code): " + str(sMCC)
+    sLog = sLog + "\nMNC (Mobile Network Code): " + str(sMNC)
+    sLog = sLog + "\nArea (decimal): " + str(sArea)
+    sLog = sLog + "\nCell + Subcell (decimal): " + str(sCell)
+    
+    #print("loci_lociToHexa - sLog = " + str(sLog))
+    
+    sLoci = str_mid(sMCC, 1, 1)
+    sLoci = sLoci + str_mid(sMCC, 0, 1)
+    if len(sMNC) > 2:
+       sLoci = sLoci + str_mid(sMNC, 2, 1)
+    else:
+       sLoci = sLoci + "F"   
+    sLoci = sLoci + str_mid(sMCC, 2, 1)
+    sLoci = sLoci + str_mid(sMNC, 1, 1)
+    sLoci = sLoci + str_mid(sMNC, 0, 1)
+    
+    #print("loci_lociToHexa - sLoci = " + str(sLoci))
+    
+    sAreaHex = bytes_NroToHexa(sArea)   
+    sAreaHex = str_PaddingAddCharToTheRightByNro(4, sAreaHex, "0", True)
+    sLoci = sLoci + sAreaHex
+
+    #print("loci_lociToHexa - sLoci = " + str(sLoci))
+
+    sCellHex = bytes_NroToHexa(sCell)   
+    if len(sCellHex) < 4:
+        sCellHex = str_PaddingAddCharToTheRightByNro(4, sCellHex, "0", True)
+    else:
+        if len(sCellHex) < 8 and len(sCellHex) >= 7:
+           sCellHex = sCellHex + "F"
+        else:
+           sCellHex = sCellHex + str_RepeatString(8 - len(sCellHex), "0")   
+    
+    sLoci = sLoci + sCellHex
+
+    #print("loci_lociToHexa - sLoci = " + str(sLoci))
+    
+    sLog = sLog + "\nLOCI: 0x" + str_AddSpaceHexa(str(sLoci)) + " (" + str(sLoci) + ")"
+
+    if len(sLoci) % 2 != 0:
+       sLog = sLog + "\nWARNING LOCI length is not correct, it must be bytes, with even characters. Length: " + str(len(sLoci)) + " characters."
+       
+    #FOR TESTING:
+    #sMCC = 334
+    #sMNC = 20
+    #sArea = 534
+    #sCell = 40039425
+    #sCOTA = "COTA0506"
+    #sReturn = loci_lociToHexa(sMCC, sMNC, sArea, sCell, True) + " - COTA: '" + sCOTA + "' 0x" + bytes_StrToHexa(sCOTA)
+    #print("\nloci_lociToHexa - sReturn = \n" + str(sReturn))
+    #
+    #sMCC = 334
+    #sMNC = 20
+    #sArea = 12108
+    #sCell = 72625097
+    #sReturn = loci_lociToHexa(sMCC, sMNC, sArea, sCell, True) + " - COTA: '" + sCOTA + "' 0x" + bytes_StrToHexa(sCOTA)
+    #print("\nloci_lociToHexa - sReturn = \n" + str(sReturn))
+    #
+    #sMCC = 334
+    #sMNC = 20
+    #sArea = 321
+    #sCell = 6137
+    #sReturn = loci_lociToHexa(sMCC, sMNC, sArea, sCell, True) + " - COTA: '" + sCOTA + "' 0x" + bytes_StrToHexa(sCOTA)
+    #print("\nloci_lociToHexa - sReturn = " + str(sReturn))
+    #
+    #sMCC = 722
+    #sMNC = 310
+    #sArea = 321
+    #sCell = 6137
+    #sReturn = loci_lociToHexa(sMCC, sMNC, sArea, sCell, True) + " - COTA: '" + sCOTA + "' 0x" + bytes_StrToHexa(sCOTA)
+    #print("\nloci_lociToHexa - sReturn = " + str(sReturn))
+    #
+    #sMCC = 33
+    #sMNC = 2090
+    #sArea = 321
+    #sCell = 6137
+    #sReturn = loci_lociToHexa(sMCC, sMNC, sArea, sCell, True) + " - COTA: '" + sCOTA + "' 0x" + bytes_StrToHexa(sCOTA)
+    #print("\nloci_lociToHexa - sReturn = " + str(sReturn))
+    #
+    #sReturn = loci_lociFromHexa("33F402014117F90000", True)
+    #print("\nloci_lociFromHexa - sReturn = \n" + str(sReturn))
+	
+
+    if bDes:
+       return sLog
+    else:
+       return sLoci
 
 # loci_MCC_MNC_To_Hexa ----------------------------------------------------------------------------------------------------------
 # loci_MCC_MNC_From_Hexa ----------------------------------------------------------------------------------------------------------

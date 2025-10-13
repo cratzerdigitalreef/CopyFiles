@@ -3,16 +3,22 @@
 import sys
 import os
 
-import sys
-
 #PYQT IMPORTS
-#from PyQt5.QtWidgets import QApplication
-#from PyQt5.QtWidgets import QPushButton
-from PySide6.QtUiTools import QUiLoader
-from PySide6.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget, QLabel
-from PySide6.QtWidgets import QMessageBox, QTextEdit, QFileDialog, QTableView
+#from PySide6.QtUiTools import QUiLoader
+#from PySide6.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget, QLabel
+#from PySide6.QtWidgets import QMessageBox, QTextEdit, QFileDialog, QTableView
+#from PySide6.QtCore import QFile, QIODevice
 
-from PySide6.QtCore import QFile, QIODevice
+#from PyQt5.QtGui import QIcon
+#from PyQt5.QtWidgets import QMainWindow, QApplication, QFileDialog, QTableView, QHeaderView, QMessageBox, QProgressBar,QLineEdit
+#from PyQt5.uic import loadUi
+#from PyQt5.QtCore import Qt, QModelIndex, pyqtSignal, QThread, QPropertyAnimation, QAbstractTableModel
+
+#from PySide2.QtUiTools import QUiLoader
+from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget, QLabel
+from PyQt5.QtWidgets import QMessageBox, QTextEdit, QFileDialog, QTableView, QTableWidget, QTableWidgetItem
+from PyQt5.QtCore import QFile, QIODevice
+
 
 # from ..constants.general import color_dark_button, color_app_background_light, color_app_background_dark, \
 #     color_red_dark, color_green_dark
@@ -37,14 +43,13 @@ from customtkinter import CTkScrollbar
 from customtkinter import CTkCheckBox
 
 from pathlib import Path
-from str import *
-from pyqt import *
-from pyqt_tv import *
-from general import *
+from libs.str import *
+from libs.pyqt import *
+from libs.pyqt_grid import *
+from constants.general import *
 
 import sys
 
-from general import *
 from about import *
 
 class CopyFilesHomeScreen:
@@ -64,6 +69,8 @@ class CopyFilesHomeScreen:
         self.nSourceRows = 0
         self.nDestinationRows = 0
         self.nRowLen = 300
+        self.nColWidth = self.nRowLen
+        self.nColPath = 0
 
         ############################################################################
         # CHANGED these to 2‑tuples so each color can adapt in Light or Dark mode.
@@ -91,7 +98,6 @@ class CopyFilesHomeScreen:
         self.list_separa = sDef_Minus
         self.list_separaNroItem = sDef_list_separaNroItem
         
-        # Crear la interfaz de usuario
         self.app = QApplication(sys.argv) # Construct QApplication first
         self.ui_file_name = parent_directory + app_ui_file_name
         bReturn, self.window = pyqt_open_ui_file(self.ui_file_name)
@@ -181,23 +187,38 @@ class CopyFilesHomeScreen:
         #    ["Grape", 2.10, 200]
         #]
         #headers = ["Fruit", "Price ($)", "Quantity"]
-        data = []
+        #data = [[1], [2], [3]]
+        dataSource = []
+        dataDestination = []
         headers = ["Path"]
 
         # Create the model
-        self.modelSource = pyqtTableModel(data, headers)
-        self.modelDestination = pyqtTableModel(data, headers)
+        self.modelSource = pyqtTableModel(dataSource, headers)
+        self.modelDestination = pyqtTableModel(dataDestination, headers)
 
-        self.tv_source = self.window.findChild(QTableView, "tvSource") 
-        if self.tv_source: # Check if the object exists
-           #pyqt_TextEditable(self.txt_source, False)
-           self.tv_source.setModel(self.modelSource)
-           self.modelSource.setGridSelectionSingle(self.tv_source)
-           self.tv_source.doubleClicked.connect(self.tvGrid_on_cell_double_clicked_Source)
+        self.layout_tv_source = self.window.findChild(QVBoxLayout, "verticalLayoutSource") 
 
+        # setting table properties -------------------------------------------------------------------------------------
+        self.tv_source: QTableView = QTableView()
 
+        self.tv_source.setModel(self.modelSource)
+        self.layout_tv_source.addWidget(self.tv_source)
+        
+        header = self.tv_source.horizontalHeader()
+        self.tv_source.resizeRowsToContents()
+        self.tv_source.setWordWrap(True)
+        self.tv_source.setModel(self.modelSource)
+        self.tv_source.setColumnWidth(self.nColPath, self.nColWidth)
+        self.modelSource.setGridSelectionSingle(self.tv_source)
+        self.tv_source.doubleClicked.connect(self.tvGrid_on_cell_double_clicked_Source)
+
+        #---------------------------------------------------------------------------------------------------------
+        # TEXT TOTAL SOURCE
+        self.txt_total_source = self.window.findChild(QTextEdit, "txtTotalSource") 
+        if self.txt_total_source: # Check if the object exists
+           pyqt_TextEditableReadOnly(self.txt_total_source)
         else:
-            print(sErrorNotExist + "QTableView tvSource")   
+            print(sErrorNotExist + "QTextEdit txtTotalSource")   
 
         #---------------------------------------------------------------------------------------------------------
         # TEXT DESTINATION
@@ -205,22 +226,35 @@ class CopyFilesHomeScreen:
         #if self.txt_destination: # Check if the object exists
         #   pyqt_TextEdit(self.txt_destination, False)
 
-        self.tv_destination = self.window.findChild(QTableView, "tvDestination") 
-        if self.tv_destination: # Check if the object exists
-           #pyqt_TextEditable(self.txt_source, False)
-           self.tv_destination.setModel(self.modelDestination)
-           self.modelDestination.setGridSelectionSingle(self.tv_destination)
-           self.tv_destination.doubleClicked.connect(self.tvGrid_on_cell_double_clicked_Destination)
+        self.layout_tv_destination = self.window.findChild(QVBoxLayout, "verticalLayoutDestination") 
 
+        # setting table properties -------------------------------------------------------------------------------------
+        self.tv_destination: QTableView = QTableView()
 
+        self.tv_destination.setModel(self.modelDestination)
+        self.layout_tv_destination.addWidget(self.tv_destination)
+        
+        header = self.tv_destination.horizontalHeader()
+        self.tv_destination.resizeRowsToContents()
+        self.tv_destination.setWordWrap(True)
+        self.tv_destination.setModel(self.modelDestination)
+        self.tv_destination.setColumnWidth(self.nColPath, self.nColWidth)
+        self.modelSource.setGridSelectionSingle(self.tv_destination)
+        self.tv_destination.doubleClicked.connect(self.tvGrid_on_cell_double_clicked_Destination)
+
+        #---------------------------------------------------------------------------------------------------------
+        # TEXT TOTAL DESTINATION
+        self.txt_total_destination = self.window.findChild(QTextEdit, "txtTotalDestination") 
+        if self.txt_total_destination: # Check if the object exists
+           pyqt_TextEditableReadOnly(self.txt_total_destination)
         else:
-            print(sErrorNotExist + "QTableView tvDestination")   
+            print(sErrorNotExist + "QTextEdit txtTotalDestination")   
 
         #---------------------------------------------------------------------------------------------------------
         # TEXT ABOUT
         self.txt_about = self.window.findChild(QTextEdit, "txtAbout") 
         if self.txt_about: # Check if the object exists
-           pyqt_TextEditable(self.txt_about)
+           pyqt_TextEditableReadOnly(self.txt_about)
         else:
             print(sErrorNotExist + "QTextEdit txtAbout")   
 
@@ -228,7 +262,7 @@ class CopyFilesHomeScreen:
         # TEXT LOG
         self.txt_log = self.window.findChild(QTextEdit, "txtLog") 
         if self.txt_log: # Check if the object exists
-           pyqt_TextEditable(self.txt_log)
+           pyqt_TextEditableReadOnly(self.txt_log)
         else:
             print(sErrorNotExist + "QTextEdit txtLog")   
 
@@ -257,16 +291,7 @@ class CopyFilesHomeScreen:
 
     #---------------------------------------------------------------------------------------------------------
     def CmdSource_get(self):
-        lstFiles = self.openFilesDlg(True)
-        print("CmdSource_get - sFile = " + str(lstFiles))
-        #pyqt_TextBoxSetText(self.txt_source, sFile)
-
-        if len(lstFiles) > 0:
-           lstFiles[0] = "pepe"
-           self.nSourceRows = self.modelSource.addRow(lstFiles)
-           print("CmdSource_get - New rows = " + str(self.nSourceRows))
-           pyqt_tv_setColumnWidth(self.tv_source, self.nSourceRows - 1, self.nRowLen) 
-
+        self.CmdPathGet()
         return
 
     #---------------------------------------------------------------------------------------------------------
@@ -275,10 +300,43 @@ class CopyFilesHomeScreen:
 
     #---------------------------------------------------------------------------------------------------------
     def CmdDestination_get(self):
-        sFile = self.openFilesDlg(False)
-        #pyqt_TextBoxSetText(self.txt_destination, sFile)
-        return 
+        self.CmdPathGet(False)
+        return
     
+    def CmdPathGet(self, bSource=True):
+        lstFiles = self.openFilesDlg(True)
+        print("CmdPathGet - sFile = " + str(lstFiles))
+
+        if len(lstFiles) > 0:
+           n = 0
+           nRow = 0
+
+           while n < len(lstFiles):
+           
+                 if bSource:
+                    #elf.nSourceRows = self.modelSource.addRow(lstFiles)
+                    #yqt_grid_setColumnWidth(self.tv_source, self.nSourceRows - 1, self.nRowLen) 
+                    nRow = self.modelSource.addRow(lstFiles)
+                    #self.modelSource.update_table_single_row(lstFiles, self.tv_source)
+                    #self.tv_source.resizeRowsToContents()
+                    self.modelSource.setDataCell(self.nSourceRows-1, self.nColPath, lstFiles[n])
+                    #self.modelSource.addRow(lstFiles[n])
+                    self.tv_source.resizeRowsToContents() 
+                    print("CmdPathGet - Source - New rows = " + str(self.nSourceRows) + " - " + lstFiles[n])
+                    pyqt_TextBoxSetText(self.txt_total_source, "Total Rows: " + str(nRow))
+   
+                 else:
+                    nRow = self.modelDestination.addRow(lstFiles)
+                    self.modelDestination.setDataCell(self.nDestinationRows-1, self.nColPath, lstFiles[n])
+                    self.tv_destination.resizeRowsToContents() 
+                    
+                    print("CmdPathGet - Destination - New rows = " + str(self.nDestinationRows) + " - " + lstFiles[n])
+                    pyqt_TextBoxSetText(self.txt_total_destination, "Total Rows: " + str(nRow))
+
+                 n = n + 1
+
+
+
     #---------------------------------------------------------------------------------------------------------
     def CmdDestination_del(self):
         return
@@ -310,16 +368,16 @@ class CopyFilesHomeScreen:
     #---------------------------------------------------------------------------------------------------------
     def tvGrid_on_cell_double_clicked_Source(self, index):
 
-        row = index.row()
-        column = index.column()
+        #print("index = " + str(index))
 
+        row = index.row
+        col = index.column
+
+        print("row = " + str(row) + " - column = " + str(col))
         return self.tvGrid_on_cell_double_clicked(self.tv_source, index)
 
     #---------------------------------------------------------------------------------------------------------
     def tvGrid_on_cell_double_clicked_Destination(self, index):
-
-        row = index.row()
-        column = index.column()
 
         return self.tvGrid_on_cell_double_clicked(self.tv_destination, index)
 
@@ -327,24 +385,15 @@ class CopyFilesHomeScreen:
     def tvGrid_on_cell_double_clicked(self, tv, index):
             # Access the data using the model associated with the QTableView
         model = tv.model()
-        cell_data = model.data(index)
+        #cell_data = model.getData(row, col)
+        cell_data = model.getDataByIndex(index)
 
-        # You can then use 'cell_data' as needed, e.g., display it in a dialog
-        print(f"tvGrid_on_cell_double_clicked_Source - cell at Row: {row}, Column: {column}. Data: {cell_data}")
-        return
+        #row = index.row
+        #col = index.column
 
-    #---------------------------------------------------------------------------------------------------------
-    def tvGrid_on_cell_double_clicked_Destination(self, index):
+       #print("tvGrid_on_cell_double_clicked_Source - cell at Row: " + str(row) + " - col = " + str(col) + " - Data: " + str(cell_data))
+        print("tvGrid_on_cell_double_clicked_Source - Data: " + str(cell_data))
 
-        row = index.row()
-        column = index.column()
-
-        # Access the data using the model associated with the QTableView
-        model = self.modelDestination.model()
-        cell_data = model.data(index)
-
-        # You can then use 'cell_data' as needed, e.g., display it in a dialog
-        print(f"tvGrid_on_cell_double_clicked_Destination - cell at Row: {row}, Column: {column}. Data: {cell_data}")
         return
 
     #---------------------------------------------------------------------------------------------------------

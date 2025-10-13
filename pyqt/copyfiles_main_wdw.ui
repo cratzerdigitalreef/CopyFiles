@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>883</width>
-    <height>433</height>
+    <height>453</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -20,28 +20,15 @@
       <x>480</x>
       <y>30</y>
       <width>391</width>
-      <height>331</height>
+      <height>351</height>
      </rect>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="pbProcess_2">
-    <property name="geometry">
-     <rect>
-      <x>90</x>
-      <y>240</y>
-      <width>75</width>
-      <height>23</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Clean</string>
     </property>
    </widget>
    <widget class="QPushButton" name="pbProcess">
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>240</y>
+      <y>390</y>
       <width>75</width>
       <height>23</height>
      </rect>
@@ -53,8 +40,8 @@
    <widget class="QLabel" name="label">
     <property name="geometry">
      <rect>
-      <x>10</x>
-      <y>270</y>
+      <x>20</x>
+      <y>310</y>
       <width>47</width>
       <height>13</height>
      </rect>
@@ -79,8 +66,8 @@
    <widget class="QPushButton" name="CmdExit">
     <property name="geometry">
      <rect>
-      <x>800</x>
-      <y>370</y>
+      <x>790</x>
+      <y>390</y>
       <width>75</width>
       <height>23</height>
      </rect>
@@ -101,16 +88,6 @@
     <property name="title">
      <string>Source</string>
     </property>
-    <widget class="QTableView" name="tvSource">
-     <property name="geometry">
-      <rect>
-       <x>0</x>
-       <y>20</y>
-       <width>331</width>
-       <height>111</height>
-      </rect>
-     </property>
-    </widget>
     <widget class="QPushButton" name="pbSourceGet">
      <property name="geometry">
       <rect>
@@ -128,13 +105,37 @@
      <property name="geometry">
       <rect>
        <x>340</x>
-       <y>110</y>
+       <y>50</y>
        <width>111</width>
        <height>23</height>
       </rect>
      </property>
      <property name="text">
       <string>Source Remove</string>
+     </property>
+    </widget>
+    <widget class="QWidget" name="verticalLayoutWidget">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>20</y>
+       <width>321</width>
+       <height>111</height>
+      </rect>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayoutSource"/>
+    </widget>
+    <widget class="QTextEdit" name="txtTotalSource">
+     <property name="geometry">
+      <rect>
+       <x>340</x>
+       <y>80</y>
+       <width>111</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="inputMethodHints">
+      <set>Qt::ImhNone</set>
      </property>
     </widget>
    </widget>
@@ -150,16 +151,6 @@
     <property name="title">
      <string>Destination</string>
     </property>
-    <widget class="QTableView" name="tvDestination">
-     <property name="geometry">
-      <rect>
-       <x>0</x>
-       <y>20</y>
-       <width>331</width>
-       <height>111</height>
-      </rect>
-     </property>
-    </widget>
     <widget class="QPushButton" name="pbDestinationGet">
      <property name="geometry">
       <rect>
@@ -177,7 +168,7 @@
      <property name="geometry">
       <rect>
        <x>340</x>
-       <y>110</y>
+       <y>50</y>
        <width>111</width>
        <height>23</height>
       </rect>
@@ -186,12 +177,36 @@
       <string>Destination Remove</string>
      </property>
     </widget>
+    <widget class="QWidget" name="verticalLayoutWidget_2">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>20</y>
+       <width>321</width>
+       <height>111</height>
+      </rect>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayoutDestination"/>
+    </widget>
+    <widget class="QTextEdit" name="txtTotalDestination">
+     <property name="geometry">
+      <rect>
+       <x>340</x>
+       <y>80</y>
+       <width>111</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="inputMethodHints">
+      <set>Qt::ImhNone</set>
+     </property>
+    </widget>
    </widget>
    <widget class="QPushButton" name="pbClean">
     <property name="geometry">
      <rect>
-      <x>10</x>
-      <y>370</y>
+      <x>400</x>
+      <y>390</y>
       <width>75</width>
       <height>23</height>
      </rect>
@@ -204,9 +219,9 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>300</y>
+      <y>330</y>
       <width>461</width>
-      <height>61</height>
+      <height>51</height>
      </rect>
     </property>
    </widget>

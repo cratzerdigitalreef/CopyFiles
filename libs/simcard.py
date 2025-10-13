@@ -6861,7 +6861,7 @@ def simcard_GlobalPlatformGetData_FreeMemory_ProcessBeforeAndAfter(sProcess, sAp
     sDes = sDes + "\nBefore process '" + sProcess + "' there were = " + str_AddThousandToNumber(str(nFreeVolatileMemoryBefore)) + " bytes." 
     sDes = sDes + "\nAfter process '" + sProcess + "' there are = " + str_AddThousandToNumber(str(nFreeVolatileMemoryAfter)) + " bytes." 
 
-    #print("simcard_GlobalPlatformGetData_FreeMemory_ProcessBeforeAndAfter - sDes = " + str(sDes))
+    print("simcard_GlobalPlatformGetData_FreeMemory_ProcessBeforeAndAfter - sDes = " + str(sDes))
     
     return sDes    
 
@@ -7113,6 +7113,21 @@ def simcard_Clean9000(sResAndSW1SW2):
        sResAndSW1SW2 = str_left(sResAndSW1SW2, len(sResAndSW1SW2)-len(sSimcard_9000))
        
     return sResAndSW1SW2   
+
+# simcard_TerminalResponseCmdIsSendSMS ---------------------------------------------------------------------------------------------------------------------------------------------------------
+def simcard_TerminalResponseCmdIsSendSMS(sRes):
+    
+    #print("simcard_TerminalResponseCmdIsSendSMS - sRes = " + str(sRes))
+    
+    sRes = str_SpacesOut(sRes)
+    sRes = simcard_Clean9000(sRes)
+    
+    if sRes != "":
+       sCmd, sCmdQualif, sSent = simcard_StatusCommandALLResponses_TerminalResponseGetCmd(sRes)
+       if sCmd == simcard_STKCmdGetCmdSendSMS() and sCmdQualif == "00":
+          return True
+    
+    return False   
 
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------
 
