@@ -54,21 +54,12 @@ class pyqtTableModel(QAbstractTableModel):
         return ""
 
     #---------------------------------------------------------------------------------------------------------
-    def headerData(self, section, orientation, role=Qt.ItemDataRole.DisplayRole):
-        if role == Qt.ItemDataRole.DisplayRole:
-            if orientation == Qt.Orientation.Horizontal:
-                return self._headers[section]
-            elif orientation == Qt.Orientation.Vertical:
-                return str(section + 1) # Row numbers
-        return None
-    
-    #---------------------------------------------------------------------------------------------------------
     def addRow(self, new_row_data):
 
-        print("addRow - new_row_data = " + str(new_row_data))
+        #print("addRow - new_row_data = " + str(new_row_data))
 
         row_count = self.rowCount()
-        print("addRow - row_count = " + str(row_count))
+        #print("addRow - row_count = " + str(row_count))
 
         #self.beginResetModel()  # refresh data
         #if new_row_data and len(new_row_data) > 0:
@@ -114,7 +105,7 @@ class pyqtTableModel(QAbstractTableModel):
 
     #---------------------------------------------------------------------------------------------------------
     def validateRowCol(self, row, col):
-        print("validateRowCol - row = " + str(row) + " - col = " + str(col))
+        #print("validateRowCol - row = " + str(row) + " - col = " + str(col))
         if row >= 0 and row < self.rowCount() and col >= 0 and col < self.columnCount():
             return True
         else:
@@ -131,7 +122,7 @@ class pyqtTableModel(QAbstractTableModel):
                index.column = col
                #self._data[index.row()][index.column()] = str(salue)
                self._data[row][col] = str(value)
-               print("setDataCell = " + str(self._data))
+               #print("setDataCell = " + str(self._data))
                #self.dataChanged.emit(index, index, [role])
                # Emit dataChanged for the specific cell
                self.layoutChanged.emit()
@@ -149,7 +140,7 @@ class pyqtTableModel(QAbstractTableModel):
     #---------------------------------------------------------------------------------------------------------
     def update_table_single_row(self, row, tvGrid):
         self.beginResetModel()  # refresh data
-        print("row = " + str(row))
+        #print("row = " + str(row))
         self._data.append(row)  # Append new row
         self.endResetModel()
         #vGrid.resizeRowsToContents()  #

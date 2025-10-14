@@ -46,6 +46,7 @@ from pathlib import Path
 from libs.str import *
 from libs.pyqt import *
 from libs.pyqt_grid import *
+from libs.xml_utils import *
 from constants.general import *
 
 import sys
@@ -60,6 +61,27 @@ class CopyFilesHomeScreen:
         self.str_client = client
         self.status = "Success"
         self.is_error = False
+
+
+        #---------------------------------------------------------------------------------------
+        #FOR XML SAVING - LOADING DATA
+        current = os.path.dirname(os.path.realpath(__file__))
+        parent_directory = os.path.dirname(current)
+        self.sApp_Path = parent_directory
+
+        self.sApp_XML = sDef_App_XML
+
+        self.sApp_XML_PathAndFile = self.sApp_Path + "\\" + self.sApp_XML  
+        self.sApp_XML_Path = file_fNormalPathForWindowsLinux(self.sApp_Path)
+        if file_fFileIsExe():
+           self.sApp_XML_PathAndFile = os.path.join(sys._MEIPASS, self.sApp_XML)
+
+        self.sXML_APDU_VERSION = "APP_VERSION"
+        self.sXML_PATH_SOURCE = "XML_PATH_SOURCE_"
+        self.sXML_PATH_DESTINATION = "XML_PATH_DESTINATION_"
+
+        #print("self.sApp_XML_PathAndFile = " + str(self.sApp_XML_PathAndFile))
+        #---------------------------------------------------------------------------------------
 
         self.sLineMark = str_RepeatString(100, sDef_Asterisc) + "\n"
 
@@ -178,7 +200,7 @@ class CopyFilesHomeScreen:
             print(sErrorNotExist + "QPushButton pbClean")   
 
         #---------------------------------------------------------------------------------------------------------
-        # GRID SOURCE
+        # DATA MODEL
         # Sample data
         #data = [
         #    ["Apple", 1.20, 100],
@@ -192,15 +214,17 @@ class CopyFilesHomeScreen:
         dataDestination = []
         headers = ["Path"]
 
+        #---------------------------------------------------------------------------------------------------------
         # Create the model
         self.modelSource = pyqtTableModel(dataSource, headers)
         self.modelDestination = pyqtTableModel(dataDestination, headers)
 
+        #---------------------------------------------------------------------------------------------------------
+        # SOURCE GRID 
         self.layout_tv_source = self.window.findChild(QVBoxLayout, "verticalLayoutSource") 
 
         # setting table properties -------------------------------------------------------------------------------------
         self.tv_source: QTableView = QTableView()
-
         self.tv_source.setModel(self.modelSource)
         self.layout_tv_source.addWidget(self.tv_source)
         
@@ -221,16 +245,13 @@ class CopyFilesHomeScreen:
             print(sErrorNotExist + "QTextEdit txtTotalSource")   
 
         #---------------------------------------------------------------------------------------------------------
-        # TEXT DESTINATION
-        #self.txt_destination = self.window.findChild(QTableView, "tvDestination") 
-        #if self.txt_destination: # Check if the object exists
-        #   pyqt_TextEdit(self.txt_destination, False)
+        # DESTINATION GRID 
+        #---------------------------------------------------------------------------------------------------------
 
         self.layout_tv_destination = self.window.findChild(QVBoxLayout, "verticalLayoutDestination") 
 
         # setting table properties -------------------------------------------------------------------------------------
         self.tv_destination: QTableView = QTableView()
-
         self.tv_destination.setModel(self.modelDestination)
         self.layout_tv_destination.addWidget(self.tv_destination)
         
@@ -283,7 +304,7 @@ class CopyFilesHomeScreen:
         pyqt_TextBoxSetText(self.txt_about, sHeader + "\n" + sVersion)
 
         #GET XML DATA
-        self.xml(True)
+        self.xml_get()
 
         dateStart = datetime.now()
         today_f = dateStart.strftime(self.sdtFormat)
@@ -313,28 +334,31 @@ class CopyFilesHomeScreen:
 
            while n < len(lstFiles):
            
-                 if bSource:
-                    #elf.nSourceRows = self.modelSource.addRow(lstFiles)
-                    #yqt_grid_setColumnWidth(self.tv_source, self.nSourceRows - 1, self.nRowLen) 
-                    nRow = self.modelSource.addRow(lstFiles)
-                    #self.modelSource.update_table_single_row(lstFiles, self.tv_source)
-                    #self.tv_source.resizeRowsToContents()
-                    self.modelSource.setDataCell(self.nSourceRows-1, self.nColPath, lstFiles[n])
-                    #self.modelSource.addRow(lstFiles[n])
-                    self.tv_source.resizeRowsToContents() 
-                    print("CmdPathGet - Source - New rows = " + str(self.nSourceRows) + " - " + lstFiles[n])
-                    pyqt_TextBoxSetText(self.txt_total_source, "Total Rows: " + str(nRow))
-   
-                 else:
-                    nRow = self.modelDestination.addRow(lstFiles)
-                    self.modelDestination.setDataCell(self.nDestinationRows-1, self.nColPath, lstFiles[n])
-                    self.tv_destination.resizeRowsToContents() 
-                    
-                    print("CmdPathGet - Destination - New rows = " + str(self.nDestinationRows) + " - " + lstFiles[n])
-                    pyqt_TextBoxSetText(self.txt_total_destination, "Total Rows: " + str(nRow))
+                 self.grid_AddRow(str(lstFiles[n]), bSource)
 
                  n = n + 1
 
+        self.tvGrid_set_totals(bSource)
+        return
+
+
+    #---------------------------------------------------------------------------------------------------------
+    def grid_AddRow(self, sData, bSource=True):
+
+        lst = []
+        lst.append(sData)
+        if len(lst) > 0:
+           if bSource:
+              nRow = self.modelSource.addRow(lst)
+              self.modelSource.setDataCell(self.nSourceRows-1, self.nColPath, lst)
+              self.tv_source.resizeRowsToContents() 
+           else:
+              nRow = self.modelDestination.addRow(lst)
+              self.modelDestination.setDataCell(self.nDestinationRows-1, self.nColPath, lst)
+              self.tv_destination.resizeRowsToContents() 
+        
+        return nRow
+                           
 
 
     #---------------------------------------------------------------------------------------------------------
@@ -370,10 +394,9 @@ class CopyFilesHomeScreen:
 
         #print("index = " + str(index))
 
-        row = index.row
-        col = index.column
-
-        print("row = " + str(row) + " - column = " + str(col))
+        #row = index.row
+        #col = index.column
+        #print("row = " + str(row) + " - column = " + str(col))
         return self.tvGrid_on_cell_double_clicked(self.tv_source, index)
 
     #---------------------------------------------------------------------------------------------------------
@@ -397,25 +420,110 @@ class CopyFilesHomeScreen:
         return
 
     #---------------------------------------------------------------------------------------------------------
-    def save_ui_state(self):
+    def tvGrid_set_totals(self, bSource=True):
+        if bSource:
+            nCount = self.modelSource.rowCount()
+            sTotal = "Total: " + str(nCount)
+            pyqt_TextBoxSetText(self.txt_total_source, sTotal)
+        else:
+            nCount = self.modelDestination.rowCount()
+            sTotal = "Total: " + str(nCount)
+            pyqt_TextBoxSetText(self.txt_total_destination, sTotal)
 
-        #self.util.util_XML_Save_Default_Value(self.util.sXML_APDU, self.apdu_input_GetValue(True))
+        return nCount    
+
+    #---------------------------------------------------------------------------------------------------------
+    # XML SAVE AND GET
+    #---------------------------------------------------------------------------------------------------------
+    def xml_save(self):
+
+        #SOURCE 
+        nCountSource = self.modelSource.rowCount()
+        n = 0
+        while n < nCountSource:
+              sData = self.modelSource.getDataByRowCol(n, 0)
+              sHeader = self.sXML_PATH_SOURCE + str(n)
+              self.util_XML_Save_Default_Value(sHeader, sData)
+              n = n + 1
+
+        #DESTINATION
+        nCountDestination = self.modelDestination.rowCount()
+        n = 0
+        while n < nCountDestination:
+              sData = self.modelDestination.getDataByRowCol(n, 0)
+              sHeader = self.sXML_PATH_DESTINATION + str(n)
+              self.util_XML_Save_Default_Value(sHeader, sData)
+              n = n + 1
+
+        self.util_XML_Save_Default_Value(self.sXML_APDU_VERSION, app_ver + "_" + app_ver_date)
+
         return
 
     #---------------------------------------------------------------------------------------------------------
-    def xml(self, bSetVersion=False):
-    
-        #self.apdu_input.set(self.util.util_XML_Load_Default_Value(self.util.sXML_APDU, self.def_apdu))
-        #ctk_utils_TextBoxSet(self.apdu_many_txt, ctk_utils_CTkComboBoxGetData(self.apdu_input))
-        #self.show_description(self.sAPDUName, "")
-        
-        #self.tar_input.set(self.util.util_XML_Load_Default_Value(self.util.sXML_APDU_TAR, self.def_tar))
-        #self.tpda_input.set(self.util.util_XML_Load_Default_Value(self.util.sXML_APDU_TPDA, self.def_tpda))
-        #self.msl_input.set(self.util.util_XML_Load_Default_Value(self.util.sXML_APDU_MSL, self.def_msl))
-        #self.msl_kic_input.set(self.util.util_XML_Load_Default_Value(self.util.sXML_APDU_MSL_KIC, self.def_msl_kic))
-        #self.msl_kid_input.set(self.util.util_XML_Load_Default_Value(self.util.sXML_APDU_MSL_KID, self.def_msl_kid))
-        #self.MSL_CounterSet(self.util.util_XML_Load_Default_Value(self.util.sXML_APDU_MSL_COUNTER, self.def_msl_count))
+    def xml_get(self):
+
+        #SOURCE 
+        self.xml_get_grid(True)
+                     
+        #DESTINATION
+        self.xml_get_grid(False)
+
         return
+
+    #---------------------------------------------------------------------------------------------------------
+    def xml_get_grid(self, bSource=True):
+
+        bOut = False
+        n = 0
+        while not bOut and n < 100:
+              if bSource:
+                 sHeader = self.sXML_PATH_SOURCE + str(n)
+              else:
+                 sHeader = self.sXML_PATH_DESTINATION + str(n)
+                     
+              sData = self.util_XML_Load_Default_Value(sHeader, "")
+              if sData == "":
+                 bOut = True
+              else:
+                 self.grid_AddRow(sData, bSource)
+              n = n + 1
+
+        self.tvGrid_set_totals(bSource)
+
+    #---------------------------------------------------------------------------------------------------------
+    def util_XML_Load_Default_Value(self, sTag, sDefault):
+        success, data, _ = xml_utils_get_nodes(self.sApp_XML_PathAndFile, sTag)
+        
+        if success and len(data) > 0:
+           return data[0].get("value", "")
+        else:   
+           return sDefault
+
+    #---------------------------------------------------------------------------------------------------------
+    def util_XML_Save_Default_Value(self, sTag, sValue):
+        if not os.path.exists(self.sApp_XML_PathAndFile):
+        
+            bReturn, xml_pretty, xml_path =  xml_utils_create_file(
+                                                                 header_name=app_name,
+                                                                 header_attrs={"Description": app_name_des},
+                                                                 child_node_name=sTag,
+                                                                 child_nodes_data=[{"value": sValue}],
+                                                                 dir_path=os.path.dirname(self.sApp_XML_PathAndFile),
+                                                                 name=os.path.basename(self.sApp_XML_PathAndFile)
+                                                                 )
+        else:   
+            bReturn, xml_pretty, xml_path =  xml_utils_replace_node(self.sApp_XML_PathAndFile, sTag, sValue)
+
+        sPrint = ""
+        if bReturn:
+           sPrint = sPrint + "[XML SAVED SUCCESSFULLY] TAG = " + str(sTag) + " - VALUE = " + str(sValue)
+        else:
+           sPrint = sPrint + "[XML NOT SAVED] ERROR = " + str(xml_pretty)
+        
+        sPrint = sPrint + ". XML Path and File Name: [" + str(self.sApp_XML_PathAndFile) + "]"   
+        print(sPrint)
+           
+        return bReturn
 
     #---------------------------------------------------------------------------------------------------------
     def CmdExit(self):
@@ -442,7 +550,7 @@ class CopyFilesHomeScreen:
         today_f = dateStart.strftime(self.sdtFormat)
         print(self.sdtString + "\n" + "Finished APP '" + self.str_client + "' at: " + today_f + "\n" + self.sdtString + "\n")
 
-        self.save_ui_state()
+        self.xml_save()
         self.window.destroy()
         sys.exit(0)
 

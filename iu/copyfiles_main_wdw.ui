@@ -98,7 +98,7 @@
       </rect>
      </property>
      <property name="text">
-      <string>Source Get</string>
+      <string>Add Source Dir</string>
      </property>
     </widget>
     <widget class="QPushButton" name="pbSourceRemove">
@@ -111,7 +111,7 @@
       </rect>
      </property>
      <property name="text">
-      <string>Source Remove</string>
+      <string>Del Selected Row</string>
      </property>
     </widget>
     <widget class="QWidget" name="verticalLayoutWidget">
@@ -161,7 +161,7 @@
       </rect>
      </property>
      <property name="text">
-      <string>Destination Get</string>
+      <string>Add Destination Dir</string>
      </property>
     </widget>
     <widget class="QPushButton" name="pbDestinationRemove">
@@ -174,7 +174,7 @@
       </rect>
      </property>
      <property name="text">
-      <string>Destination Remove</string>
+      <string>Del Selected Row</string>
      </property>
     </widget>
     <widget class="QWidget" name="verticalLayoutWidget_2">
@@ -205,8 +205,8 @@
    <widget class="QPushButton" name="pbClean">
     <property name="geometry">
      <rect>
-      <x>400</x>
-      <y>390</y>
+      <x>390</x>
+      <y>300</y>
       <width>75</width>
       <height>23</height>
      </rect>
