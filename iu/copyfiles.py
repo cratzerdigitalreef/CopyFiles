@@ -48,6 +48,7 @@ from libs.pyqt import *
 from libs.pyqt_grid import *
 from libs.xml_utils import *
 from constants.general import *
+from libs.log import *
 
 import sys
 
@@ -76,12 +77,23 @@ class CopyFilesHomeScreen:
         if file_fFileIsExe():
            self.sApp_XML_PathAndFile = os.path.join(sys._MEIPASS, self.sApp_XML)
 
+        self.sXML_PATH_DEFAULT_SOURCE = "APP_PATH_DEFAULT_SOURCE"
+        self.sXML_PATH_DEFAULT_DESTINATION = "APP_PATH_DEFAULT_DESTINATION"
         self.sXML_APDU_VERSION = "APP_VERSION"
         self.sXML_PATH_SOURCE = "XML_PATH_SOURCE_"
         self.sXML_PATH_DESTINATION = "XML_PATH_DESTINATION_"
+        self.sXML_PATH_SOURCE_TOTAL = "XML_PATH_SOURCE_TOTAL"
+        self.sXML_PATH_DESTINATION_TOTAL = "XML_PATH_DESTINATION_TOTAL"
 
         #print("self.sApp_XML_PathAndFile = " + str(self.sApp_XML_PathAndFile))
         #---------------------------------------------------------------------------------------
+
+        self.sPathSource = self.sApp_Path
+        self.sPathDestination = self.sApp_Path
+        self.nPathSourceTotal = 0
+        self.nPathDestinationTotal = 0
+        self.sPathSourceTotal = str(self.nPathSourceTotal)
+        self.sPathDestinationTotal = str(self.nPathDestinationTotal)
 
         self.sLineMark = str_RepeatString(100, sDef_Asterisc) + "\n"
 
@@ -133,9 +145,6 @@ class CopyFilesHomeScreen:
         print(f"Height: {self.nWindowHeight}")
         self.create_widgets()
 
-        self.sPathSource = parent_directory
-        self.sPathDestination = parent_directory
-        
         self.window.show()
         
         sys.exit(self.app.exec()) # Start the event loop 
@@ -334,7 +343,14 @@ class CopyFilesHomeScreen:
 
            while n < len(lstFiles):
            
-                 self.grid_AddRow(str(lstFiles[n]), bSource)
+                 if bSource:
+                    nCount = self.modelSource.rowCount()
+                 else:
+                    nCount = self.modelDestination.rowCount()
+                        
+                 nRow = self.grid_AddRow(str(lstFiles[n]), bSource, True)
+                 if nRow <= nCount:
+                     log_writeWordsInColorYellow("WARNING!!! Data '" + str(lstFiles[n]) + "' already exists in Row = " + str(nRow))
 
                  n = n + 1
 
@@ -343,20 +359,31 @@ class CopyFilesHomeScreen:
 
 
     #---------------------------------------------------------------------------------------------------------
-    def grid_AddRow(self, sData, bSource=True):
+    def grid_AddRow(self, sData, bSource=True, bValidateExists=True):
 
         lst = []
         lst.append(sData)
+        nRow = -1
+
         if len(lst) > 0:
            if bSource:
-              nRow = self.modelSource.addRow(lst)
-              self.modelSource.setDataCell(self.nSourceRows-1, self.nColPath, lst)
-              self.tv_source.resizeRowsToContents() 
+              if bValidateExists:
+                 nRow = self.modelSource.getRowByData(0, sData)
+
+              if nRow == -1:
+                 nRow = self.modelSource.addRow(lst)
+                 self.modelSource.setDataCell(self.nSourceRows-1, self.nColPath, lst)
+                 self.tv_source.resizeRowsToContents() 
            else:
-              nRow = self.modelDestination.addRow(lst)
-              self.modelDestination.setDataCell(self.nDestinationRows-1, self.nColPath, lst)
-              self.tv_destination.resizeRowsToContents() 
+              if bValidateExists:
+                 nRow = self.modelDestination.getRowByData(0, sData)
+
+              if nRow == -1:
+                 nRow = self.modelDestination.addRow(lst)
+                 self.modelDestination.setDataCell(self.nDestinationRows-1, self.nColPath, lst)
+                 self.tv_destination.resizeRowsToContents() 
         
+        #print("grid_AddRow - nRow = " + str(nRow))
         return nRow
                            
 
@@ -372,6 +399,14 @@ class CopyFilesHomeScreen:
 
     #---------------------------------------------------------------------------------------------------------
     def CmdClean(self):
+
+        self.modelSource.clean_table(self.tv_source)
+        self.modelDestination.clean_table(self.tv_destination)
+        self.tvGrid_set_totals(True)
+        self.tvGrid_set_totals(False)
+
+        pyqt_TextBoxSetText(self.txt_log, "")
+
         return 
 
     #---------------------------------------------------------------------------------------------------------
@@ -383,6 +418,7 @@ class CopyFilesHomeScreen:
            sTitle = "Destination"
            sPath = self.sPathDestination
 
+        print("openFilesDlg - sPath = " + str(sPath))
         lstFiles = pyqt_OpenFileDlgDirOnly(self.window, app_name_des + " - " + sTitle, sPath, "", True)
 
         #print("openFilesDlg = " + str(lstFiles))
@@ -437,36 +473,58 @@ class CopyFilesHomeScreen:
     #---------------------------------------------------------------------------------------------------------
     def xml_save(self):
 
+        #APP REFERENCE
+        xml_Save_Default_Value(self.sApp_XML_PathAndFile, self.sXML_APDU_VERSION, app_ver + "_" + app_ver_date, app_name, app_name_des)
+
         #SOURCE 
         nCountSource = self.modelSource.rowCount()
+        xml_Save_Default_Value(self.sApp_XML_PathAndFile, self.sXML_PATH_SOURCE_TOTAL, str(nCountSource))
+        self.sPathSource  = self.sApp_Path 
         n = 0
         while n < nCountSource:
               sData = self.modelSource.getDataByRowCol(n, 0)
               sHeader = self.sXML_PATH_SOURCE + str(n)
-              self.util_XML_Save_Default_Value(sHeader, sData)
+              xml_Save_Default_Value(self.sApp_XML_PathAndFile, sHeader, sData)
+              self.sPathSource = sData
               n = n + 1
 
         #DESTINATION
         nCountDestination = self.modelDestination.rowCount()
+        xml_Save_Default_Value(self.sApp_XML_PathAndFile, self.sXML_PATH_DESTINATION_TOTAL, str(nCountDestination))
+        self.sPathDestination  = self.sApp_Path 
         n = 0
         while n < nCountDestination:
               sData = self.modelDestination.getDataByRowCol(n, 0)
               sHeader = self.sXML_PATH_DESTINATION + str(n)
-              self.util_XML_Save_Default_Value(sHeader, sData)
+              xml_Save_Default_Value(self.sApp_XML_PathAndFile, sHeader, sData)
+              self.sPathDestination = sData
               n = n + 1
 
-        self.util_XML_Save_Default_Value(self.sXML_APDU_VERSION, app_ver + "_" + app_ver_date)
+        #APP LAST PATH USED - SOURCE
+        xml_Save_Default_Value(self.sApp_XML_PathAndFile, self.sXML_PATH_DEFAULT_SOURCE, self.sPathSource )
+        #APP LAST PATH USED - DESTINATION
+        xml_Save_Default_Value(self.sApp_XML_PathAndFile, self.sXML_PATH_DEFAULT_DESTINATION, self.sPathDestination )
 
         return
 
     #---------------------------------------------------------------------------------------------------------
     def xml_get(self):
 
-        #SOURCE 
+        #SOURCE TOTALS
+        self.nPathSourceTotal = 0 
+        self.sPathSourceTotal = xml_Load_Default_Value(self.sApp_XML_PathAndFile, self.sXML_PATH_SOURCE_TOTAL, str(self.nPathSourceTotal))
+        #DESTINATION TOTALS
+        self.nPathDestinationTotal = 0 
+        self.sPathDestinationTotal = xml_Load_Default_Value(self.sApp_XML_PathAndFile, self.sXML_PATH_SOURCE_TOTAL, str(self.nPathDestinationTotal))
+                                        
         self.xml_get_grid(True)
                      
         #DESTINATION
         self.xml_get_grid(False)
+
+        #GET LAST PATHS
+        self.sPathSource = xml_Load_Default_Value(self.sApp_XML_PathAndFile, self.sXML_PATH_DEFAULT_SOURCE, self.sApp_Path)
+        self.sPathDestination = xml_Load_Default_Value(self.sApp_XML_PathAndFile, self.sXML_PATH_DEFAULT_DESTINATION, self.sApp_Path)
 
         return
 
@@ -481,49 +539,14 @@ class CopyFilesHomeScreen:
               else:
                  sHeader = self.sXML_PATH_DESTINATION + str(n)
                      
-              sData = self.util_XML_Load_Default_Value(sHeader, "")
+              sData = xml_Load_Default_Value(self.sApp_XML_PathAndFile, sHeader, "")
               if sData == "":
                  bOut = True
               else:
-                 self.grid_AddRow(sData, bSource)
+                 self.grid_AddRow(sData, bSource, False)
               n = n + 1
 
         self.tvGrid_set_totals(bSource)
-
-    #---------------------------------------------------------------------------------------------------------
-    def util_XML_Load_Default_Value(self, sTag, sDefault):
-        success, data, _ = xml_utils_get_nodes(self.sApp_XML_PathAndFile, sTag)
-        
-        if success and len(data) > 0:
-           return data[0].get("value", "")
-        else:   
-           return sDefault
-
-    #---------------------------------------------------------------------------------------------------------
-    def util_XML_Save_Default_Value(self, sTag, sValue):
-        if not os.path.exists(self.sApp_XML_PathAndFile):
-        
-            bReturn, xml_pretty, xml_path =  xml_utils_create_file(
-                                                                 header_name=app_name,
-                                                                 header_attrs={"Description": app_name_des},
-                                                                 child_node_name=sTag,
-                                                                 child_nodes_data=[{"value": sValue}],
-                                                                 dir_path=os.path.dirname(self.sApp_XML_PathAndFile),
-                                                                 name=os.path.basename(self.sApp_XML_PathAndFile)
-                                                                 )
-        else:   
-            bReturn, xml_pretty, xml_path =  xml_utils_replace_node(self.sApp_XML_PathAndFile, sTag, sValue)
-
-        sPrint = ""
-        if bReturn:
-           sPrint = sPrint + "[XML SAVED SUCCESSFULLY] TAG = " + str(sTag) + " - VALUE = " + str(sValue)
-        else:
-           sPrint = sPrint + "[XML NOT SAVED] ERROR = " + str(xml_pretty)
-        
-        sPrint = sPrint + ". XML Path and File Name: [" + str(self.sApp_XML_PathAndFile) + "]"   
-        print(sPrint)
-           
-        return bReturn
 
     #---------------------------------------------------------------------------------------------------------
     def CmdExit(self):

@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>883</width>
+    <width>1106</width>
     <height>453</height>
    </rect>
   </property>
@@ -17,9 +17,9 @@
    <widget class="QTextEdit" name="txtLog">
     <property name="geometry">
      <rect>
-      <x>480</x>
+      <x>590</x>
       <y>30</y>
-      <width>391</width>
+      <width>501</width>
       <height>351</height>
      </rect>
     </property>
@@ -40,8 +40,8 @@
    <widget class="QLabel" name="label">
     <property name="geometry">
      <rect>
-      <x>20</x>
-      <y>310</y>
+      <x>10</x>
+      <y>320</y>
       <width>47</width>
       <height>13</height>
      </rect>
@@ -53,8 +53,8 @@
    <widget class="QLabel" name="label_4">
     <property name="geometry">
      <rect>
-      <x>470</x>
-      <y>0</y>
+      <x>590</x>
+      <y>10</y>
       <width>171</width>
       <height>16</height>
      </rect>
@@ -66,8 +66,8 @@
    <widget class="QPushButton" name="CmdExit">
     <property name="geometry">
      <rect>
-      <x>790</x>
-      <y>390</y>
+      <x>1020</x>
+      <y>380</y>
       <width>75</width>
       <height>23</height>
      </rect>
@@ -81,7 +81,7 @@
      <rect>
       <x>10</x>
       <y>10</y>
-      <width>461</width>
+      <width>571</width>
       <height>141</height>
      </rect>
     </property>
@@ -91,7 +91,7 @@
     <widget class="QPushButton" name="pbSourceGet">
      <property name="geometry">
       <rect>
-       <x>340</x>
+       <x>450</x>
        <y>20</y>
        <width>111</width>
        <height>23</height>
@@ -104,7 +104,7 @@
     <widget class="QPushButton" name="pbSourceRemove">
      <property name="geometry">
       <rect>
-       <x>340</x>
+       <x>450</x>
        <y>50</y>
        <width>111</width>
        <height>23</height>
@@ -119,7 +119,7 @@
       <rect>
        <x>10</x>
        <y>20</y>
-       <width>321</width>
+       <width>431</width>
        <height>111</height>
       </rect>
      </property>
@@ -128,10 +128,10 @@
     <widget class="QTextEdit" name="txtTotalSource">
      <property name="geometry">
       <rect>
-       <x>340</x>
+       <x>450</x>
        <y>80</y>
        <width>111</width>
-       <height>21</height>
+       <height>31</height>
       </rect>
      </property>
      <property name="inputMethodHints">
@@ -144,7 +144,7 @@
      <rect>
       <x>10</x>
       <y>160</y>
-      <width>461</width>
+      <width>571</width>
       <height>141</height>
      </rect>
     </property>
@@ -154,8 +154,8 @@
     <widget class="QPushButton" name="pbDestinationGet">
      <property name="geometry">
       <rect>
-       <x>340</x>
-       <y>20</y>
+       <x>450</x>
+       <y>10</y>
        <width>111</width>
        <height>23</height>
       </rect>
@@ -167,8 +167,8 @@
     <widget class="QPushButton" name="pbDestinationRemove">
      <property name="geometry">
       <rect>
-       <x>340</x>
-       <y>50</y>
+       <x>450</x>
+       <y>40</y>
        <width>111</width>
        <height>23</height>
       </rect>
@@ -182,7 +182,7 @@
       <rect>
        <x>10</x>
        <y>20</y>
-       <width>321</width>
+       <width>431</width>
        <height>111</height>
       </rect>
      </property>
@@ -191,10 +191,10 @@
     <widget class="QTextEdit" name="txtTotalDestination">
      <property name="geometry">
       <rect>
-       <x>340</x>
-       <y>80</y>
+       <x>450</x>
+       <y>70</y>
        <width>111</width>
-       <height>21</height>
+       <height>31</height>
       </rect>
      </property>
      <property name="inputMethodHints">
@@ -205,7 +205,7 @@
    <widget class="QPushButton" name="pbClean">
     <property name="geometry">
      <rect>
-      <x>390</x>
+      <x>500</x>
       <y>300</y>
       <width>75</width>
       <height>23</height>
@@ -219,9 +219,9 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>330</y>
-      <width>461</width>
-      <height>51</height>
+      <y>340</y>
+      <width>571</width>
+      <height>41</height>
      </rect>
     </property>
    </widget>
@@ -231,7 +231,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>883</width>
+     <width>1106</width>
      <height>21</height>
     </rect>
    </property>

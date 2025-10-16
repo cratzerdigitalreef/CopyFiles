@@ -143,6 +143,8 @@ def pyqt_OpenFileDlg(parent, sTitle, sPath, sFilters="All Files (*)", bDirOnly=F
     sFiltersDefault = str(lstFiltes[0])
 
     #print("pyqt_OpenFileDlg - sFilters = " + str(sFilters) + " - bDirOnly = " + str(bDirOnly) + " - bMoreFiles = " + str(bMoreFiles))
+    #print("pyqt_OpenFileDlg - sPath = " + str(sPath))
+
     option = 0
     if bDirOnly:
        option = QFileDialog.Option.ShowDirsOnly

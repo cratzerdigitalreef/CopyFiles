@@ -104,6 +104,20 @@ class pyqtTableModel(QAbstractTableModel):
         return -1
 
     #---------------------------------------------------------------------------------------------------------
+    def getRowByData(self, nCol, sData):
+
+        nMax = self.rowCount()
+
+        n = 0
+        while n < nMax:
+              sDataCol = self.getDataByRowCol(n, nCol)
+              if sData == sDataCol:
+                 return n
+              n = n + 1
+
+        return -1
+
+    #---------------------------------------------------------------------------------------------------------
     def validateRowCol(self, row, col):
         #print("validateRowCol - row = " + str(row) + " - col = " + str(col))
         if row >= 0 and row < self.rowCount() and col >= 0 and col < self.columnCount():

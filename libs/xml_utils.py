@@ -310,3 +310,44 @@ def xml_utils_replace_node(xml_path_with_file_name: str, node_name: str, value: 
 
     except Exception as e:
         return False, f"Error updating XML: {str(e)}", ""
+
+#---------------------------------------------------------------------------------------------------------
+def xml_Load_Default_Value(sXMLPathAndFile, sTag, sDefault=""):
+    success, data, _ = xml_utils_get_nodes(sXMLPathAndFile, sTag)
+        
+    if success and len(data) > 0:
+       return data[0].get("value", "")
+    else:   
+       return sDefault
+
+#---------------------------------------------------------------------------------------------------------
+def xml_Save_Default_Value(sXMLPathAndFile, sTag, sValue, sAppName="App", sAppNameDes=""):
+    
+    if sXMLPathAndFile == "":
+        return False
+    
+    bReturn = True
+
+    if not os.path.exists(sXMLPathAndFile):
+        
+        bReturn, xml_pretty, xml_path =  xml_utils_create_file(
+                                                              header_name=sAppName,
+                                                              header_attrs={"Description": sAppNameDes},
+                                                              child_node_name=sTag,
+                                                              child_nodes_data=[{"value": sValue}],
+                                                              dir_path=os.path.dirname(sXMLPathAndFile),
+                                                              name=os.path.basename(sXMLPathAndFile)
+                                                              )
+    else:   
+        bReturn, xml_pretty, xml_path =  xml_utils_replace_node(sXMLPathAndFile, sTag, sValue)
+
+    sPrint = ""
+    if bReturn:
+       sPrint = sPrint + "[XML SAVED SUCCESSFULLY] TAG = " + str(sTag) + " - VALUE = " + str(sValue)
+    else:
+        sPrint = sPrint + "[XML NOT SAVED] ERROR = " + str(xml_pretty)
+        
+    sPrint = sPrint + ". XML Path and File Name: [" + str(sXMLPathAndFile) + "]"   
+    print(sPrint)
+           
+    return bReturn
