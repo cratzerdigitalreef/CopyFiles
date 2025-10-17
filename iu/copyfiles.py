@@ -28,10 +28,10 @@ parent_directory = os.path.dirname(current)
 sys.path.append(current)
 sys.path.append(parent_directory+"/libs")
 sys.path.append(parent_directory+"/constants")
+sys.path.append(parent_directory+"/proc")
 sys.path.append(parent_directory+"/iu")
 
 import customtkinter as ctk
-import threading
 
 ################################################################################
 # ADDED: Make the app follow the system’s light/dark settings:
@@ -48,11 +48,10 @@ from libs.pyqt import *
 from libs.pyqt_grid import *
 from libs.xml_utils import *
 from constants.general import *
+from proc.process import *
 from libs.log import *
 
 import sys
-
-from about import *
 
 class CopyFilesHomeScreen:
 
@@ -400,7 +399,7 @@ class CopyFilesHomeScreen:
                  nRow = self.modelSource.addRow(lst)
                  self.modelSource.setDataCell(self.nSourceRows-1, self.nColPath, lst)
                  self.tv_source.resizeRowsToContents() 
-                 self.nRowCurrentSource = nRow
+                 self.nRowCurrentSource = nRow - 1
                  self.tv_source.selectRow(nRow)
            else:
               if bValidateExists:
@@ -410,7 +409,7 @@ class CopyFilesHomeScreen:
                  nRow = self.modelDestination.addRow(lst)
                  self.modelDestination.setDataCell(self.nDestinationRows-1, self.nColPath, lst)
                  self.tv_destination.resizeRowsToContents() 
-                 self.nRowCurrentDestination = nRow
+                 self.nRowCurrentDestination = nRow - 1
                  self.tv_destination.selectRow(nRow)
         
         #print("grid_AddRow - nRow = " + str(nRow))
@@ -442,7 +441,7 @@ class CopyFilesHomeScreen:
         bResult = False
         #print("Cmd_del - nRow = " + str(nRow))
 
-        if nRow >= 0:
+        if nRow >= 0 and sData != "":
             sMsg = "Are you sure you need to delete '" + sTVDes + "' row: " + str(nRow) + " ?"
             sMsg += "\nData: " + sData
 
@@ -459,18 +458,27 @@ class CopyFilesHomeScreen:
             else:
                 bResult = self.modelDestination.delRowByRow(nRow)
                 if bResult:
-                   self.nRowCurrentSource = self.nRowCurrentDestination - 1
+                   self.nRowCurrentDestination = self.nRowCurrentDestination - 1
                     
             self.tvGrid_set_totals(bSource)   
 
         else:
-            pyqt_MsgBox_Error("Delete Row", "No row selected for " + sTVDes)
+            pyqt_MsgBox_Error("Delete Row", "No row selected for " + sTVDes + ". Row: " + str(nRow) + " - Data: " + str(sData))
 
         return bResult    
 
     #---------------------------------------------------------------------------------------------------------
     def CmdProcess(self):
-        return 
+
+        lstSource = self.modelSource.getALLDataByCol(self.nColPath)
+        lstDestination = self.modelDestination.getALLDataByCol(self.nColPath)
+        bResult, sError = process_CopyFiles(self.log_file, lstSource, lstDestination)
+
+        if not bResult:   
+           log_writeWordsInColorYellow(sError)
+           pyqt_MsgBox_Warning("Process", sError)
+
+        return bResult
 
     #---------------------------------------------------------------------------------------------------------
     def CmdClean(self):

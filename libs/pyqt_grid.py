@@ -33,6 +33,22 @@ class pyqtTableModel(QAbstractTableModel):
         return len(self._headers)
 
     #---------------------------------------------------------------------------------------------------------
+    def getALLDataByCol(self, col):
+
+        lst = []
+
+        if col >= 0 and col < self.columnCount():
+           nMax = self.rowCount() 
+
+           n = 0
+           while n < nMax:
+                 sData = self.getDataByRowCol(n, col)
+                 lst.append(sData)
+                 n = n + 1
+
+        return lst
+
+    #---------------------------------------------------------------------------------------------------------
     def getDataByRowCol(self, row, col, role=Qt.ItemDataRole.DisplayRole):
 
         if self.validateRowCol(row, col):
