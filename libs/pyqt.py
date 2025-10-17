@@ -228,7 +228,7 @@ def pyqt_OpenFileDlg(parent, sTitle, sPath, sFilters="All Files (*)", bDirOnly=F
     
 #---------------------------------------------------------------------------------------------------------
 def pyqt_MsgBoxOk(parent, sHeader, sText):
-    return pyqt_MsgBox(parent, sHeader, sText)
+    return pyqt_MsgBoxQuestion(parent, sHeader, sText)
 
 #---------------------------------------------------------------------------------------------------------
 def pyqt_MsgBoxYesNo(parent, sHeader, sText, bDefaultYes=True):
@@ -236,7 +236,17 @@ def pyqt_MsgBoxYesNo(parent, sHeader, sText, bDefaultYes=True):
     if not bDefaultYes:
        bDef = QMessageBox.No
 
-    return pyqt_MsgBox(parent, sHeader, sText, QMessageBox.Yes | QMessageBox.No, bDef)
+    tReturn = pyqt_MsgBoxQuestion(parent, sHeader, sText, QMessageBox.Yes | QMessageBox.No, bDef)
+
+    #print("pyqt_MsgBoxYesNo - tReturn = " + str(tReturn))
+
+    sReturn = "Yes"
+    bReturn = True
+    if tReturn == QMessageBox.StandardButton.No:
+        sReturn = "No"
+        bReturn = False
+    
+    return sReturn, bReturn
 
 #---------------------------------------------------------------------------------------------------------
 def pyqt_MsgBoxOkCancel(parent, sHeader, sText, bDefaultOk=True):
@@ -244,7 +254,15 @@ def pyqt_MsgBoxOkCancel(parent, sHeader, sText, bDefaultOk=True):
     if not bDefaultOk:
        bDef = QMessageBox.Cancel
 
-    return pyqt_MsgBox(parent, sHeader, sText, QMessageBox.Ok | QMessageBox.Cancel, bDef)
+    tReturn = pyqt_MsgBoxQuestion(parent, sHeader, sText, QMessageBox.Ok | QMessageBox.Cancel, bDef)
+
+    sReturn = "Ok"
+    bReturn = True
+    if tReturn == QMessageBox.StandardButton.Cancel:
+        sReturn = "Cancel"
+        bReturn = False
+    
+    return sReturn, bReturn
 
 #---------------------------------------------------------------------------------------------------------
 def pyqt_MsgBoxAbortRetryIgnore(parent, sHeader, sText, bDefaultAbort, bDefaultRetry, bDefaultIgnore):
@@ -254,16 +272,24 @@ def pyqt_MsgBoxAbortRetryIgnore(parent, sHeader, sText, bDefaultAbort, bDefaultR
     if not bDefaultIgnore:
        bDef = QMessageBox.Ignore
 
-    return pyqt_MsgBox(parent, sHeader, sText, QMessageBox.Abort | QMessageBox.Retry | QMessageBox.Ignore, bDef)
+    tReturn = pyqt_MsgBoxQuestion(parent, sHeader, sText, QMessageBox.Abort | QMessageBox.Retry | QMessageBox.Ignore, bDef)
+
+    sReturn = "Abort"
+    if tReturn == QMessageBox.StandardButton.Retry:
+        sReturn = "Retry"
+    if tReturn == QMessageBox.StandardButton.Ignore:
+        sReturn =  "Ignore"
+    
+    return sReturn
 
 #---------------------------------------------------------------------------------------------------------
-def pyqt_MsgBox(parent, sHeader, sText, btns=QMessageBox.Ok, btnDefault=QMessageBox.Ok):
+def pyqt_MsgBoxQuestion(parent, sHeader, sText, btns=QMessageBox.Ok, btnDefault=QMessageBox.StandardButton.Ok):
     #https://www.tutorialspoint.com/pyqt/pyqt_qmessagebox.htm
     if not btns:
-       btns = QMessageBox.Ok
+       btns = QMessageBox.StandardButton.Ok
 
     if not btnDefault:   
-       btnDefault = QMessageBox.Ok
+       btnDefault = QMessageBox.StandardButton.Ok
 
     #print("pyqt_MsgBox - parent = " + str(parent))
     #print("pyqt_MsgBox - sHeader = " + str(sHeader))
@@ -286,6 +312,31 @@ def pyqt_MsgBox(parent, sHeader, sText, btns=QMessageBox.Ok, btnDefault=QMessage
     reply = QMessageBox.question(parent, sHeader, sText, btns, btnDefault)
 
     return reply
+
+#---------------------------------------------------------------------------------------------------------
+def pyqt_MsgBox_Info(sHeader, sText, icon=QMessageBox.Icon.Information):
+    return pyqt_MsgBox(sHeader, sText)
+
+#---------------------------------------------------------------------------------------------------------
+def pyqt_MsgBox_Warning(sHeader, sText):
+    return pyqt_MsgBox(sHeader, sText, QMessageBox.Icon.Warning)
+
+#---------------------------------------------------------------------------------------------------------
+def pyqt_MsgBox_Error(sHeader, sText):
+    return pyqt_MsgBox(sHeader, sText, icon=QMessageBox.Icon.Critical)
+
+#---------------------------------------------------------------------------------------------------------
+def pyqt_MsgBox(sHeader, sText, icon=QMessageBox.Icon.Information):
+    #https://www.tutorialspoint.com/pyqt/pyqt_qmessagebox.htm
     
+    msg = QMessageBox()
+    msg.setIcon(icon)
+    msg.setText(sText)
+    msg.setWindowTitle(sHeader)
+    msg.setStandardButtons(QMessageBox.StandardButton.Ok)
+    retval = msg.exec()
+
+    return retval
+
 #---------------------------------------------------------------------------------------------------------
     

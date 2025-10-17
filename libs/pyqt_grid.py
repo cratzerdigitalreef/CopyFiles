@@ -49,6 +49,8 @@ class pyqtTableModel(QAbstractTableModel):
         if not index.isValid():
            return ""
         if role == Qt.ItemDataRole.DisplayRole:
+            #print("getDataByIndex - row = " + str(index.row()) + " - col = " + str(index.column()))
+            #print("getDataByIndex - Total Rows = " + str(len(self._data)))
             return self._data[index.row()][index.column()]
         
         return ""
@@ -74,7 +76,7 @@ class pyqtTableModel(QAbstractTableModel):
         return self.rowCount()
 
     #---------------------------------------------------------------------------------------------------------
-    def delRow(self, modelData, lstData, row_index=0):
+    def delRowByIndex(self, modelData, lstData, row_index=0):
 
         nMax = self.rowCount()
 
@@ -88,6 +90,26 @@ class pyqtTableModel(QAbstractTableModel):
             self.layoutChanged.emit()
 
         return self.rowCount()
+
+    #---------------------------------------------------------------------------------------------------------
+    def delRowByRow(self, nRow):
+
+        nMax = self.rowCount()
+
+        if nRow < 0 or nRow > nMax:
+           return False
+
+        self.beginRemoveRows(QModelIndex(), nRow, nRow)
+        del self._data[nRow] # Modify your internal data
+        self.endRemoveRows()
+        self.layoutChanged.emit()
+
+        nMaxNew = self.rowCount()
+
+        if nMaxNew == nMax-1:
+            return True
+        
+        return False
 
     #---------------------------------------------------------------------------------------------------------
     def getRowIndex(self, modelData, lstData):
@@ -170,6 +192,31 @@ class pyqtTableModel(QAbstractTableModel):
         self._data = []  # Replace data with results
         self.endResetModel()
         tvGrid.resizeRowsToContents()  #
+
+    #---------------------------------------------------------------------------------------------------------
+    def table_selectedRow(self, tvGrid):
+        sRow = self.table_selectedRows(tvGrid, False)
+        nRow = int(sRow)
+        return nRow
+
+    #---------------------------------------------------------------------------------------------------------
+    def table_selectedRows(self, tvGrid, bReturnRows=False, bSeparaReturnRows=","):
+        selected_indexes = tvGrid.selectionModel().selectedRows()
+        if selected_indexes:
+           if bReturnRows == False:
+              return str(selected_indexes[0].row())
+           else:
+               sSelected = ""
+               n = 0
+               while n < len(selected_indexes):
+                     sSelected = bSeparaReturnRows + sSelected + str(selected_indexes[n].row())
+                     n = n + 1
+               if len(sSelected) > 0:
+                  sSelected = sSelected[len(bSeparaReturnRows):]
+               return sSelected
+        else:
+           # Handle no selection case
+           return "-1"
 
     #---------------------------------------------------------------------------------------------------------
     def data(self, index, role=Qt.DisplayRole):

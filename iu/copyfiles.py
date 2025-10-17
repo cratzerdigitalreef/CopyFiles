@@ -16,7 +16,7 @@ import os
 
 #from PySide2.QtUiTools import QUiLoader
 from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget, QLabel
-from PyQt5.QtWidgets import QMessageBox, QTextEdit, QFileDialog, QTableView, QTableWidget, QTableWidgetItem
+from PyQt5.QtWidgets import QMessageBox, QTextEdit, QFileDialog, QTableView, QTableWidget, QTableWidgetItem, QGroupBox
 from PyQt5.QtCore import QFile, QIODevice
 
 
@@ -105,6 +105,10 @@ class CopyFilesHomeScreen:
         self.nRowLen = 300
         self.nColWidth = self.nRowLen
         self.nColPath = 0
+        self.nRowCurrentSource = -1
+        self.nRowCurrentDestination = -1
+        self.sTVDesSource = ""
+        self.sTVDesDestination = ""
 
         ############################################################################
         # CHANGED these to 2‑tuples so each color can adapt in Light or Dark mode.
@@ -174,6 +178,13 @@ class CopyFilesHomeScreen:
         else:
             print(sErrorNotExist + "QPushButton pbSourceRemove")   
 
+        # GROUP BOX SOURCE 
+        self.gbox_source = self.window.findChild(QGroupBox, "groupBoxSource") 
+        if self.gbox_source: # Check if the object exists
+           self.sTVDesSource = self.gbox_source.title()
+        else:
+            print(sErrorNotExist + "QGroupBox groupBoxSource")   
+        
         #---------------------------------------------------------------------------------------------------------
         #---------------------------------------------------------------------------------------------------------
         # DESTINATION
@@ -192,6 +203,13 @@ class CopyFilesHomeScreen:
         else:
             print(sErrorNotExist + "QPushButton pbDestinationRemove")   
 
+        # GROUP BOX SOURCE 
+        self.gbox_destination = self.window.findChild(QGroupBox, "groupBoxDestination") 
+        if self.gbox_destination: # Check if the object exists
+           self.sTVDesDestination = self.gbox_destination.title()
+        else:
+            print(sErrorNotExist + "QGroupBox groupBoxDestination")   
+
         #---------------------------------------------------------------------------------------------------------
         # BUTTON PROCESS
         self.btn_process = self.window.findChild(QPushButton, "pbProcess") 
@@ -207,6 +225,14 @@ class CopyFilesHomeScreen:
            self.btn_clean.clicked.connect(self.CmdClean)
         else:
             print(sErrorNotExist + "QPushButton pbClean")   
+
+        #---------------------------------------------------------------------------------------------------------
+        # BUTTON CLEAN LOG
+        self.btn_clean_log = self.window.findChild(QPushButton, "pbCleanLog") 
+        if self.btn_clean_log: # Check if the object exists
+           self.btn_clean_log.clicked.connect(self.CmdCleanLog)
+        else:
+            print(sErrorNotExist + "QPushButton pbCleanLog")   
 
         #---------------------------------------------------------------------------------------------------------
         # DATA MODEL
@@ -244,6 +270,7 @@ class CopyFilesHomeScreen:
         self.tv_source.setColumnWidth(self.nColPath, self.nColWidth)
         self.modelSource.setGridSelectionSingle(self.tv_source)
         self.tv_source.doubleClicked.connect(self.tvGrid_on_cell_double_clicked_Source)
+        self.tv_source.clicked.connect(self.tvGrid_on_cell_double_clicked_Source)
 
         #---------------------------------------------------------------------------------------------------------
         # TEXT TOTAL SOURCE
@@ -271,6 +298,7 @@ class CopyFilesHomeScreen:
         self.tv_destination.setColumnWidth(self.nColPath, self.nColWidth)
         self.modelSource.setGridSelectionSingle(self.tv_destination)
         self.tv_destination.doubleClicked.connect(self.tvGrid_on_cell_double_clicked_Destination)
+        self.tv_destination.clicked.connect(self.tvGrid_on_cell_double_clicked_Destination)
 
         #---------------------------------------------------------------------------------------------------------
         # TEXT TOTAL DESTINATION
@@ -325,17 +353,13 @@ class CopyFilesHomeScreen:
         return
 
     #---------------------------------------------------------------------------------------------------------
-    def CmdSource_del(self):
-        return
-
-    #---------------------------------------------------------------------------------------------------------
     def CmdDestination_get(self):
         self.CmdPathGet(False)
         return
     
     def CmdPathGet(self, bSource=True):
         lstFiles = self.openFilesDlg(True)
-        print("CmdPathGet - sFile = " + str(lstFiles))
+        #print("CmdPathGet - sFile = " + str(lstFiles))
 
         if len(lstFiles) > 0:
            n = 0
@@ -350,7 +374,9 @@ class CopyFilesHomeScreen:
                         
                  nRow = self.grid_AddRow(str(lstFiles[n]), bSource, True)
                  if nRow <= nCount:
-                     log_writeWordsInColorYellow("WARNING!!! Data '" + str(lstFiles[n]) + "' already exists in Row = " + str(nRow))
+                     sWarning = "WARNING!!! Data '" + str(lstFiles[n]) + "' already exists in Row = " + str(nRow)
+                     log_writeWordsInColorYellow(sWarning)
+                     pyqt_MsgBox_Warning("Add Directory", sWarning)
 
                  n = n + 1
 
@@ -374,6 +400,8 @@ class CopyFilesHomeScreen:
                  nRow = self.modelSource.addRow(lst)
                  self.modelSource.setDataCell(self.nSourceRows-1, self.nColPath, lst)
                  self.tv_source.resizeRowsToContents() 
+                 self.nRowCurrentSource = nRow
+                 self.tv_source.selectRow(nRow)
            else:
               if bValidateExists:
                  nRow = self.modelDestination.getRowByData(0, sData)
@@ -382,16 +410,63 @@ class CopyFilesHomeScreen:
                  nRow = self.modelDestination.addRow(lst)
                  self.modelDestination.setDataCell(self.nDestinationRows-1, self.nColPath, lst)
                  self.tv_destination.resizeRowsToContents() 
+                 self.nRowCurrentDestination = nRow
+                 self.tv_destination.selectRow(nRow)
         
         #print("grid_AddRow - nRow = " + str(nRow))
         return nRow
                            
 
+    #---------------------------------------------------------------------------------------------------------
+    def CmdSource_del(self):
+        self.Cmd_del(True)
+        return
+
 
     #---------------------------------------------------------------------------------------------------------
     def CmdDestination_del(self):
+        self.Cmd_del(False)
         return
 
+    #---------------------------------------------------------------------------------------------------------
+    def Cmd_del(self, bSource=True):
+
+        nRow = self.nRowCurrentSource
+        sTVDes = self.sTVDesSource
+        sData = self.modelSource.getDataByRowCol(nRow, 0)
+        if not bSource:
+           nRow = self.nRowCurrentDestination
+           sTVDes = self.sTVDesDestination
+           sData = self.modelDestination.getDataByRowCol(nRow, 0)
+
+        bResult = False
+        #print("Cmd_del - nRow = " + str(nRow))
+
+        if nRow >= 0:
+            sMsg = "Are you sure you need to delete '" + sTVDes + "' row: " + str(nRow) + " ?"
+            sMsg += "\nData: " + sData
+
+            sResponse, bResponse = pyqt_MsgBoxYesNo(self.window, "Delete Row for " + sTVDes, sMsg)
+            #print("Cmd_del - sResponse = " + str(sResponse) + " - bResponse = " + str(bResponse))
+
+            if not bResponse:
+                return bResponse
+            
+            if bSource:
+                bResult = self.modelSource.delRowByRow(nRow)
+                if bResult:
+                   self.nRowCurrentSource = self.nRowCurrentSource - 1
+            else:
+                bResult = self.modelDestination.delRowByRow(nRow)
+                if bResult:
+                   self.nRowCurrentSource = self.nRowCurrentDestination - 1
+                    
+            self.tvGrid_set_totals(bSource)   
+
+        else:
+            pyqt_MsgBox_Error("Delete Row", "No row selected for " + sTVDes)
+
+        return bResult    
 
     #---------------------------------------------------------------------------------------------------------
     def CmdProcess(self):
@@ -400,14 +475,23 @@ class CopyFilesHomeScreen:
     #---------------------------------------------------------------------------------------------------------
     def CmdClean(self):
 
+        if self.modelSource.rowCount() <= 0 and self.modelDestination.rowCount() <= 0:
+           sWarning = "WARNING!!! There is nothing to clean in both Grids."
+           log_writeWordsInColorYellow(sWarning)
+           pyqt_MsgBox_Warning("Clean Grids", sWarning)
+           return
+
         self.modelSource.clean_table(self.tv_source)
         self.modelDestination.clean_table(self.tv_destination)
         self.tvGrid_set_totals(True)
         self.tvGrid_set_totals(False)
 
-        pyqt_TextBoxSetText(self.txt_log, "")
-
         return 
+
+    #---------------------------------------------------------------------------------------------------------
+    def CmdCleanLog(self):
+        pyqt_TextBoxSetText(self.txt_log, "")
+        return
 
     #---------------------------------------------------------------------------------------------------------
     def openFilesDlg(self, bSource):
@@ -418,7 +502,7 @@ class CopyFilesHomeScreen:
            sTitle = "Destination"
            sPath = self.sPathDestination
 
-        print("openFilesDlg - sPath = " + str(sPath))
+        print("openFilesDlg - Default Path = " + str(sPath))
         lstFiles = pyqt_OpenFileDlgDirOnly(self.window, app_name_des + " - " + sTitle, sPath, "", True)
 
         #print("openFilesDlg = " + str(lstFiles))
@@ -433,27 +517,44 @@ class CopyFilesHomeScreen:
         #row = index.row
         #col = index.column
         #print("row = " + str(row) + " - column = " + str(col))
-        return self.tvGrid_on_cell_double_clicked(self.tv_source, index)
+        return self.tvGrid_on_cell_double_clicked(index, True)
 
     #---------------------------------------------------------------------------------------------------------
     def tvGrid_on_cell_double_clicked_Destination(self, index):
 
-        return self.tvGrid_on_cell_double_clicked(self.tv_destination, index)
+        return self.tvGrid_on_cell_double_clicked(index, False)
 
     #---------------------------------------------------------------------------------------------------------
-    def tvGrid_on_cell_double_clicked(self, tv, index):
+    def tvGrid_on_cell_double_clicked(self, index, bSource=True):
             # Access the data using the model associated with the QTableView
-        model = tv.model()
+
+        model = self.modelSource
+        if not bSource:
+           model = self.modelDestination
+
+        #print("tvGrid_on_cell_double_clicked_Source - index: " + str(index) + " - index.row = " + str(index.row()))
+
+        row = index.row()
+        col = index.column()
+
         #cell_data = model.getData(row, col)
         cell_data = model.getDataByIndex(index)
+        #cell_data = model.getDataByRowCol(row, col)
 
-        #row = index.row
-        #col = index.column
+        if bSource:
+           self.nRowCurrentSource = row
+        else:
+           self.nRowCurrentDestination = row
 
-       #print("tvGrid_on_cell_double_clicked_Source - cell at Row: " + str(row) + " - col = " + str(col) + " - Data: " + str(cell_data))
-        print("tvGrid_on_cell_double_clicked_Source - Data: " + str(cell_data))
+       #print("tvGrid_on_cell_double_clicked - cell at Row: " + str(row) + " - col = " + str(col) + " - Data: " + str(cell_data))
+        print("tvGrid_on_cell_double_clicked - Data: " + str(cell_data) + " Row: " + str(row))
 
         return
+
+    #---------------------------------------------------------------------------------------------------------
+    def tvGrid_on_cell_clicked_Destination(self, index):
+
+        return self.tvGrid_on_cell_double_clicked(self.tv_source, index)
 
     #---------------------------------------------------------------------------------------------------------
     def tvGrid_set_totals(self, bSource=True):
@@ -517,10 +618,10 @@ class CopyFilesHomeScreen:
         self.nPathDestinationTotal = 0 
         self.sPathDestinationTotal = xml_Load_Default_Value(self.sApp_XML_PathAndFile, self.sXML_PATH_SOURCE_TOTAL, str(self.nPathDestinationTotal))
                                         
-        self.xml_get_grid(True)
+        self.xml_get_grid(True, self.nPathSourceTotal)
                      
         #DESTINATION
-        self.xml_get_grid(False)
+        self.xml_get_grid(False, self.nPathDestinationTotal)
 
         #GET LAST PATHS
         self.sPathSource = xml_Load_Default_Value(self.sApp_XML_PathAndFile, self.sXML_PATH_DEFAULT_SOURCE, self.sApp_Path)
@@ -529,11 +630,11 @@ class CopyFilesHomeScreen:
         return
 
     #---------------------------------------------------------------------------------------------------------
-    def xml_get_grid(self, bSource=True):
+    def xml_get_grid(self, bSource=True, nTotal=0):
 
         bOut = False
         n = 0
-        while not bOut and n < 100:
+        while not bOut and n < nTotal:
               if bSource:
                  sHeader = self.sXML_PATH_SOURCE + str(n)
               else:
@@ -551,15 +652,15 @@ class CopyFilesHomeScreen:
     #---------------------------------------------------------------------------------------------------------
     def CmdExit(self):
 
-        reply = pyqt_MsgBoxYesNo(self.window, app_name_des, "Are you sure you want to quit?")
+        sReply, bReply = pyqt_MsgBoxYesNo(self.window, app_name_des, "Are you sure you want to quit?")
 
-        if reply == QMessageBox.Yes:
+        if bReply:
             print("Window to be closed.")
             self.exit()
         else:
             print("Close event ignored.")
 
-        return reply
+        return sReply
         
     #---------------------------------------------------------------------------------------------------------
     def about(self):
