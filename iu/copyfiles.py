@@ -357,7 +357,7 @@ class CopyFilesHomeScreen:
         return
     
     def CmdPathGet(self, bSource=True):
-        lstFiles = self.openFilesDlg(True)
+        lstFiles = self.openFilesDlg(bSource)
         #print("CmdPathGet - sFile = " + str(lstFiles))
 
         if len(lstFiles) > 0:
@@ -368,8 +368,10 @@ class CopyFilesHomeScreen:
            
                  if bSource:
                     nCount = self.modelSource.rowCount()
+                    self.sPathSource = str(lstFiles[n])
                  else:
                     nCount = self.modelDestination.rowCount()
+                    self.sPathDestination = str(lstFiles[n])
                         
                  nRow = self.grid_AddRow(str(lstFiles[n]), bSource, True)
                  if nRow <= nCount:
@@ -588,7 +590,7 @@ class CopyFilesHomeScreen:
         #SOURCE 
         nCountSource = self.modelSource.rowCount()
         xml_Save_Default_Value(self.sApp_XML_PathAndFile, self.sXML_PATH_SOURCE_TOTAL, str(nCountSource))
-        self.sPathSource  = self.sApp_Path 
+        #self.sPathSource  = self.sApp_Path 
         n = 0
         while n < nCountSource:
               sData = self.modelSource.getDataByRowCol(n, 0)
@@ -600,7 +602,7 @@ class CopyFilesHomeScreen:
         #DESTINATION
         nCountDestination = self.modelDestination.rowCount()
         xml_Save_Default_Value(self.sApp_XML_PathAndFile, self.sXML_PATH_DESTINATION_TOTAL, str(nCountDestination))
-        self.sPathDestination  = self.sApp_Path 
+        #self.sPathDestination  = self.sApp_Path 
         n = 0
         while n < nCountDestination:
               sData = self.modelDestination.getDataByRowCol(n, 0)
@@ -640,6 +642,7 @@ class CopyFilesHomeScreen:
     #---------------------------------------------------------------------------------------------------------
     def xml_get_grid(self, bSource=True, nTotal=0):
 
+        print("xml_get_grid - Total: " + str(nTotal))
         bOut = False
         n = 0
         while not bOut and n < nTotal:
@@ -647,8 +650,12 @@ class CopyFilesHomeScreen:
                  sHeader = self.sXML_PATH_SOURCE + str(n)
               else:
                  sHeader = self.sXML_PATH_DESTINATION + str(n)
-                     
+
+              print("xml_get_grid - sHeader: " + str(sHeader))
+
               sData = xml_Load_Default_Value(self.sApp_XML_PathAndFile, sHeader, "")
+              print("xml_get_grid - sData: " + str(sData))
+
               if sData == "":
                  bOut = True
               else:

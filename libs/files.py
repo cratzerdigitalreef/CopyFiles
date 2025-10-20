@@ -494,14 +494,17 @@ def file_createPandaDicWithFileLstAddingStats(lstFiles, bSortByName=True):
     dfFiles = pd.DataFrame(files)
 
     if bSortByName and len(files) > 0:
-        dfFiles = dfFiles.sort_values(by=file_dic_path_file)
+        dfFiles = file_PandasDicSorted(dfFiles, file_dic_path_file, True)
+    else:
+        dfFiles = file_PandasDicSorted(dfFiles, file_dic_size)
+            
         
     return dfFiles
 
 #---------------------------------------------------------------------------------------------------------
 # file_dicSortedBySize
 #---------------------------------------------------------------------------------------------------------
-def file_PandasDicSortedBySize(df, bSortMaxToMin=True):
+def file_PandasDicSorted(df, sSortField, bSortMaxToMin=True):
 
     bAscending = False
     if bSortMaxToMin:
@@ -509,7 +512,7 @@ def file_PandasDicSortedBySize(df, bSortMaxToMin=True):
         
     df_sorted = df
     if len(df) > 0:
-        df_sorted = df.sort_values(by=file_dic_size, ascending=bAscending)
+        df_sorted = df.sort_values(by=sSortField, ascending=bAscending)
 
     return df_sorted
 
