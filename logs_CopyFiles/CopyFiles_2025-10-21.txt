@@ -1,0 +1,448 @@
+2025-10-21 16.52.28: ----------------------------------------------------------------------------------------------------
+2025-10-21 16.52.28: PROCESS APDU Commands - Client: CopyFiles. STARTED: 2025-10-21 16:52:28
+2025-10-21 16.52.28: ----------------------------------------------------------------------------------------------------
+2025-10-21 16.53.38: ----------------------------------------------------------------------------------------------------
+2025-10-21 16.53.38: PROCESS APDU Commands - Client: CopyFiles. STARTED: 2025-10-21 16:53:38
+2025-10-21 16.53.38: ----------------------------------------------------------------------------------------------------
+2025-10-21 16.57.48: ----------------------------------------------------------------------------------------------------
+2025-10-21 16.57.48: PROCESS APDU Commands - Client: CopyFiles. STARTED: 2025-10-21 16:57:48
+2025-10-21 16.57.48: ----------------------------------------------------------------------------------------------------
+2025-10-21 16.58.14: ----------------------------------------------------------------------------------------------------
+2025-10-21 16.58.14: PROCESS APDU Commands - Client: CopyFiles. STARTED: 2025-10-21 16:58:14
+2025-10-21 16.58.14: ----------------------------------------------------------------------------------------------------
+2025-10-21 16.59.10: 
+0 File: D:\Temp\Outputs\UNF16993.inp
+Size: 1034 bytes
+Creation Date: 2025-06-09 20:18:15.994463
+Last Modification Date: 2021-01-04 18:04:58
+Last Access Date: 2025-08-19 12:19:44.556308
+Directory: False
+2025-10-21 16.59.10: 
+1 File: D:\Temp\Outputs\CTI20444.SMS
+Size: 1040871 bytes
+Creation Date: 2025-06-09 20:15:03.569525
+Last Modification Date: 2025-06-09 20:22:12.610541
+Last Access Date: 2025-09-29 15:00:17.770087
+Directory: False
+2025-10-21 16.59.10: 
+2 File: D:\Temp\Outputs\CTI20457.SMS
+Size: 1040871 bytes
+Creation Date: 2025-06-10 12:44:27.104445
+Last Modification Date: 2025-06-10 12:48:22.955310
+Last Access Date: 2025-09-26 11:06:27.389186
+Directory: False
+2025-10-21 16.59.10: 
+3 File: D:\Temp\Outputs\UNF16993.OTA
+Size: 1201240 bytes
+Creation Date: 2025-06-09 20:18:15.994463
+Last Modification Date: 2025-06-09 20:31:01.568281
+Last Access Date: 2025-09-29 15:01:27.823502
+Directory: False
+2025-10-21 16.59.10: 
+4 File: D:\Temp\Outputs\drone_result_20250922_103044.txt
+Size: 1560 bytes
+Creation Date: 2025-09-22 10:30:51.242372
+Last Modification Date: 2025-09-22 10:30:51.242372
+Last Access Date: 2025-09-22 10:31:03.453098
+Directory: False
+2025-10-21 16.59.10: 
+5 File: D:\Temp\Outputs\drone_result_20250923_094512.txt
+Size: 1608 bytes
+Creation Date: 2025-09-23 09:45:19.217846
+Last Modification Date: 2025-09-23 09:45:19.281628
+Last Access Date: 2025-09-23 09:45:51.870046
+Directory: False
+2025-10-21 16.59.10: 
+6 File: D:\Temp\Outputs\dummy_keys.csv
+Size: 217 bytes
+Creation Date: 2025-08-08 12:45:51.702068
+Last Modification Date: 2025-07-29 12:46:37.067828
+Last Access Date: 2025-09-26 12:25:03.163143
+Directory: False
+2025-10-21 16.59.10: 
+7 File: D:\Temp\Outputs\dummy_keys - Copy.csv
+Size: 217 bytes
+Creation Date: 2025-09-26 10:55:21.601542
+Last Modification Date: 2025-07-29 12:46:37.067828
+Last Access Date: 2025-09-26 12:20:24.127049
+Directory: False
+2025-10-21 16.59.10: 
+8 File: D:\Temp\Outputs\dummy_keys_error.csv
+Size: 221 bytes
+Creation Date: 2025-08-18 14:56:53.519840
+Last Modification Date: 2025-08-18 15:10:02.595265
+Last Access Date: 2025-09-26 12:20:34.860737
+Directory: False
+2025-10-21 16.59.10: 
+9 File: D:\Temp\Outputs\dummy_keys_error2.csv
+Size: 277 bytes
+Creation Date: 2025-08-18 15:01:26.254712
+Last Modification Date: 2025-08-18 15:10:02.595948
+Last Access Date: 2025-09-26 10:55:15.820873
+Directory: False
+2025-10-21 16.59.10: 
+10 File: D:\Temp\Outputs\Grabaci_n 2025-08-18 140808_NoStopProcess.mp4
+Size: 37344324 bytes
+Creation Date: 2025-08-18 14:08:11.778807
+Last Modification Date: 2025-08-18 14:03:17.993898
+Last Access Date: 2025-08-19 12:19:45.421860
+Directory: False
+2025-10-21 16.59.10: 
+11 File: D:\Temp\Outputs\CTI20457.7z
+Size: 373539 bytes
+Creation Date: 2025-07-23 11:28:17.528843
+Last Modification Date: 2025-07-23 11:28:17.655574
+Last Access Date: 2025-08-19 12:19:44.580277
+Directory: False
+2025-10-21 16.59.10: 
+12 File: D:\Temp\Outputs\UNF16993.sec.xml
+Size: 3780208 bytes
+Creation Date: 2025-06-09 20:31:26.549383
+Last Modification Date: 2025-06-09 20:32:17.863814
+Last Access Date: 2025-09-22 10:30:21.786143
+Directory: False
+2025-10-21 16.59.10: 
+13 File: D:\Temp\Outputs\UNF16993.sec.xml.zip
+Size: 417576 bytes
+Creation Date: 2025-07-23 11:47:37.334625
+Last Modification Date: 2025-07-23 11:47:37.501705
+Last Access Date: 2025-08-19 12:19:44.560601
+Directory: False
+2025-10-21 16.59.10: 
+14 File: D:\Temp\Outputs\CTI20457.sec.xml
+Size: 4630211 bytes
+Creation Date: 2025-06-10 12:48:48.536817
+Last Modification Date: 2025-06-10 12:49:44.268062
+Last Access Date: 2025-09-29 14:22:18.678797
+Directory: False
+2025-10-21 16.59.10: 
+15 File: D:\Temp\Outputs\CTI20444.sec.xml
+Size: 4630211 bytes
+Creation Date: 2025-06-09 20:22:36.605476
+Last Modification Date: 2025-06-09 20:23:26.699298
+Last Access Date: 2025-09-29 15:03:58.801440
+Directory: False
+2025-10-21 16.59.10: 
+16 File: D:\Temp\Outputs\Grabaci_n 2025-08-18 140053_Add_No_NoOK.mp4
+Size: 5153029 bytes
+Creation Date: 2025-08-18 14:01:08.603334
+Last Modification Date: 2025-08-18 13:59:49.777475
+Last Access Date: 2025-10-17 17:11:16.183426
+Directory: False
+2025-10-21 16.59.10: 
+17 File: D:\Temp\Outputs\CTI20457.txt
+Size: 671 bytes
+Creation Date: 2025-06-10 12:44:27.104445
+Last Modification Date: 2021-11-24 17:11:14.731947
+Last Access Date: 2025-08-19 12:19:44.547663
+Directory: False
+2025-10-21 16.59.10: 
+18 File: D:\Temp\Outputs\CTI20444.txt
+Size: 671 bytes
+Creation Date: 2025-06-09 20:15:03.569525
+Last Modification Date: 2021-11-24 17:11:14.683676
+Last Access Date: 2025-09-22 10:59:40.768862
+Directory: False
+2025-10-21 16.59.10: 
+19 File: D:\Temp\Outputs\Grabaci_n 2025-08-18 140808_NoStopProcess.7z
+Size: 7413386 bytes
+Creation Date: 2025-08-18 14:18:57.858745
+Last Modification Date: 2025-08-18 14:18:58.764238
+Last Access Date: 2025-08-19 12:19:44.835394
+Directory: False
+2025-10-21 17.22.58: ----------------------------------------------------------------------------------------------------
+2025-10-21 17.22.58: PROCESS APDU Commands - Client: CopyFiles. STARTED: 2025-10-21 17:22:58
+2025-10-21 17.22.58: ----------------------------------------------------------------------------------------------------
+2025-10-21 17.23.02: 
+0 File: D:\Temp\Outputs\UNF16993.inp
+Size: 1034 bytes
+Creation Date: 2025-06-09 20:18:15.994463
+Last Modification Date: 2021-01-04 18:04:58
+Last Access Date: 2025-08-19 12:19:44.556308
+Directory: False
+2025-10-21 17.23.02: 
+1 File: D:\Temp\Outputs\CTI20444.SMS
+Size: 1040871 bytes
+Creation Date: 2025-06-09 20:15:03.569525
+Last Modification Date: 2025-06-09 20:22:12.610541
+Last Access Date: 2025-09-29 15:00:17.770087
+Directory: False
+2025-10-21 17.23.02: 
+2 File: D:\Temp\Outputs\CTI20457.SMS
+Size: 1040871 bytes
+Creation Date: 2025-06-10 12:44:27.104445
+Last Modification Date: 2025-06-10 12:48:22.955310
+Last Access Date: 2025-09-26 11:06:27.389186
+Directory: False
+2025-10-21 17.23.02: 
+3 File: D:\Temp\Outputs\UNF16993.OTA
+Size: 1201240 bytes
+Creation Date: 2025-06-09 20:18:15.994463
+Last Modification Date: 2025-06-09 20:31:01.568281
+Last Access Date: 2025-09-29 15:01:27.823502
+Directory: False
+2025-10-21 17.23.02: 
+4 File: D:\Temp\Outputs\drone_result_20250922_103044.txt
+Size: 1560 bytes
+Creation Date: 2025-09-22 10:30:51.242372
+Last Modification Date: 2025-09-22 10:30:51.242372
+Last Access Date: 2025-09-22 10:31:03.453098
+Directory: False
+2025-10-21 17.23.02: 
+5 File: D:\Temp\Outputs\drone_result_20250923_094512.txt
+Size: 1608 bytes
+Creation Date: 2025-09-23 09:45:19.217846
+Last Modification Date: 2025-09-23 09:45:19.281628
+Last Access Date: 2025-09-23 09:45:51.870046
+Directory: False
+2025-10-21 17.23.02: 
+6 File: D:\Temp\Outputs\dummy_keys.csv
+Size: 217 bytes
+Creation Date: 2025-08-08 12:45:51.702068
+Last Modification Date: 2025-07-29 12:46:37.067828
+Last Access Date: 2025-09-26 12:25:03.163143
+Directory: False
+2025-10-21 17.23.02: 
+7 File: D:\Temp\Outputs\dummy_keys - Copy.csv
+Size: 217 bytes
+Creation Date: 2025-09-26 10:55:21.601542
+Last Modification Date: 2025-07-29 12:46:37.067828
+Last Access Date: 2025-09-26 12:20:24.127049
+Directory: False
+2025-10-21 17.23.02: 
+8 File: D:\Temp\Outputs\dummy_keys_error.csv
+Size: 221 bytes
+Creation Date: 2025-08-18 14:56:53.519840
+Last Modification Date: 2025-08-18 15:10:02.595265
+Last Access Date: 2025-09-26 12:20:34.860737
+Directory: False
+2025-10-21 17.23.02: 
+9 File: D:\Temp\Outputs\dummy_keys_error2.csv
+Size: 277 bytes
+Creation Date: 2025-08-18 15:01:26.254712
+Last Modification Date: 2025-08-18 15:10:02.595948
+Last Access Date: 2025-09-26 10:55:15.820873
+Directory: False
+2025-10-21 17.23.02: 
+10 File: D:\Temp\Outputs\Grabaci_n 2025-08-18 140808_NoStopProcess.mp4
+Size: 37344324 bytes
+Creation Date: 2025-08-18 14:08:11.778807
+Last Modification Date: 2025-08-18 14:03:17.993898
+Last Access Date: 2025-08-19 12:19:45.421860
+Directory: False
+2025-10-21 17.23.02: 
+11 File: D:\Temp\Outputs\CTI20457.7z
+Size: 373539 bytes
+Creation Date: 2025-07-23 11:28:17.528843
+Last Modification Date: 2025-07-23 11:28:17.655574
+Last Access Date: 2025-08-19 12:19:44.580277
+Directory: False
+2025-10-21 17.23.02: 
+12 File: D:\Temp\Outputs\UNF16993.sec.xml
+Size: 3780208 bytes
+Creation Date: 2025-06-09 20:31:26.549383
+Last Modification Date: 2025-06-09 20:32:17.863814
+Last Access Date: 2025-09-22 10:30:21.786143
+Directory: False
+2025-10-21 17.23.02: 
+13 File: D:\Temp\Outputs\UNF16993.sec.xml.zip
+Size: 417576 bytes
+Creation Date: 2025-07-23 11:47:37.334625
+Last Modification Date: 2025-07-23 11:47:37.501705
+Last Access Date: 2025-08-19 12:19:44.560601
+Directory: False
+2025-10-21 17.23.02: 
+14 File: D:\Temp\Outputs\CTI20457.sec.xml
+Size: 4630211 bytes
+Creation Date: 2025-06-10 12:48:48.536817
+Last Modification Date: 2025-06-10 12:49:44.268062
+Last Access Date: 2025-09-29 14:22:18.678797
+Directory: False
+2025-10-21 17.23.02: 
+15 File: D:\Temp\Outputs\CTI20444.sec.xml
+Size: 4630211 bytes
+Creation Date: 2025-06-09 20:22:36.605476
+Last Modification Date: 2025-06-09 20:23:26.699298
+Last Access Date: 2025-09-29 15:03:58.801440
+Directory: False
+2025-10-21 17.23.02: 
+16 File: D:\Temp\Outputs\Grabaci_n 2025-08-18 140053_Add_No_NoOK.mp4
+Size: 5153029 bytes
+Creation Date: 2025-08-18 14:01:08.603334
+Last Modification Date: 2025-08-18 13:59:49.777475
+Last Access Date: 2025-10-17 17:11:16.183426
+Directory: False
+2025-10-21 17.23.02: 
+17 File: D:\Temp\Outputs\CTI20457.txt
+Size: 671 bytes
+Creation Date: 2025-06-10 12:44:27.104445
+Last Modification Date: 2021-11-24 17:11:14.731947
+Last Access Date: 2025-08-19 12:19:44.547663
+Directory: False
+2025-10-21 17.23.02: 
+18 File: D:\Temp\Outputs\CTI20444.txt
+Size: 671 bytes
+Creation Date: 2025-06-09 20:15:03.569525
+Last Modification Date: 2021-11-24 17:11:14.683676
+Last Access Date: 2025-09-22 10:59:40.768862
+Directory: False
+2025-10-21 17.23.02: 
+19 File: D:\Temp\Outputs\Grabaci_n 2025-08-18 140808_NoStopProcess.7z
+Size: 7413386 bytes
+Creation Date: 2025-08-18 14:18:57.858745
+Last Modification Date: 2025-08-18 14:18:58.764238
+Last Access Date: 2025-08-19 12:19:44.835394
+Directory: False
+2025-10-21 18.02.13: ----------------------------------------------------------------------------------------------------
+2025-10-21 18.02.13: PROCESS APDU Commands - Client: CopyFiles. STARTED: 2025-10-21 18:02:13
+2025-10-21 18.02.14: ----------------------------------------------------------------------------------------------------
+2025-10-21 18.02.38: ----------------------------------------------------------------------------------------------------
+2025-10-21 18.02.38: PROCESS APDU Commands - Client: CopyFiles. STARTED: 2025-10-21 18:02:38
+2025-10-21 18.02.38: ----------------------------------------------------------------------------------------------------
+2025-10-21 18.02.40: 
+0 File: D:\Temp\Outputs\UNF16993.inp
+Size: 1034 bytes
+Creation Date: 2025-06-09 20:18:15.994463
+Last Modification Date: 2021-01-04 18:04:58
+Last Access Date: 2025-08-19 12:19:44.556308
+Directory: False
+2025-10-21 18.02.40: 
+1 File: D:\Temp\Outputs\CTI20444.SMS
+Size: 1040871 bytes
+Creation Date: 2025-06-09 20:15:03.569525
+Last Modification Date: 2025-06-09 20:22:12.610541
+Last Access Date: 2025-09-29 15:00:17.770087
+Directory: False
+2025-10-21 18.02.40: 
+2 File: D:\Temp\Outputs\CTI20457.SMS
+Size: 1040871 bytes
+Creation Date: 2025-06-10 12:44:27.104445
+Last Modification Date: 2025-06-10 12:48:22.955310
+Last Access Date: 2025-09-26 11:06:27.389186
+Directory: False
+2025-10-21 18.02.40: 
+3 File: D:\Temp\Outputs\UNF16993.OTA
+Size: 1201240 bytes
+Creation Date: 2025-06-09 20:18:15.994463
+Last Modification Date: 2025-06-09 20:31:01.568281
+Last Access Date: 2025-09-29 15:01:27.823502
+Directory: False
+2025-10-21 18.02.40: 
+4 File: D:\Temp\Outputs\drone_result_20250922_103044.txt
+Size: 1560 bytes
+Creation Date: 2025-09-22 10:30:51.242372
+Last Modification Date: 2025-09-22 10:30:51.242372
+Last Access Date: 2025-09-22 10:31:03.453098
+Directory: False
+2025-10-21 18.02.40: 
+5 File: D:\Temp\Outputs\drone_result_20250923_094512.txt
+Size: 1608 bytes
+Creation Date: 2025-09-23 09:45:19.217846
+Last Modification Date: 2025-09-23 09:45:19.281628
+Last Access Date: 2025-09-23 09:45:51.870046
+Directory: False
+2025-10-21 18.02.40: 
+6 File: D:\Temp\Outputs\dummy_keys.csv
+Size: 217 bytes
+Creation Date: 2025-08-08 12:45:51.702068
+Last Modification Date: 2025-07-29 12:46:37.067828
+Last Access Date: 2025-09-26 12:25:03.163143
+Directory: False
+2025-10-21 18.02.40: 
+7 File: D:\Temp\Outputs\dummy_keys - Copy.csv
+Size: 217 bytes
+Creation Date: 2025-09-26 10:55:21.601542
+Last Modification Date: 2025-07-29 12:46:37.067828
+Last Access Date: 2025-09-26 12:20:24.127049
+Directory: False
+2025-10-21 18.02.40: 
+8 File: D:\Temp\Outputs\dummy_keys_error.csv
+Size: 221 bytes
+Creation Date: 2025-08-18 14:56:53.519840
+Last Modification Date: 2025-08-18 15:10:02.595265
+Last Access Date: 2025-09-26 12:20:34.860737
+Directory: False
+2025-10-21 18.02.40: 
+9 File: D:\Temp\Outputs\dummy_keys_error2.csv
+Size: 277 bytes
+Creation Date: 2025-08-18 15:01:26.254712
+Last Modification Date: 2025-08-18 15:10:02.595948
+Last Access Date: 2025-09-26 10:55:15.820873
+Directory: False
+2025-10-21 18.02.40: 
+10 File: D:\Temp\Outputs\Grabaci_n 2025-08-18 140808_NoStopProcess.mp4
+Size: 37344324 bytes
+Creation Date: 2025-08-18 14:08:11.778807
+Last Modification Date: 2025-08-18 14:03:17.993898
+Last Access Date: 2025-08-19 12:19:45.421860
+Directory: False
+2025-10-21 18.02.40: 
+11 File: D:\Temp\Outputs\CTI20457.7z
+Size: 373539 bytes
+Creation Date: 2025-07-23 11:28:17.528843
+Last Modification Date: 2025-07-23 11:28:17.655574
+Last Access Date: 2025-08-19 12:19:44.580277
+Directory: False
+2025-10-21 18.02.40: 
+12 File: D:\Temp\Outputs\UNF16993.sec.xml
+Size: 3780208 bytes
+Creation Date: 2025-06-09 20:31:26.549383
+Last Modification Date: 2025-06-09 20:32:17.863814
+Last Access Date: 2025-09-22 10:30:21.786143
+Directory: False
+2025-10-21 18.02.40: 
+13 File: D:\Temp\Outputs\\Siprocal
+Size: 4096 bytes
+Creation Date: 2025-10-21 17:23:52.915494
+Last Modification Date: 2025-10-21 17:24:02.487395
+Last Access Date: 2025-10-21 18:02:40.631322
+Directory: True
+2025-10-21 18.02.40: 
+14 File: D:\Temp\Outputs\UNF16993.sec.xml.zip
+Size: 417576 bytes
+Creation Date: 2025-07-23 11:47:37.334625
+Last Modification Date: 2025-07-23 11:47:37.501705
+Last Access Date: 2025-08-19 12:19:44.560601
+Directory: False
+2025-10-21 18.02.40: 
+15 File: D:\Temp\Outputs\CTI20457.sec.xml
+Size: 4630211 bytes
+Creation Date: 2025-06-10 12:48:48.536817
+Last Modification Date: 2025-06-10 12:49:44.268062
+Last Access Date: 2025-09-29 14:22:18.678797
+Directory: False
+2025-10-21 18.02.40: 
+16 File: D:\Temp\Outputs\CTI20444.sec.xml
+Size: 4630211 bytes
+Creation Date: 2025-06-09 20:22:36.605476
+Last Modification Date: 2025-06-09 20:23:26.699298
+Last Access Date: 2025-09-29 15:03:58.801440
+Directory: False
+2025-10-21 18.02.40: 
+17 File: D:\Temp\Outputs\Grabaci_n 2025-08-18 140053_Add_No_NoOK.mp4
+Size: 5153029 bytes
+Creation Date: 2025-08-18 14:01:08.603334
+Last Modification Date: 2025-08-18 13:59:49.777475
+Last Access Date: 2025-10-17 17:11:16.183426
+Directory: False
+2025-10-21 18.02.40: 
+18 File: D:\Temp\Outputs\CTI20457.txt
+Size: 671 bytes
+Creation Date: 2025-06-10 12:44:27.104445
+Last Modification Date: 2021-11-24 17:11:14.731947
+Last Access Date: 2025-08-19 12:19:44.547663
+Directory: False
+2025-10-21 18.02.40: 
+19 File: D:\Temp\Outputs\CTI20444.txt
+Size: 671 bytes
+Creation Date: 2025-06-09 20:15:03.569525
+Last Modification Date: 2021-11-24 17:11:14.683676
+Last Access Date: 2025-09-22 10:59:40.768862
+Directory: False
+2025-10-21 18.02.40: 
+20 File: D:\Temp\Outputs\Grabaci_n 2025-08-18 140808_NoStopProcess.7z
+Size: 7413386 bytes
+Creation Date: 2025-08-18 14:18:57.858745
+Last Modification Date: 2025-08-18 14:18:58.764238
+Last Access Date: 2025-08-19 12:19:44.835394
+Directory: False

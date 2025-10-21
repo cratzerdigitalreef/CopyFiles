@@ -43,14 +43,21 @@ def process_CopyFiles(logFile, lstSource, lstDestination):
     lstFiles = []
     n = 0
     while n < len(lstSource):
-          lstFilesTemp = []
-          lstFilesTemp = file_getDirsAndFiles(lstSource[n], logFile)
+
+          lstFilesTemp = process_CopyFiles_GetDirsAndFiles(lstSource[n], logFile)
+          if len(lstFilesTemp) > 0:
+          
+              m = 0
+              while m < len(lstFilesTemp):
+                    if lstFilesTemp[m] not in lstFiles:
+                       lstFiles.append(lstFilesTemp[m]) 
+
+                       if file_Is_a_Directory(lstFilesTemp[m]):
+                          print("process_CopyFiles - Added new directory for source: " + str(lstFilesTemp[m]))
+                          lstSource.append(lstFilesTemp[m])
          
-          lstFiles.extend(lstFilesTemp)
-
-          nFound = len(lstFiles)
-          print("process_CopyFiles - found for path " + str(n) + " = " + str(nFound))
-
+                    m = m + 1
+    
           n = n + 1 
 
     #PREPARING A PANDAS DICT WITH THE PREVIOUS LIST
@@ -65,6 +72,7 @@ def process_CopyFiles(logFile, lstSource, lstDestination):
     for row1 in dict_df_file.itertuples():
 
           print("File: " + str(n) + " - " + str(row1))          
+          #FIRST RECORD IS THE RECORD NUMBER, NEXT RECORD IS THE PATH/FILE
           sPrint, sFileSize, sFileDateCreation, sFileDateModif, sFieDateAccess = process_CopyFiles_DirFileStatus(row1[1], logFile)
           sPrint = "\n" + str(n) + " File: " + sPrint
           log_write_Normal(logFile, sPrint)
@@ -73,6 +81,19 @@ def process_CopyFiles(logFile, lstSource, lstDestination):
 
     return True, ""
 
+# process_CopyFiles_GetDirsAndFiles ----------------------------------------------------------------------------------------------------------
+def process_CopyFiles_GetDirsAndFiles(sPathFile, logFile=""):
+    lstFilesTemp = []
+    if file_Is_a_Directory(sPathFile):
+       lstFilesTemp = file_getDirsAndFiles(sPathFile, logFile)
+       nFound = len(lstFilesTemp)
+       print("process_CopyFiles_GetDirsAndFiles - found for path: " + str(sPathFile) + "' = " + str(nFound))
+    else:
+       print("process_CopyFiles_GetDirsAndFiles - path: '" + str(sPathFile) + "' not a DIRECTORY!")
+           
+    return lstFilesTemp
+
+    
 # process_CopyFiles ----------------------------------------------------------------------------------------------------------
 def process_CopyFiles_DirFileStatus(sFile, logFile=""):
 

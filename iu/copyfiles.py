@@ -624,13 +624,19 @@ class CopyFilesHomeScreen:
         #SOURCE TOTALS
         self.nPathSourceTotal = 0 
         self.sPathSourceTotal = xml_Load_Default_Value(self.sApp_XML_PathAndFile, self.sXML_PATH_SOURCE_TOTAL, str(self.nPathSourceTotal))
+        if valid_nro_IsCharValidNro(self.sPathSourceTotal, True):
+           self.nPathSourceTotal = int(self.sPathSourceTotal)
+
+        #print("xml_get - Total Source: " + str(self.nPathSourceTotal))
+        self.xml_get_grid(True, self.nPathSourceTotal)
+
         #DESTINATION TOTALS
         self.nPathDestinationTotal = 0 
-        self.sPathDestinationTotal = xml_Load_Default_Value(self.sApp_XML_PathAndFile, self.sXML_PATH_SOURCE_TOTAL, str(self.nPathDestinationTotal))
-                                        
-        self.xml_get_grid(True, self.nPathSourceTotal)
-                     
-        #DESTINATION
+        self.sPathDestinationTotal = xml_Load_Default_Value(self.sApp_XML_PathAndFile, self.sXML_PATH_DESTINATION_TOTAL, str(self.nPathDestinationTotal))
+        if valid_nro_IsCharValidNro(self.sPathDestinationTotal, True):
+           self.nPathDestinationTotal = int(self.sPathDestinationTotal)
+
+        #print("xml_get - Total Destination: " + str(self.nPathDestinationTotal))
         self.xml_get_grid(False, self.nPathDestinationTotal)
 
         #GET LAST PATHS
@@ -642,7 +648,7 @@ class CopyFilesHomeScreen:
     #---------------------------------------------------------------------------------------------------------
     def xml_get_grid(self, bSource=True, nTotal=0):
 
-        print("xml_get_grid - Total: " + str(nTotal))
+        #print("xml_get_grid - Total: " + str(nTotal))
         bOut = False
         n = 0
         while not bOut and n < nTotal:
@@ -651,10 +657,10 @@ class CopyFilesHomeScreen:
               else:
                  sHeader = self.sXML_PATH_DESTINATION + str(n)
 
-              print("xml_get_grid - sHeader: " + str(sHeader))
+              #print("xml_get_grid - sHeader: " + str(sHeader))
 
               sData = xml_Load_Default_Value(self.sApp_XML_PathAndFile, sHeader, "")
-              print("xml_get_grid - sData: " + str(sData))
+              #print("xml_get_grid - sData: " + str(sData))
 
               if sData == "":
                  bOut = True

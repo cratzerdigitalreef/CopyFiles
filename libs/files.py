@@ -277,7 +277,7 @@ def file_PathAndFile_GetFileName(sPathAndFile):
 def file_getFileSlash(sPathAndFile):
 
     if file_slashdouble in sPathAndFile:
-        return sPathAndFile
+        return file_slashdouble
     
     return file_slash
 
@@ -293,6 +293,7 @@ def file_PathAndFile_GetSeparated(sPathAndFile):
     sFile = ""
     
     sSepara = file_getFileSlash(sPathAndFile)
+    #print("file_PathAndFile_GetSeparated - sSepara = " + str(sSepara))
     tFiles = sPathAndFile.split(sSepara)
     
     if len(tFiles) > 0:

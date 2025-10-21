@@ -20,7 +20,9 @@ ota_sDef_SIMSupplierThales = "Thales"
 ota_sDef_SIMSupplierValid = "Valid"
 ota_sDef_SIMSupplierGyD = "GyD"
 ota_sDef_SIMSupplierIdemia = "Idemia"
-ota_sDef_SIMSupplierValidGyDIdemia = ota_sDef_SIMSupplierValid + ota_sDef_SIMSupplierGyD + ota_sDef_SIMSupplierIdemia
+ota_sDef_SIMSupplierWordCards = "WorldCards"
+
+ota_sDef_SIMSupplierValidGyDIdemia = ota_sDef_SIMSupplierValid + ota_sDef_SIMSupplierGyD + ota_sDef_SIMSupplierIdemia + ota_sDef_SIMSupplierWordCards
 
 ota_sDef_OTAExtThales = ".script"
 ota_sDef_OTAExtValid = ".xml"
@@ -136,10 +138,10 @@ def ota_OTAForDeletePackageAndInstance(OTAScriptsName, sPathOut, sAIDPackage, sA
         
     if sFileNameProc != "":
  
-       tOTAAdvanced.append(sAPDUDelInstance)
+      # tOTAAdvanced.append(sAPDUDelInstance) => NOT USED BECAUSE IT IS ONLY DELETED THE PACKAGE AND RELATIVES
        tOTAAdvanced.append(sAPDUDelPackage)
        ota_ThalesOTAPlatformAdvancedAPDU(tOTAAdvanced, sFileNameProc)
-       ota_ThalesOTAPlatformAdvancedFooter(2, sFileNameProc, ota_sDef_SIMSupplierValidGyDIdemia)
+       ota_ThalesOTAPlatformAdvancedFooter(1, sFileNameProc, ota_sDef_SIMSupplierValidGyDIdemia)
 
     # -------------------------------------------------------------------------------------------------------------------------------
     # VALID OTA PLATFORM
@@ -509,11 +511,14 @@ def ota_FileCreate(sPath, sFileName, sHeader):
     else:   
        try:
        
+          print("ota_FileCreate - sPath: " + sPath)
           if not file_FileExists(sPath):
              os.mkdir(sPath)
 
           sPathFileName = os.path.join(sPath, sFileName)
         
+          print("ota_FileCreate - sPathFileName: " + sPathFileName)
+
           file2write=open(sPathFileName,'w')
     
           if sHeader!="":
