@@ -166,7 +166,50 @@ def fFileGetCSVHeader(sFile, sCSVSepara=","):
        
     #print("sHeader = " + str(sHeader))
     return sHeader
+
+#------------------------------------------------------------------------------------
+# fFileOpenTextMode => Open file in Text Mode for Reading
+#---------------------------------------------------------
+def fFileOpenTextMode(sPathAndFile):
     
+    if sPathAndFile=="":
+       return ""
+
+    if not file_FileExists(sPathAndFile):
+       return ""
+
+    err = ""   
+
+    try:
+       file=open(sPathAndFile,'r')
+       return file
+       
+    except Exception as e:
+       sError = "An unexpected error has occurred. " + str(e)    
+       print("fFileOpenTextMode - Error: " + sError)
+       return ""
+
+#------------------------------------------------------------------------------------
+# fFileOpenTextModeAndRead => Open file in Text Mode for Reading
+#---------------------------------------------------------
+def fFileOpenTextModeAndRead(sPathAndFile):
+    
+    file = fFileOpenTextMode(sPathAndFile)
+    if file is None or str(file) == "":
+       return ""
+    
+    err = ""   
+    try:
+       sData = file.read()
+       file.close()
+       
+       return str(sData)
+       
+    except IOError(err):
+       sError = str(err)
+       print("fFileOpenTextModeAndRead - Error: " + sError)
+       return ""
+
 #------------------------------------------------------------------------------------
 # fFileOpenBinaryMode => Open file in Binary Mode for Reading
 #---------------------------------------------------------
@@ -175,6 +218,9 @@ def fFileOpenBinaryMode(sPathAndFile):
     if sPathAndFile=="":
        return ""
 
+    if not file_FileExists(sPathAndFile):
+       return ""
+    
     err = ""   
 
     try:
@@ -261,15 +307,22 @@ def file_OpenFileExplorer(sPath):
 # file_PathAndFile_GetPath
 #---------------------------------------------------------------------------------------------------------
 def file_PathAndFile_GetPath(sPathAndFile):
-    sPath, sFile = file_PathAndFile_GetSeparated(sPathAndFile)
+    sPath, sFile, sExt = file_PathAndFile_GetSeparated(sPathAndFile)
     return sPath
 
 #---------------------------------------------------------------------------------------------------------
 # file_PathAndFile_GetFileName
 #---------------------------------------------------------------------------------------------------------
 def file_PathAndFile_GetFileName(sPathAndFile):
-    sPath, sFile = file_PathAndFile_GetSeparated(sPathAndFile)
+    sPath, sFile, sExt = file_PathAndFile_GetSeparated(sPathAndFile)
     return sFile
+
+#---------------------------------------------------------------------------------------------------------
+# file_PathAndFile_GetFileNameExtension
+#---------------------------------------------------------------------------------------------------------
+def file_PathAndFile_GetFileNameExtension(sPathAndFile):
+    sPath, sFile, sExt = file_PathAndFile_GetSeparated(sPathAndFile)
+    return sExt
 
 #---------------------------------------------------------------------------------------------------------
 # file_getFileSlash => get whether path is with "\"" or with "//"
@@ -306,8 +359,16 @@ def file_PathAndFile_GetSeparated(sPathAndFile):
     #print("file_PathAndFile_GetSeparated - sPathAndFile = " + str(sPathAndFile))
     #print("file_PathAndFile_GetSeparated - sPath = " + str(sPath))
     #print("file_PathAndFile_GetSeparated - sFile = " + str(sFile))
-       
-    return sPath, sFile      
+
+    sExt = ""
+    if sFile != "":
+       lstExt = sFile.split(".")
+       if len(lstExt) > 1:
+           sExt = lstExt[len(lstExt)-1]
+
+    #print("file_PathAndFile_GetSeparated - sExt = " + str(sExt))
+
+    return sPath, sFile, sExt      
     
 #---------------------------------------------------------------------------------------------------------
 # file_IsOSWindows

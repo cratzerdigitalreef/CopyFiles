@@ -407,7 +407,7 @@ def ctk_utils_AskOpenFileName_Files_IJC_CAP(sPath, sTitle="", bMultipleFiles=Fal
         return ctk_utils_AskOpenFileName(sPath, sTitle, sType)
 
 #---------------------------------------------------------------------------------------------------------
-# ctk_utils_AskOpenFileName_Files_CSV =>Open Custom TKinter Dialog for selecting one or more files with CSV files
+# ctk_utils_AskOpenFileName_Files_CSV => Open Custom TKinter Dialog for selecting one or more files with CSV files
 #---------------------------------------------------------------------------------------------------------
 def ctk_utils_AskOpenFileName_Files_CSV(sPath, sTitle="", bMultipleFiles=False):
     sType = "csv"
@@ -417,7 +417,7 @@ def ctk_utils_AskOpenFileName_Files_CSV(sPath, sTitle="", bMultipleFiles=False):
         return ctk_utils_AskOpenFileName(sPath, sTitle, sType)
 
 #---------------------------------------------------------------------------------------------------------
-# ctk_utils_AskOpenFileName_Files_XML =>Open Custom TKinter Dialog for selecting one or more files with XML files
+# ctk_utils_AskOpenFileName_Files_XML => Open Custom TKinter Dialog for selecting one or more files with XML files
 #---------------------------------------------------------------------------------------------------------
 def ctk_utils_AskOpenFileName_Files_XML(sPath, sTitle="", bMultipleFiles=False):
     sType = "xml"
@@ -425,7 +425,17 @@ def ctk_utils_AskOpenFileName_Files_XML(sPath, sTitle="", bMultipleFiles=False):
         return ctk_utils_AskOpenMultipleFileNames(sPath, sTitle, sType, True)
     else:
         return ctk_utils_AskOpenFileName(sPath, sTitle, sType)
-    
+
+#---------------------------------------------------------------------------------------------------------
+# ctk_utils_AskOpenFileName_Files_OTA => Open Custom TKinter Dialog for selecting one or more files with OTA files format
+#---------------------------------------------------------------------------------------------------------
+def ctk_utils_AskOpenFileName_Files_OTA(sPath, sTitle="", bMultipleFiles=False):
+    sType = "ota"
+    if bMultipleFiles:
+        return ctk_utils_AskOpenMultipleFileNames(sPath, sTitle, sType, True)
+    else:
+        return ctk_utils_AskOpenFileName(sPath, sTitle, sType)
+
 #---------------------------------------------------------------------------------------------------------
 # ctk_utils_AskOpenFileName => Open Custom TKinter Dialog for selecting a file
 # Example for file_types:
@@ -460,6 +470,8 @@ def ctk_utils_AskOpenMultipleFileNames(sPath, sTitle="", file_types="", bMultipl
        file_types = [("CSV Files", "*.csv"), ("Text Files", "*.txt"), ("All Files", "*.*")]
     if str(file_types).lower() == "xml":
        file_types = [("XML Files", "*.xml"), ("Text Files", "*.txt"), ("All Files", "*.*")]
+    if str(file_types).lower() == "ota":
+       file_types = [("Thales Script Files", "*.script"), ("Valid XML Files", "*.xml"), ("Text Files", "*.txt"), ("All Files", "*.*")]
        
     if sTitle == "":
        sTitle = "Select File"

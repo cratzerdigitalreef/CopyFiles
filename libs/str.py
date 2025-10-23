@@ -583,26 +583,39 @@ def str_CleanEnter(st):
 
 # str_CleanPattern ----------------------------------------------------------------------------------------------------------------------
 def str_CleanPattern(st, sPattern):
-    st = str(st)
-    sPattern = str(sPattern)
     
-    if st == "" or len(st)==0:
-       return st
-    out=""
-    nLen = len(st)
-    nLenPat = len(sPattern)
-    i = 0
-    s = ""
-    while i < nLen:
-          s = st[i:i+nLenPat]
-          if len(s)<nLenPat:
-             s=st[i-1:]
-             out=out[:len(out)-1]
-             
-          if not s==sPattern:
-             out=out+st[i:i+nLenPat]
-             #print("str_CleanPattern. Out: " + out)
-          i = i+nLenPat
+    out = st.replace(sPattern, "")
+
+    #FOR TESTING:
+    #sIn = "5491130850618"
+    #sPattern = "}]}"
+    #sOut = str_CleanPattern(sIn, sPattern)
+    #print("sIn: " + sIn + " - sPattern = " + sPattern + " sOut = " + sOut)
+    #sOut = str_CleanEnter("\n" + sOut + "\n")
+    #print("sIn: " + sIn + " - sPattern = " + sPattern + " sOut = " + sOut)
+    #exit(0)
+
+
+    #st = str(st)
+    #sPattern = str(sPattern)
+    #
+    #if st == "" or len(st)==0:
+    #   return st
+    #out=""
+    #nLen = len(st)
+    #nLenPat = len(sPattern)
+    #i = 0
+    #s = ""
+    #while i < nLen:
+    #      s = st[i:i+nLenPat]
+    #      if len(s)<nLenPat:
+    #         s=st[i-1:]
+    #         out=out[:len(out)-1]
+    #         
+    #      if not s==sPattern:
+    #         out=out+st[i:i+nLenPat]
+    #         #print("str_CleanPattern. Out: " + out)
+    #      i = i+nLenPat
     
     return out
           

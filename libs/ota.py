@@ -40,6 +40,12 @@ ota_sDef_OTAThalesScript_CommentFinish = "*/"
 ota_nDef_OTAThalesScript_ByteStream = 0
 ota_sDef_OTAValidScript_CommentStart = "<!-- "
 ota_sDef_OTAValidScript_CommentFinish = " -->"
+ota_sDef_OTAAThalesAPDUStart = "22"
+ota_sDef_OTAClassicThalesAPDUStart = "write(" + str_GetComillaDoble() + "0x"
+ota_sDef_OTAClassicThalesAPDUEnd = str_GetComillaDoble() + ");"
+ota_sDef_OTAClassicValidAPDUStart = "<command>"
+ota_sDef_OTAClassicValidAPDUEnd = "</command>"
+
 
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------
 # ota_OTAForDeletePackageAndInstance 
@@ -710,7 +716,7 @@ def ota_ThalesOTAPlatformAdvancedAPDU(tAPDU, sPathFileName=""):
 
     sData = ""
     
-    sInit = "22"
+    sInit = ota_sDef_OTAAThalesAPDUStart
     
     if len(tAPDU)> 0:
     
@@ -818,5 +824,119 @@ def ota_ValidOTAPlatformAPDU(sAPDU, sRef, sPathFileName=""):
 
     return sData
 
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------
+# ota_ThalesOTAAScriptToAPDUList 
+def ota_ThalesOTAAScriptToAPDUList(sScript, bShowResult=True, sLogPathFileOptional =""):
+
+    sScript = str_SpacesOut(sScript)
+    if str_left(sScript, 2) != ota_sDef_OTAAThalesAPDUStart:
+       return sScript
     
+    apdu = []
+
+    n = 0
+    while n < len(sScript):
+          
+          if str_mid(sScript, n, 2) == ota_sDef_OTAAThalesAPDUStart:
+             n = n + 2
+             sLen = str_mid(sScript, n, 2)
+             n = n + 2
+             nLen = int(int(bytes_HexaToNro(sLen)) * 2)
+             sAPDU = str_mid(sScript, n, nLen)
+             apdu.append(sAPDU)
+             n = n + nLen
+          else:   
+             n = n + 2
+
+    sPrint = "Total Thales Advanced OTA APDUs: " + str(len(apdu))
+    n = 0
+    while n < len(apdu):
+          sPrint = sPrint + "\nAPDU nro " + str(n) + " from total " + str(len(apdu)) +  ": " + str(apdu[n])
+          nBytes = int(len(apdu[n])/2)
+          sPrint = sPrint + " - Length: " + str(len(apdu[n])) + " characters - (bytes = " + str(nBytes)
+          #print("nBytes = " + str(nBytes))
+          sPrint = sPrint + " - hexa = 0x" + bytes_NroToHexa(str(nBytes)) +  ")"
+          n = n + 1
+
+    if bShowResult:
+       print(sPrint + "\n")
+
+    if sLogPathFileOptional != "":
+       log_write_Normal(sLogPathFileOptional, sPrint)
+
+    return apdu
+    
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------
+# ota_ScriptFileToAPDUs 
+def ota_ScriptFileToAPDUs(sPathFile, sSeparaAPDU):
+
+    sReturn = ""
+
+    sData = fFileOpenTextModeAndRead(sPathFile)
+    if sData == "":
+       return sReturn
+
+    #print("ota_ScriptFileToAPDUs - sData = " + sData)
+
+    sExt = file_PathAndFile_GetFileNameExtension(sPathFile)
+    sExt = str(sExt).upper()
+
+    #print("ota_ScriptFileToAPDUs - sExt = " + sExt  + " from " + sPathFile)
+
+    sSeparaAPDU = str(sSeparaAPDU)
+    if sSeparaAPDU == "":
+       sSeparaAPDU = ";"
+
+    if sExt == "SCRIPT" or sExt == "XML":
+       #THALES AND VALID OTA SCRIPTS
+       lstData = sData.split("\n")
+
+       #print("ota_ScriptFileToAPDUs - lstData = " + str(lstData) + " - Len: " + str(len(lstData)))
+
+       if len(lstData) > 0:
+          
+          n = 0 
+          while n < len(lstData):
+                sLine = str_SpacesOut(lstData[n])
+                n = n + 1
+
+                if sLine == "":
+                   continue
+                
+                #print("ota_ScriptFileToAPDUs - sLine = " + sLine)
+
+                if sExt == "SCRIPT":
+                   #THALES OTA SCRIPTS
+                   #OTA ADVANCED
+                   if str_left(sLine, 2) == ota_sDef_OTAAThalesAPDUStart:
+                      sReturn = sReturn + sSeparaAPDU + sLine
+                   else:
+                      #OTA CLASSIC
+                       if ota_sDef_OTAClassicThalesAPDUStart in sLine:
+                          sReturnT = str_getSubStringFromOcur(sLine, ota_sDef_OTAClassicThalesAPDUStart, 1)
+                          sReturnT = str_getSubStringFromOcur(sReturnT, ota_sDef_OTAClassicThalesAPDUEnd, 0)   
+                          sReturn = sReturn + sSeparaAPDU + sReturnT
+
+                   #print("ota_ScriptFileToAPDUs - n = " + str(n) + " - Thales - sReturn = " + sReturn)
+
+                if sExt == "XML":   
+                   #VALID OTA SCRIPTS
+                   if ota_sDef_OTAClassicValidAPDUStart in sLine:
+                          sReturnT = str_getSubStringFromOcur(sLine, ota_sDef_OTAClassicValidAPDUStart, 1)
+                          sReturnT = str_getSubStringFromOcur(sReturnT, ota_sDef_OTAClassicValidAPDUEnd, 0)   
+                          sReturn = sReturn + sSeparaAPDU + sReturnT
+
+    if sReturn != "":
+       
+       if str_left(sReturn, len(sSeparaAPDU)) == sSeparaAPDU:
+          sReturn = str_midToEnd(sReturn, len(sSeparaAPDU))
+
+       #str_Replace(sReturn, sSeparaAPDU, sSeparaAPDU + str_GetENTER())   
+
+       
+    print("ota_ScriptFileToAPDUs - sReturn = " + sLine)
+
+    return sReturn   
+
+
 # --------------------------------------------------------------------------------------------------------------------------------------------------------
