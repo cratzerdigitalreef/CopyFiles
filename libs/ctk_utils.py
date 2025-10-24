@@ -810,3 +810,11 @@ class CTkTextWithLineNumbers(ctk.CTkFrame):
         """Scroll both text and line numbers to bottom."""
         self.text.see("end")
         self.line_numbers.yview_moveto(1.0)
+
+#---------------------------------------------------------------------------------------------------------
+def ctk_double_click_des(sText):
+    file_OpenNotePadInWindows(sText)
+    return
+
+#---------------------------------------------------------------------------------------------------------
+

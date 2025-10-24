@@ -607,4 +607,31 @@ def file_formatFilePathWithSlash(sPathAndFileToFormat):
        #print("file_formatFilePathWithSlash - file_slash => " +  file_slash + " - sReturn = " + sReturn)
                 
     return sReturn        
+
+#---------------------------------------------------------------------------------------------------------
+def file_OpenNotePadInWindows(sText, sPath=""):
+    if sText != "":
+       try:
+           if not file_IsOSWindows():
+              print("file_OpenNotePadInWindows - sText:\n\n" + str(sText))
+           else:    
+              
+              temp_filename = "temp_data.txt"
+              if sPath!="":
+                 temp_filename = os.path.join(sPath,temp_filename)
+
+              with open(temp_filename, "w") as f:
+                  f.write(sText)
+
+              subprocess.Popen(["notepad.exe", temp_filename])
+
+           return True
+       
+       except Exception as e:
+             sError = "An unexpected error has occurred. " + str(e)    
+             print("file_OpenNotePadInWindows - Error: " + sError)
+             return False
+        
+
+
 #------------------------------------------------------------------------------------

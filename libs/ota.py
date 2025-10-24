@@ -934,7 +934,7 @@ def ota_ScriptFileToAPDUs(sPathFile, sSeparaAPDU):
        #str_Replace(sReturn, sSeparaAPDU, sSeparaAPDU + str_GetENTER())   
 
        
-    print("ota_ScriptFileToAPDUs - sReturn = " + sLine)
+    #print("ota_ScriptFileToAPDUs - sReturn = " + sLine)
 
     return sReturn   
 

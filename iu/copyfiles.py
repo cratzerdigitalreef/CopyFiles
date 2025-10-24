@@ -317,9 +317,12 @@ class CopyFilesHomeScreen:
 
         #---------------------------------------------------------------------------------------------------------
         # TEXT LOG
-        self.txt_log = self.window.findChild(QTextEdit, "txtLog") 
+        self.layout_txt_log = self.window.findChild(QVBoxLayout, "verticalLayoutLog") 
+        self.txt_log = customPyQt_TextEdit()
+        self.layout_txt_log.addWidget(self.txt_log)
         if self.txt_log: # Check if the object exists
            pyqt_TextEditableReadOnly(self.txt_log)
+           self.txt_log.setText("LOG")
         else:
             print(sErrorNotExist + "QTextEdit txtLog")   
 

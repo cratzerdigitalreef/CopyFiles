@@ -14,16 +14,6 @@
    <string>Copy Files</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QTextEdit" name="txtLog">
-    <property name="geometry">
-     <rect>
-      <x>590</x>
-      <y>30</y>
-      <width>501</width>
-      <height>351</height>
-     </rect>
-    </property>
-   </widget>
    <widget class="QPushButton" name="pbProcess">
     <property name="geometry">
      <rect>
@@ -237,6 +227,17 @@
     <property name="text">
      <string>Clean Log</string>
     </property>
+   </widget>
+   <widget class="QWidget" name="verticalLayoutWidget_3">
+    <property name="geometry">
+     <rect>
+      <x>590</x>
+      <y>30</y>
+      <width>511</width>
+      <height>351</height>
+     </rect>
+    </property>
+    <layout class="QVBoxLayout" name="verticalLayoutLog"/>
    </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">

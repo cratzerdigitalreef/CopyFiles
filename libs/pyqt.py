@@ -11,7 +11,7 @@ import os
 from PyQt5.uic import loadUi
 from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget, QLabel
 from PyQt5.QtWidgets import QMessageBox, QTextEdit, QFileDialog, QTableView
-from PyQt5.QtCore import QFile, QIODevice
+from PyQt5.QtCore import QFile, QIODevice, Qt
 
 from str import *
 from bytes import *
@@ -337,6 +337,28 @@ def pyqt_MsgBox(sHeader, sText, icon=QMessageBox.Icon.Information):
     retval = msg.exec()
 
     return retval
+
+class customPyQt_TextEdit(QTextEdit):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+    def mouseDoubleClickEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            print("customPyQt_TextEdit - QTextEdit double-clicked!")
+            sDes = self.toPlainText()
+            if sDes !="":   
+               print(sDes)
+               file_OpenNotePadInWindows(sDes)
+            else:
+                print("customPyQt_TextEdit - Nothing to show!")   
+       
+            # You can add your custom logic here
+            # For example, select the entire word at the cursor
+            # self.selectAll() 
+            # Or perform some other action
+
+        # Call the base class implementation to maintain default behavior
+        super().mouseDoubleClickEvent(event)
 
 #---------------------------------------------------------------------------------------------------------
     
