@@ -338,6 +338,9 @@ def pyqt_MsgBox(sHeader, sText, icon=QMessageBox.Icon.Information):
 
     return retval
 
+#---------------------------------------------------------------------------------------------------------
+# CLASS QTextEdit for mapper events such as Double Click
+#---------------------------------------------------------------------------------------------------------
 class customPyQt_TextEdit(QTextEdit):
     def __init__(self, parent=None):
         super().__init__(parent)
