@@ -24,6 +24,10 @@ file_slash = "/"
 
 import pandas as pd
 
+from pathlib import Path
+import subprocess
+import argparse
+
 #-------------------------------------------------------------------------
 #FOR FILE DICTIONARY
 file_dic_path_file = "path_file"
@@ -609,21 +613,30 @@ def file_formatFilePathWithSlash(sPathAndFileToFormat):
     return sReturn        
 
 #---------------------------------------------------------------------------------------------------------
+def file_OpenNotePadInMac(sText, sPath=""):
+    return file_OpenNotePadInWindows(sText, sPath)
+
+#---------------------------------------------------------------------------------------------------------
 def file_OpenNotePadInWindows(sText, sPath=""):
     if sText != "":
        try:
-           if not file_IsOSWindows():
-              print("file_OpenNotePadInWindows - sText:\n\n" + str(sText))
+           if file_IsOSLinux():
+              print("file_OpenNotePadInWindows - OS: Linux. sText:\n\n" + str(sText))
            else:    
               
               temp_filename = "temp_data.txt"
               if sPath!="":
                  temp_filename = os.path.join(sPath,temp_filename)
 
+              #print("temp_filename = " + str(temp_filename))
+           
               with open(temp_filename, "w") as f:
                   f.write(sText)
 
-              subprocess.Popen(["notepad.exe", temp_filename])
+              if file_IsOSMac():
+                 subprocess.run(["open", str(temp_filename)], check=False)
+              else:    
+                  subprocess.Popen(["notepad.exe", temp_filename])
 
            return True
        
@@ -632,6 +645,5 @@ def file_OpenNotePadInWindows(sText, sPath=""):
              print("file_OpenNotePadInWindows - Error: " + sError)
              return False
         
-
 
 #------------------------------------------------------------------------------------
