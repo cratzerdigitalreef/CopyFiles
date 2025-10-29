@@ -6,9 +6,11 @@ app_ver_date = "2025-10-31"
 app_name_des = "Copy Files"
 app_name = "CopyFiles"
 
+import sys
+import os
 
 #Prepared with a Main Window
-app_ui_file_name = "\iu\copyfiles_main_wdw.ui"
+app_ui_file_name = os.path.join("iu","copyfiles_main_wdw.ui")
 #Prepared with a Dialog
 #app_ui_file_name = "\iu\copyfiles.ui"
 

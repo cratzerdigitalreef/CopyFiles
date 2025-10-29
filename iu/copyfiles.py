@@ -136,7 +136,7 @@ class CopyFilesHomeScreen:
         self.list_separaNroItem = sDef_list_separaNroItem
         
         self.app = QApplication(sys.argv) # Construct QApplication first
-        self.ui_file_name = parent_directory + app_ui_file_name
+        self.ui_file_name = os.path.join(parent_directory,app_ui_file_name)
         bReturn, self.window = pyqt_open_ui_file(self.ui_file_name)
 
         if not (bReturn or self.window):

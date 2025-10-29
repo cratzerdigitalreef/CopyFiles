@@ -633,10 +633,7 @@ def file_OpenNotePadInWindows(sText, sPath=""):
               with open(temp_filename, "w") as f:
                   f.write(sText)
 
-              if file_IsOSMac():
-                 subprocess.run(["open", str(temp_filename)], check=False)
-              else:    
-                  subprocess.Popen(["notepad.exe", temp_filename])
+              file_OpenFileWithNotepadInWindows(temp_filename)
 
            return True
        
@@ -645,5 +642,18 @@ def file_OpenNotePadInWindows(sText, sPath=""):
              print("file_OpenNotePadInWindows - Error: " + sError)
              return False
         
+#---------------------------------------------------------------------------------------------------------
+def file_OpenFileWithNotepadInWindows(sPathFileName):
+
+    if file_IsOSWindows():    
+       subprocess.Popen(["notepad.exe", sPathFileName])
+    else:
+       if file_IsOSMac():
+          subprocess.run(["open", str(sPathFileName)], check=False)
+       else:
+           #LINUX OS NOT SUPPORTED FOR OPENING NOTEPAD.EXE
+           return False
+
+    return True      
 
 #------------------------------------------------------------------------------------
