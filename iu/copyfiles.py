@@ -317,13 +317,14 @@ class CopyFilesHomeScreen:
 
         #---------------------------------------------------------------------------------------------------------
         # TEXT LOG FILE
-        self.txt_logFile = self.window.findChild(QTextEdit, "txtLogFile") 
+        self.layout_txt_logFile = self.window.findChild(QVBoxLayout, "verticalLayoutLogFile") 
+        self.txt_logFile = customPyQt_TextEdit()
+        self.layout_txt_logFile.addWidget(self.txt_logFile)
         if self.txt_logFile: # Check if the object exists
            pyqt_TextEditableReadOnly(self.txt_logFile)
            pyqt_TextBoxSetText(self.txt_logFile, self.log_file)
         else:
             print(sErrorNotExist + "QTextEdit txtLogFile")   
-
 
         #---------------------------------------------------------------------------------------------------------
         # TEXT LOG
@@ -332,7 +333,7 @@ class CopyFilesHomeScreen:
         self.layout_txt_log.addWidget(self.txt_log)
         if self.txt_log: # Check if the object exists
            pyqt_TextEditableReadOnly(self.txt_log)
-           self.txt_log.setText("LOG")
+           pyqt_TextBoxSetText(self.txt_log, "LOG")
         else:
             print(sErrorNotExist + "QTextEdit txtLog")   
 

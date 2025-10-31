@@ -347,11 +347,17 @@ class customPyQt_TextEdit(QTextEdit):
 
     def mouseDoubleClickEvent(self, event):
         if event.button() == Qt.LeftButton:
-            print("customPyQt_TextEdit - QTextEdit double-clicked!")
+            
+            #print("customPyQt_TextEdit - QTextEdit double-clicked!")
+            
             sDes = self.toPlainText()
             if sDes !="":   
-               print(sDes)
-               file_OpenNotePadInWindows(sDes)
+               print("customPyQt_TextEdit - sDes = " + sDes)
+
+               if file_FileExists(sDes):
+                   file_OpenFileWithNotepadInWindows(sDes)
+               else:    
+                   file_OpenNotePadInWindows(sDes)
             else:
                 print("customPyQt_TextEdit - Nothing to show!")   
        
