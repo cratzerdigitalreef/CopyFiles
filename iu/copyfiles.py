@@ -514,6 +514,11 @@ class CopyFilesHomeScreen:
 
     #---------------------------------------------------------------------------------------------------------
     def CmdCleanLog(self):
+
+        sLog = pyqt_TextBoxGetText(self.txt_log)
+        if sLog == "":
+            pyqt_MsgBox_Warning("Clean Log", "There is nothing to be clean!")
+            
         pyqt_TextBoxSetText(self.txt_log, "")
         return
 

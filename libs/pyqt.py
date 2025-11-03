@@ -111,7 +111,7 @@ def pyqt_TextBoxSetText(obj, txt):
 def pyqt_TextBoxGetText(obj):
     txt = ""
     if obj:   
-       txt = obj.toPlainText(txt)
+       txt = obj.toPlainText()
     return txt   
 
 #---------------------------------------------------------------------------------------------------------
