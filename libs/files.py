@@ -30,13 +30,17 @@ import argparse
 
 #-------------------------------------------------------------------------
 #FOR FILE DICTIONARY
-file_dic_path_file = "path_file"
-file_dic_size = "file_size"
-file_dic_creation_date = "creation_date"
-file_dic_modification_date = "modification_date"
-file_dic_access_date = "access_date"
-file_dic_directory_type = "directory_type"
-file_dic_path_from = "path_from"
+file_dic_path_file = "file_dic_path_file"
+file_dic_path = "file_dic_path"
+file_dic_filename = "file_dic_filename"
+file_dic_fileext = "file_dic_fileext"
+file_dic_size = "file_dic_file_size"
+file_dic_creation_date = "file_dic_creation_date"
+file_dic_modification_date = "file_dic_modification_date"
+file_dic_access_date = "file_dic_access_date"
+file_dic_directory_type = "file_dic_directory_type"
+file_dic_path_from = "file_dic_path_from"
+file_dic_path_to = "file_dic_path_to"
 #-------------------------------------------------------------------------
 
 
@@ -312,7 +316,7 @@ def file_OpenFileExplorer(sPath):
 # file_PathAndFile_GetPath
 #---------------------------------------------------------------------------------------------------------
 def file_PathAndFile_GetPath(sPathAndFile):
-    sPath, sFile, sExt = file_PathAndFile_GetSeparated(sPathAndFile)
+    sPath, sFileName, sExt = file_PathAndFile_GetSeparated(sPathAndFile)
     return sPath
 
 #---------------------------------------------------------------------------------------------------------
@@ -325,7 +329,7 @@ def file_PathAndFile_GetPath(sPathAndFile):
 #           sNext = Siprocal\
 #---------------------------------------------------------------------------------------------------------
 def file_GetPath_From_Next(sPathAndOrFile, sPathFrom):
-    sPath, sFile, sExt = file_PathAndFile_GetSeparated(sPathAndOrFile)
+    sPath, sFileName, sExt = file_PathAndFile_GetSeparated(sPathAndOrFile)
 
     sSlash = file_getFileSlash(sPath)
 
@@ -347,14 +351,14 @@ def file_GetPath_From_Next(sPathAndOrFile, sPathFrom):
 # file_PathAndFile_GetFileName
 #---------------------------------------------------------------------------------------------------------
 def file_PathAndFile_GetFileName(sPathAndFile):
-    sPath, sFile, sExt = file_PathAndFile_GetSeparated(sPathAndFile)
-    return sFile
+    sPath, sFileName, sExt = file_PathAndFile_GetSeparated(sPathAndFile)
+    return sFileName
 
 #---------------------------------------------------------------------------------------------------------
 # file_PathAndFile_GetFileNameExtension
 #---------------------------------------------------------------------------------------------------------
 def file_PathAndFile_GetFileNameExtension(sPathAndFile):
-    sPath, sFile, sExt = file_PathAndFile_GetSeparated(sPathAndFile)
+    sPath, sFileName, sExt = file_PathAndFile_GetSeparated(sPathAndFile)
     return sExt
 
 #---------------------------------------------------------------------------------------------------------
@@ -368,15 +372,31 @@ def file_getFileSlash(sPathAndFile):
     return file_slash
 
 #---------------------------------------------------------------------------------------------------------
+# file_addSlashToPathIfNeeded => add slash "//" or "\" at the end of path if there is not
+#---------------------------------------------------------------------------------------------------------
+def file_addSlashToPathIfNeeded(sPath):
+
+    sSlash = file_getFileSlash(sPath)
+
+    if str_right(sPath, len(sSlash)) != sSlash:
+       sPath = sPath + sSlash
+
+    return sPath             
+
+#---------------------------------------------------------------------------------------------------------
 # file_PathAndFile_GetSeparated
 # Path and File Name to process
+# Returns for input "D:\Temp\Outputs\CTI20444.sec.xml":
+#         sPath => D:\Temp\Outputs\
+#         sFileName => CTI20444.sec.xml
+#         sExt => xml
 #---------------------------------------------------------------------------------------------------------
 def file_PathAndFile_GetSeparated(sPathAndFile):
     
     tFiles = []
     
     sPath = ""
-    sFile = ""
+    sFileName = ""
     
     sSepara = file_getFileSlash(sPathAndFile)
     #print("file_PathAndFile_GetSeparated - sSepara = " + str(sSepara))
@@ -387,21 +407,21 @@ def file_PathAndFile_GetSeparated(sPathAndFile):
        while n < len(tFiles)-1:
              sPath = sPath + tFiles[n] + sSepara
              n = n + 1
-       sFile = tFiles[len(tFiles)-1]    
+       sFileName = tFiles[len(tFiles)-1]    
      
     #print("file_PathAndFile_GetSeparated - sPathAndFile = " + str(sPathAndFile))
     #print("file_PathAndFile_GetSeparated - sPath = " + str(sPath))
     #print("file_PathAndFile_GetSeparated - sFile = " + str(sFile))
 
     sExt = ""
-    if sFile != "":
-       lstExt = sFile.split(".")
+    if sFileName != "":
+       lstExt = sFileName.split(".")
        if len(lstExt) > 1:
            sExt = lstExt[len(lstExt)-1]
 
     #print("file_PathAndFile_GetSeparated - sExt = " + str(sExt))
 
-    return sPath, sFile, sExt      
+    return sPath, sFileName, sExt      
     
 #---------------------------------------------------------------------------------------------------------
 # file_IsOSWindows
@@ -496,7 +516,7 @@ def file_Error_handlerWithDes(err, sLogFile="", sMsgOptional=""):
     if not bLogFile:
        log_writePrintOnlyError(sError)
 
-    return 
+    return sError
 
 
 #---------------------------------------------------------------------------------------------------------
@@ -541,23 +561,34 @@ def file_getDirsAndFiles(sStartingPath, sLogFile=""):
 #---------------------------------------------------------------------------------------------------------
 def file_getFileState(sPathAndFile, sLogFile=""):
 
+    bReturn = True
+    file_size = ""
+    creation_date = ""
+    modification_date = ""
+    access_date = ""
+
     try:
-       file_stats = os.stat(sPathAndFile)
+       
+       if file_FileExists(sPathAndFile):
+          file_stats = os.stat(sPathAndFile)
 
-       file_size = file_stats.st_size
-       creation_date = datetime.fromtimestamp(file_stats.st_ctime)
-       modification_date = datetime.fromtimestamp(file_stats.st_mtime)
-       access_date = datetime.fromtimestamp(file_stats.st_atime)
+          file_size = file_stats.st_size
+          creation_date = datetime.fromtimestamp(file_stats.st_ctime)
+          modification_date = datetime.fromtimestamp(file_stats.st_mtime)
+          access_date = datetime.fromtimestamp(file_stats.st_atime)
+       else:
+           file_Error_handlerWithDes("", sLogFile, "Error: File not found at " + str(sPathAndFile))
+           bReturn = False   
 
-       return str(file_size), str(creation_date), str(modification_date), str(access_date)
+       return bReturn, str(file_size), str(creation_date), str(modification_date), str(access_date)
 
     except FileNotFoundError:
        file_Error_handlerWithDes("", sLogFile, "Error: File not found at " + str(sPathAndFile))
-       return "", "", "", ""
+       return False, str(file_size), str(creation_date), str(modification_date), str(access_date)
 
     except Exception as e:
        file_Error_handlerWithDes(e, sLogFile, "Getting stats for " + str(sPathAndFile))
-       return "", "", "", ""
+       return False, str(file_size), str(creation_date), str(modification_date), str(access_date)
 
 #---------------------------------------------------------------------------------------------------------
 # file_createPandaDicWithFileLstAddingStats
@@ -574,9 +605,9 @@ def file_createPandaDicWithFileLstAddingStats(lstFiles, lstFilesFrom, bSort=Fals
          if file_FileExists(lstFiles[n]):
              
              #print("file_createPandaDicWithFileLstAddingStats = file " + str(n) + " : " + str(lstFiles[n]) + " - EXISTS = TRUE")
-             file_size, creation_date, modification_date, access_date = file_getFileState(lstFiles[n])
+             bFound, file_size, creation_date, modification_date, access_date = file_getFileState(lstFiles[n])
 
-             if file_size != "":
+             if bFound and file_size != "":
                # SAVE IN A DICT 
                file_record = {}
                file_record[file_dic_path_file] = str(lstFiles[n])
@@ -584,13 +615,22 @@ def file_createPandaDicWithFileLstAddingStats(lstFiles, lstFilesFrom, bSort=Fals
                file_record[file_dic_creation_date] = str(creation_date)
                file_record[file_dic_modification_date] = str(modification_date)
                file_record[file_dic_access_date] = str(access_date)
-               file_record[file_dic_directory_type] = str(file_Is_a_Directory(lstFiles[n]))
+               file_record[file_dic_directory_type] = str(file_Is_a_Directory(file_record[file_dic_path_file] ))
 
+               sPath, sFileName, sExt = file_PathAndFile_GetSeparated(file_record[file_dic_path_file])
+               file_record[file_dic_path] = str(sPath)
+               file_record[file_dic_filename] = str(sFileName)
+               file_record[file_dic_fileext] = str(sExt)
+
+               #USED FOR COPY FILES SO THAT IT IS SAVED WHETHER IT STARTS FROM SUBDIRECTORY
                file_record[file_dic_path_from] = ""
                #print("file_createPandaDicWithFileLstAddingStats - lstFilesFrom: " + str(lstFilesFrom[n]))
                if len(lstFilesFrom) > 0 and n < len(lstFilesFrom):
                    file_record[file_dic_path_from] = str(lstFilesFrom[n])
-                   
+
+               #USED FOR COPY FILES SO THAT IT IS SAVED THE DESTINATION PATH WHEN IT IS COPIED
+               file_record[file_dic_path_to] = ""
+
                files.append(file_record)
 
          n = n + 1
@@ -694,5 +734,93 @@ def file_OpenFileWithNotepadInWindows(sPathFileName):
            return False
 
     return True      
+
+#---------------------------------------------------------------------------------------------------------
+# file_copy
+#---------------------------------------------------------------------------------------------------------
+def file_copy(sPathFileSource, sPathFileDestination):
+
+    try:
+
+        if sPathFileSource == "" or sPathFileDestination == "":
+            return False, "No file for copy. Source: '" + sPathFileSource + "', Destination: '" + sPathFileDestination + "'"
+
+        # Determine the appropriate copy command based on the operating system
+        if file_IsOSWindows():  # Windows
+           command = "copy " + str(sPathFileSource) + " " + str(sPathFileDestination)
+        else:  # Unix/Linux/macOS
+           command = "cp " + str(sPathFileSource) + " " + str(sPathFileDestination)
+
+        # Execute the command
+        os.system(command)       
+
+        return True, ""
+    
+    except Exception as e:
+       sError = file_Error_handlerWithDes(e, "", "Trying to copy file. From: '" + sPathFileSource + "' - To: '" + sPathFileDestination + "'")
+       return False, sError
+
+#---------------------------------------------------------------------------------------------------------
+# file_delete
+#---------------------------------------------------------------------------------------------------------
+def file_delete(sPathFileSource):
+
+    try:
+   
+        if sPathFileSource == "":
+            return False, "No file for deletion. File: '" + sPathFileSource + '"'
+        
+        if os.path.exists(sPathFileSource):
+           os.remove(sPathFileSource)
+
+        return True, ""
+    
+    except Exception as e:
+       sError = file_Error_handlerWithDes(e, "", "Trying to delete file '" + sPathFileSource + "'")
+       return False, sError
+
+#---------------------------------------------------------------------------------------------------------
+# file_compare
+# Returns:
+#         True => They are equal
+#         False => They are different
+#         Difference  
+#---------------------------------------------------------------------------------------------------------
+def file_compare(sPathFileSource, sPathFileDestination):
+
+    sError = "Comparing files. Source: '" + sPathFileSource + "', Destination: '" + sPathFileDestination + "'. ERROR: "
+
+    try:
+
+        if sPathFileSource == "" or sPathFileDestination == "":
+            return False, sError + "No file for comparing"
+
+        bFromExists, sFromFileSize, sFromFileDateCreation, sFromFileDateModif, sFromFieDateAccess = file_getFileState(sPathFileSource, "")
+        bToExists, sToFileSize, sToFileDateCreation, sToFileDateModif, sToFieDateAccess = file_getFileState(sPathFileDestination, "")
+
+        if not bFromExists:
+            return False, sError + "Source file '" + sPathFileSource + "' does not exist."
+
+        if not bToExists:
+            return False, sError + "Destination file '" + sPathFileDestination + "' does not exist."
+
+        sDif = ""
+        if sFromFileSize != sToFileSize:
+            sDif = sDif + " Source file Size '" + sFromFileSize + "' is different from Destination file Size '" + sToFileSize + "'."
+        if sFromFileDateCreation != sToFileDateCreation:
+            sDif = sDif + " Source file Date Creation '" + sFromFileDateCreation + "' is different from Destination file Date Creation '" + sToFileDateCreation + "'."
+        if sFromFileDateModif != sToFileDateModif:
+            sDif = sDif + " Source file Date Modification '" + sFromFileDateModif + "' is different from Destination file Date Modification '" + sToFileDateModif + "'."
+        if sFromFieDateAccess != sToFieDateAccess:
+            sDif = sDif + " Source file Date Access '" + sFromFieDateAccess + "' is different from Destination file Date Access '" + sToFieDateAccess + "'."
+
+        if sDif != "":
+            return False, sError + sDif
+            
+        return True, ""
+    
+    except Exception as e:
+       sError = file_Error_handlerWithDes(e, "", "Trying to copy file. From: '" + sPathFileSource + "' - To: '" + sPthFileDestination + "'")
+       return False, sError
 
 #------------------------------------------------------------------------------------
