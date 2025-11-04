@@ -36,6 +36,7 @@ file_dic_creation_date = "creation_date"
 file_dic_modification_date = "modification_date"
 file_dic_access_date = "access_date"
 file_dic_directory_type = "directory_type"
+file_dic_path_from = "path_from"
 #-------------------------------------------------------------------------
 
 
@@ -315,6 +316,34 @@ def file_PathAndFile_GetPath(sPathAndFile):
     return sPath
 
 #---------------------------------------------------------------------------------------------------------
+# file_GetPath_From_Next
+# This method separates the following:
+# sPathAndOrFile => D:\Temp\Outputs\Siprocal\loci_answers_2025-09-05_10-26_Mexico_V3.txt
+# sPathFrom => D:\Temp\Outputs\
+# Returns => 
+#           sPath = D:\Temp\Outputs\Siprocal\
+#           sNext = Siprocal\
+#---------------------------------------------------------------------------------------------------------
+def file_GetPath_From_Next(sPathAndOrFile, sPathFrom):
+    sPath, sFile, sExt = file_PathAndFile_GetSeparated(sPathAndOrFile)
+
+    sSlash = file_getFileSlash(sPath)
+
+    #print("file_PathAndFile_GetPath_From - sPathAndFile: " + str(sPathAndFile) + " - sPathFrom = " + str(sPathFrom) + " - sPath: " + str(sPath))
+    if str_right(sPath, len(sSlash)) == sSlash:
+       if str_right(sPathFrom, len(sSlash)) != sSlash:
+          sPathFrom = sPathFrom + sSlash
+
+    sNext = ""
+    if sPathFrom in sPath and sPathFrom != sPath:
+       sNext = str_right(sPath, len(sPath) - len(sPathFrom))
+       #print("file_PathAndFile_GetPath_From - len(sPath): " + str(len(sPath)) + " - len(sPathFrom): " + str(len(sPathFrom)))
+
+    #print("file_PathAndFile_GetPath_From - sPath: " + str(sPath))
+
+    return sPath, sNext
+
+#---------------------------------------------------------------------------------------------------------
 # file_PathAndFile_GetFileName
 #---------------------------------------------------------------------------------------------------------
 def file_PathAndFile_GetFileName(sPathAndFile):
@@ -500,7 +529,7 @@ def file_getDirsAndFiles(sStartingPath, sLogFile=""):
         if len(files) > 0:
             m = 0
             while m < len(files):
-                sTemp = file_formatFilePathWithSlash(sRoot + str(files[m]))
+                sTemp = file_formatFilePathWithSlash(sRoot + sSlash + str(files[m]))
                 #print("file_getDirsAndFiles - FILES sTemp = " + str(sTemp))
                 lstFiles.append(sTemp)
                 m = m + 1
@@ -533,15 +562,18 @@ def file_getFileState(sPathAndFile, sLogFile=""):
 #---------------------------------------------------------------------------------------------------------
 # file_createPandaDicWithFileLstAddingStats
 #---------------------------------------------------------------------------------------------------------
-def file_createPandaDicWithFileLstAddingStats(lstFiles, bSortByName=True):
+def file_createPandaDicWithFileLstAddingStats(lstFiles, lstFilesFrom, bSort=False, bSortByName=True):
     
     files = []
 
     n = 0
     while n < len(lstFiles):
 
+         #print("file_createPandaDicWithFileLstAddingStats = file " + str(n) + " : " + str(lstFiles[n]))
+
          if file_FileExists(lstFiles[n]):
              
+             #print("file_createPandaDicWithFileLstAddingStats = file " + str(n) + " : " + str(lstFiles[n]) + " - EXISTS = TRUE")
              file_size, creation_date, modification_date, access_date = file_getFileState(lstFiles[n])
 
              if file_size != "":
@@ -552,17 +584,24 @@ def file_createPandaDicWithFileLstAddingStats(lstFiles, bSortByName=True):
                file_record[file_dic_creation_date] = str(creation_date)
                file_record[file_dic_modification_date] = str(modification_date)
                file_record[file_dic_access_date] = str(access_date)
-               file_record[file_dic_directory_type] = str(file_Is_a_Directory(lstFiles[n])   )
+               file_record[file_dic_directory_type] = str(file_Is_a_Directory(lstFiles[n]))
+
+               file_record[file_dic_path_from] = ""
+               #print("file_createPandaDicWithFileLstAddingStats - lstFilesFrom: " + str(lstFilesFrom[n]))
+               if len(lstFilesFrom) > 0 and n < len(lstFilesFrom):
+                   file_record[file_dic_path_from] = str(lstFilesFrom[n])
+                   
                files.append(file_record)
 
          n = n + 1
     
     dfFiles = pd.DataFrame(files)
 
-    if bSortByName and len(files) > 0:
-        dfFiles = file_PandasDicSorted(dfFiles, file_dic_path_file, True)
-    else:
-        dfFiles = file_PandasDicSorted(dfFiles, file_dic_size)
+    if bSort:
+       if bSortByName and len(files) > 0:
+          dfFiles = file_PandasDicSorted(dfFiles, file_dic_path_file, True)
+       else:
+          dfFiles = file_PandasDicSorted(dfFiles, file_dic_size)
             
         
     return dfFiles

@@ -41,38 +41,55 @@ def process_CopyFiles(logFile, lstSource, lstDestination):
 
     #GETTING ALL PATHs AND FILEs    
     lstFiles = []
+    lstFilesPathNext = []
     n = 0
-    while n < len(lstSource):
+    nSource = len(lstSource)
 
+    while n < nSource:
+          
+          lstSource[n]= file_fNormalPathForWindowsLinux(lstSource[n])
+          print("Processing source: " + str(n) + " - " + str(lstSource[n]))
           lstFilesTemp = process_CopyFiles_GetDirsAndFiles(lstSource[n], logFile)
           if len(lstFilesTemp) > 0:
-          
+
               m = 0
               while m < len(lstFilesTemp):
                     if lstFilesTemp[m] not in lstFiles:
-                       lstFiles.append(lstFilesTemp[m]) 
+
+                       #ADDED FOR FILES TO BE PROCESSED
+                       lstFilesTemp[m] = file_fNormalPathForWindowsLinux(lstFilesTemp[m])
+                       lstFiles.append(lstFilesTemp[m])
 
                        if file_Is_a_Directory(lstFilesTemp[m]):
                           print("process_CopyFiles - Added new directory for source: " + str(lstFilesTemp[m]))
                           lstSource.append(lstFilesTemp[m])
-         
+                          nSource = len(lstSource)
+
+                       sPath, sPathNext = file_GetPath_From_Next(lstFilesTemp[m], lstSource[n])
+                       #ADDED FOR SOURTH PATH FOR FILES TO BE PREOCESSED
+                       print("process_CopyFiles - file " + str(m) + ": " + str(lstFilesTemp[m]) + " - Directory for source " + str(n) + ": " + str(sPathNext))
+                       lstFilesPathNext.append(sPathNext) 
+
                     m = m + 1
     
           n = n + 1 
 
+    log_write_Normal(logFile, "Total Files records before Pandas = " + str(len(lstFiles)) + " from: " + str(len(lstFilesPathNext)))
+
     #PREPARING A PANDAS DICT WITH THE PREVIOUS LIST
-    dict_df_file = file_createPandaDicWithFileLstAddingStats(lstFiles, False)
+    dict_df_file = file_createPandaDicWithFileLstAddingStats(lstFiles, lstFilesPathNext)
     dict_df_file_cols = dict_df_file.columns.tolist()
     rows, cols = dict_df_file.shape 
-    print("Columns header = " + str(dict_df_file_cols) + " Total Columns=" + str(cols))
-    print("Total records = " + str(rows))
+    log_write_Normal(logFile, "Pandas Columns header = " + str(dict_df_file_cols) + " Total Columns=" + str(cols))
+    log_write_Normal(logFile, "Total records with Pandas = " + str(rows))
 
     nCols = 0
     n = 0
     for row1 in dict_df_file.itertuples():
 
-          print("File: " + str(n) + " - " + str(row1))          
-          #FIRST RECORD IS THE RECORD NUMBER, NEXT RECORD IS THE PATH/FILE
+          #FIRST FIELD IS THE RECORD NUMBER, NEXT RECORD IS THE PATH/FILE
+          #LAST FIELD IS THE PATH FROM WHERE IT IS ANALIZED
+          print("\nFile: " + str(n) + " - " + str(row1) + " - Path From: " + str(row1[len(row1)-1]))          
           sPrint, sFileSize, sFileDateCreation, sFileDateModif, sFieDateAccess = process_CopyFiles_DirFileStatus(row1[1], logFile)
           sPrint = "\n" + str(n) + " File: " + sPrint
           log_write_Normal(logFile, sPrint)
