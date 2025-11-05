@@ -3,6 +3,8 @@
 import os
 import sys
 
+import shutil
+
 current = os.path.dirname(os.path.realpath(__file__))
 parent_directory = os.path.dirname(current)
   
@@ -30,17 +32,48 @@ import argparse
 
 #-------------------------------------------------------------------------
 #FOR FILE DICTIONARY
+# IT STARTS WITH 1 BECAUSE OF INDEX
+n = 1
 file_dic_path_file = "file_dic_path_file"
-file_dic_path = "file_dic_path"
-file_dic_filename = "file_dic_filename"
-file_dic_fileext = "file_dic_fileext"
+file_dic_path_file_nro = n
+n = n + 1
 file_dic_size = "file_dic_file_size"
+file_dic_size_nro = n
+n = n + 1
 file_dic_creation_date = "file_dic_creation_date"
+file_dic_creation_date_nro = n
+n = n + 1
 file_dic_modification_date = "file_dic_modification_date"
+file_dic_modification_date_nro = n
+n = n + 1
 file_dic_access_date = "file_dic_access_date"
+file_dic_access_date_nro = n
+n = n + 1
 file_dic_directory_type = "file_dic_directory_type"
-file_dic_path_from = "file_dic_path_from"
+file_dic_directory_type_nro = n
+n = n + 1
+file_dic_path = "file_dic_path"
+file_dic_path_nro = n
+n = n + 1
+file_dic_filename = "file_dic_filename"
+file_dic_filename_nro = n
+n = n + 1
+file_dic_fileext = "file_dic_fileext"
+file_dic_fileext_nro = n
+n = n + 1
+file_dic_path_subdir = "file_dic_path_subdir"
+file_dic_path_subdir_nro = n
+n = n + 1
 file_dic_path_to = "file_dic_path_to"
+file_dic_path_to_nro = n
+n = n + 1
+file_dic_status = "file_dic_status"
+file_dic_status_nro = n
+n = n + 1
+
+file_dic_status_copied = "file_status_copied"
+file_dic_status_equal = "file_status_equal"
+
 #-------------------------------------------------------------------------
 
 
@@ -566,6 +599,7 @@ def file_getFileState(sPathAndFile, sLogFile=""):
     creation_date = ""
     modification_date = ""
     access_date = ""
+    bDirectory = False
 
     try:
        
@@ -576,24 +610,28 @@ def file_getFileState(sPathAndFile, sLogFile=""):
           creation_date = datetime.fromtimestamp(file_stats.st_ctime)
           modification_date = datetime.fromtimestamp(file_stats.st_mtime)
           access_date = datetime.fromtimestamp(file_stats.st_atime)
+
+          if file_Is_a_Directory(sPathAndFile):
+             bDirectory = True
+
        else:
            file_Error_handlerWithDes("", sLogFile, "Error: File not found at " + str(sPathAndFile))
            bReturn = False   
 
-       return bReturn, str(file_size), str(creation_date), str(modification_date), str(access_date)
+       return bReturn, str(file_size), str(creation_date), str(modification_date), str(access_date), bDirectory
 
     except FileNotFoundError:
        file_Error_handlerWithDes("", sLogFile, "Error: File not found at " + str(sPathAndFile))
-       return False, str(file_size), str(creation_date), str(modification_date), str(access_date)
+       return False, str(file_size), str(creation_date), str(modification_date), str(access_date), bDirectory
 
     except Exception as e:
        file_Error_handlerWithDes(e, sLogFile, "Getting stats for " + str(sPathAndFile))
-       return False, str(file_size), str(creation_date), str(modification_date), str(access_date)
+       return False, str(file_size), str(creation_date), str(modification_date), str(access_date), bDirectory
 
 #---------------------------------------------------------------------------------------------------------
 # file_createPandaDicWithFileLstAddingStats
 #---------------------------------------------------------------------------------------------------------
-def file_createPandaDicWithFileLstAddingStats(lstFiles, lstFilesFrom, bSort=False, bSortByName=True):
+def file_pandasFileRecord_CreateDicWithFileLstAddingStats(lstFiles, lstFilesFrom, bSort=False, bSortByName=True):
     
     files = []
 
@@ -605,7 +643,7 @@ def file_createPandaDicWithFileLstAddingStats(lstFiles, lstFilesFrom, bSort=Fals
          if file_FileExists(lstFiles[n]):
              
              #print("file_createPandaDicWithFileLstAddingStats = file " + str(n) + " : " + str(lstFiles[n]) + " - EXISTS = TRUE")
-             bFound, file_size, creation_date, modification_date, access_date = file_getFileState(lstFiles[n])
+             bFound, file_size, creation_date, modification_date, access_date, bDirectory = file_getFileState(lstFiles[n])
 
              if bFound and file_size != "":
                # SAVE IN A DICT 
@@ -615,7 +653,7 @@ def file_createPandaDicWithFileLstAddingStats(lstFiles, lstFilesFrom, bSort=Fals
                file_record[file_dic_creation_date] = str(creation_date)
                file_record[file_dic_modification_date] = str(modification_date)
                file_record[file_dic_access_date] = str(access_date)
-               file_record[file_dic_directory_type] = str(file_Is_a_Directory(file_record[file_dic_path_file] ))
+               file_record[file_dic_directory_type] = str(bDirectory)
 
                sPath, sFileName, sExt = file_PathAndFile_GetSeparated(file_record[file_dic_path_file])
                file_record[file_dic_path] = str(sPath)
@@ -623,13 +661,14 @@ def file_createPandaDicWithFileLstAddingStats(lstFiles, lstFilesFrom, bSort=Fals
                file_record[file_dic_fileext] = str(sExt)
 
                #USED FOR COPY FILES SO THAT IT IS SAVED WHETHER IT STARTS FROM SUBDIRECTORY
-               file_record[file_dic_path_from] = ""
+               file_record[file_dic_path_subdir] = ""
                #print("file_createPandaDicWithFileLstAddingStats - lstFilesFrom: " + str(lstFilesFrom[n]))
                if len(lstFilesFrom) > 0 and n < len(lstFilesFrom):
-                   file_record[file_dic_path_from] = str(lstFilesFrom[n])
+                   file_record[file_dic_path_subdir] = str(lstFilesFrom[n])
 
                #USED FOR COPY FILES SO THAT IT IS SAVED THE DESTINATION PATH WHEN IT IS COPIED
                file_record[file_dic_path_to] = ""
+               file_record[file_dic_status] = ""
 
                files.append(file_record)
 
@@ -645,6 +684,76 @@ def file_createPandaDicWithFileLstAddingStats(lstFiles, lstFilesFrom, bSort=Fals
             
         
     return dfFiles
+
+#---------------------------------------------------------------------------------------------------------
+# file_pandasFileRecord_get
+#---------------------------------------------------------------------------------------------------------
+def file_dic_pandasFileRecord_get(df_row, nItem):
+    #print("file_pandasFilefile_pandasFileRecord_getRecord_get - df_row = " + str(df_row) + " - nItem = " + str(nItem))
+    # For a row, the first item is the index
+    if nItem >= 0 and nItem < len(df_row):
+        #print("file_pandasFilefile_pandasFileRecord_getRecord_get - df_row[nItem] = " + str(df_row[nItem]) + " - nItem = " + str(nItem))
+        return df_row[nItem]
+    else:
+        return ""
+
+#---------------------------------------------------------------------------------------------------------
+# file_pandasFileRecord_set
+#---------------------------------------------------------------------------------------------------------
+def file_dic_pandasFileRecord_set(df, nRowIndex, nColumn, sValue):
+    tShape = df.shape
+    nRows = tShape[0]
+    nCols = tShape[1]
+    nRowIndex = int(nRowIndex)
+    nColumn = int(nColumn)
+
+    #For a column, to set a value it is not being taken into account the index because it is not updatable
+    nColumn = nColumn - 1
+
+    #print("file_pandasFileRecord_set - nRows = " + str(nRows) + " - nCols = " + str(nCols) + " - nRowIndex = " + str(nRowIndex) + " - nColumn = " + str(nColumn) + " sValue = " + str(sValue))
+    if nColumn >= 0 and nColumn <= nCols and nRowIndex >= 0 and nRowIndex <= nRows:
+        #print("df before: " + str(df.iloc[nRowIndex, nColumn]))
+        df.iloc[nRowIndex, nColumn] = sValue
+        #print("df after: " + str(df.iloc[nRowIndex, nColumn]))
+        return True
+    return False   
+
+#---------------------------------------------------------------------------------------------------------
+# file_pandasFileRecord_get_path_file
+#---------------------------------------------------------------------------------------------------------
+def file_dic_pandasFileRecord_get_path_file(df_row):
+    return file_dic_pandasFileRecord_get(df_row, file_dic_path_file_nro)
+
+#---------------------------------------------------------------------------------------------------------
+# file_pandasFileRecord_get_path_to
+#---------------------------------------------------------------------------------------------------------
+def file_dic_pandasFileRecord_get_path_to(df_row):
+    return file_dic_pandasFileRecord_get(df_row, file_dic_path_to_nro)
+
+#---------------------------------------------------------------------------------------------------------
+# file_pandasFileRecord_get_path_from
+#---------------------------------------------------------------------------------------------------------
+def file_dic_pandasFileRecord_get_path_subdir(df_row):
+    return file_dic_pandasFileRecord_get(df_row, file_dic_path_subdir_nro)
+
+#---------------------------------------------------------------------------------------------------------
+# file_pandasFileRecord_get_fileext
+#---------------------------------------------------------------------------------------------------------
+def file_dic_pandasFileRecord_get_fileext(df_row):
+    return file_dic_pandasFileRecord_get(df_row, file_dic_fileext_nro)
+
+
+#---------------------------------------------------------------------------------------------------------
+# file_pandasFileRecord_set_status
+#---------------------------------------------------------------------------------------------------------
+def file_dic_pandasFileRecord_set_status(df, nRow, sValue):
+    return file_dic_pandasFileRecord_set(df, nRow, file_dic_status_nro, sValue)
+
+#---------------------------------------------------------------------------------------------------------
+# file_pandasFileRecord_set_path_to
+#---------------------------------------------------------------------------------------------------------
+def file_dic_pandasFileRecord_set_path_to(df, nRow, sValue):
+    return file_dic_pandasFileRecord_set(df, nRow, file_dic_path_to_nro, sValue)
 
 #---------------------------------------------------------------------------------------------------------
 # file_dicSortedBySize
@@ -736,6 +845,48 @@ def file_OpenFileWithNotepadInWindows(sPathFileName):
     return True      
 
 #---------------------------------------------------------------------------------------------------------
+# file_mkDir
+#---------------------------------------------------------------------------------------------------------
+def file_mkDir(sPathSource):
+
+    try:
+
+        if sPathSource == "":
+            return False, "No path to create. Path: '" + sPathSource + "'"
+
+        if file_Is_a_Directory(sPathSource):
+            return False, "Path already exists. Source: '" + sPathSource + "'"
+
+        os.makedirs(sPathSource)
+
+        return True, ""
+    
+    except Exception as e:
+       sError = file_Error_handlerWithDes(e, "", "Trying to create a directory. Path: '" + sPathSource + "'")
+       return False, sError
+
+
+#---------------------------------------------------------------------------------------------------------
+# file_rmDir
+#---------------------------------------------------------------------------------------------------------
+def file_rmDir(sPathSource):
+
+    try:
+
+        if sPathSource == "":
+            return False, "No path to remove. Path: '" + sPathSource + "'"
+
+        if not file_Is_a_Directory(sPathSource):
+            return False, "File is not a directory. Source: '" + sPathSource + "'"
+
+        os.rmdir(sPathSource)
+
+        return True, ""
+    
+    except Exception as e:
+       sError = file_Error_handlerWithDes(e, "", "Trying to remove a directory. Path: '" + sPathSource + "'")
+       return False, sError
+#---------------------------------------------------------------------------------------------------------
 # file_copy
 #---------------------------------------------------------------------------------------------------------
 def file_copy(sPathFileSource, sPathFileDestination):
@@ -745,20 +896,24 @@ def file_copy(sPathFileSource, sPathFileDestination):
         if sPathFileSource == "" or sPathFileDestination == "":
             return False, "No file for copy. Source: '" + sPathFileSource + "', Destination: '" + sPathFileDestination + "'"
 
-        # Determine the appropriate copy command based on the operating system
-        if file_IsOSWindows():  # Windows
-           command = "copy " + str(sPathFileSource) + " " + str(sPathFileDestination)
-        else:  # Unix/Linux/macOS
-           command = "cp " + str(sPathFileSource) + " " + str(sPathFileDestination)
+        if not file_FileExists(sPathFileSource):
+            return False, "File to copy does not exist. Source: '" + sPathFileSource + "', Destination: '" + sPathFileDestination + "'"
 
-        # Execute the command
-        os.system(command)       
+        bReturn = True
+        sError = ""
 
-        return True, ""
+        if file_Is_a_Directory(sPathFileSource):
+           bReturn, sError = file_mkDir(sPathFileDestination)
+        else:
+           #https://stackoverflow.com/questions/123198/how-do-i-copy-a-file
+           shutil.copy2(sPathFileSource, sPathFileDestination)
+
+        return bReturn, sError
     
     except Exception as e:
        sError = file_Error_handlerWithDes(e, "", "Trying to copy file. From: '" + sPathFileSource + "' - To: '" + sPathFileDestination + "'")
        return False, sError
+
 
 #---------------------------------------------------------------------------------------------------------
 # file_delete
@@ -769,6 +924,9 @@ def file_delete(sPathFileSource):
    
         if sPathFileSource == "":
             return False, "No file for deletion. File: '" + sPathFileSource + '"'
+        
+        if file_Is_a_Directory(sPathFileSource):
+            return False, "It is a directory. It must be removed as a directory with rmdir, not delete command. Path: '" + sPathFileSource + "'"
         
         if os.path.exists(sPathFileSource):
            os.remove(sPathFileSource)
@@ -786,7 +944,7 @@ def file_delete(sPathFileSource):
 #         False => They are different
 #         Difference  
 #---------------------------------------------------------------------------------------------------------
-def file_compare(sPathFileSource, sPathFileDestination):
+def file_compare(sPathFileSource, sPathFileDestination, bValidateDateCreation=False):
 
     sError = "Comparing files. Source: '" + sPathFileSource + "', Destination: '" + sPathFileDestination + "'. ERROR: "
 
@@ -795,8 +953,8 @@ def file_compare(sPathFileSource, sPathFileDestination):
         if sPathFileSource == "" or sPathFileDestination == "":
             return False, sError + "No file for comparing"
 
-        bFromExists, sFromFileSize, sFromFileDateCreation, sFromFileDateModif, sFromFieDateAccess = file_getFileState(sPathFileSource, "")
-        bToExists, sToFileSize, sToFileDateCreation, sToFileDateModif, sToFieDateAccess = file_getFileState(sPathFileDestination, "")
+        bFromExists, sFromFileSize, sFromFileDateCreation, sFromFileDateModif, sFromFileDateAccess, bFromDirectory = file_getFileState(sPathFileSource, "")
+        bToExists, sToFileSize, sToFileDateCreation, sToFileDateModif, sToFileDateAccess, bToDirectory = file_getFileState(sPathFileDestination, "")
 
         if not bFromExists:
             return False, sError + "Source file '" + sPathFileSource + "' does not exist."
@@ -804,15 +962,21 @@ def file_compare(sPathFileSource, sPathFileDestination):
         if not bToExists:
             return False, sError + "Destination file '" + sPathFileDestination + "' does not exist."
 
+        if bFromDirectory:
+            return False, sError + "Source '" + sPathFileSource + "' is a direcory not to be compared."
+        if bToDirectory:
+            return False, sError + "Destination '" + sPathFileDestination + "' is a direcory not to be compared."
+
         sDif = ""
         if sFromFileSize != sToFileSize:
             sDif = sDif + " Source file Size '" + sFromFileSize + "' is different from Destination file Size '" + sToFileSize + "'."
-        if sFromFileDateCreation != sToFileDateCreation:
-            sDif = sDif + " Source file Date Creation '" + sFromFileDateCreation + "' is different from Destination file Date Creation '" + sToFileDateCreation + "'."
+        if bValidateDateCreation:    
+           if sFromFileDateCreation != sToFileDateCreation:
+              sDif = sDif + " Source file Date Creation '" + sFromFileDateCreation + "' is different from Destination file Date Creation '" + sToFileDateCreation + "'."
         if sFromFileDateModif != sToFileDateModif:
             sDif = sDif + " Source file Date Modification '" + sFromFileDateModif + "' is different from Destination file Date Modification '" + sToFileDateModif + "'."
-        if sFromFieDateAccess != sToFieDateAccess:
-            sDif = sDif + " Source file Date Access '" + sFromFieDateAccess + "' is different from Destination file Date Access '" + sToFieDateAccess + "'."
+        if sFromFileDateAccess != sToFileDateAccess:
+            sDif = sDif + " Source file Date Access '" + sFromFileDateAccess + "' is different from Destination file Date Access '" + sToFileDateAccess + "'."
 
         if sDif != "":
             return False, sError + sDif
@@ -820,7 +984,7 @@ def file_compare(sPathFileSource, sPathFileDestination):
         return True, ""
     
     except Exception as e:
-       sError = file_Error_handlerWithDes(e, "", "Trying to copy file. From: '" + sPathFileSource + "' - To: '" + sPthFileDestination + "'")
+       sError = file_Error_handlerWithDes(e, "", "Trying to copy file. From: '" + sPathFileSource + "' - To: '" + sPathFileDestination + "'")
        return False, sError
 
 #------------------------------------------------------------------------------------
