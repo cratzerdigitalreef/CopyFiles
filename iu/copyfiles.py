@@ -218,6 +218,14 @@ class CopyFilesHomeScreen:
             print(sErrorNotExist + "QPushButton pbProcess")   
 
         #---------------------------------------------------------------------------------------------------------
+        # BUTTON STOP PROCESS
+        self.btn_process_stop = self.window.findChild(QPushButton, "pbStop") 
+        if self.btn_process_stop: # Check if the object exists
+           self.btn_process_stop.clicked.connect(self.CmdProcessStop)
+        else:
+            print(sErrorNotExist + "QPushButton pbStop")   
+
+        #---------------------------------------------------------------------------------------------------------
         # BUTTON CLEAN
         self.btn_clean = self.window.findChild(QPushButton, "pbClean") 
         if self.btn_clean: # Check if the object exists
@@ -360,6 +368,9 @@ class CopyFilesHomeScreen:
         today_f = dateStart.strftime(self.sdtFormat)
         print(self.sdtString + "\n" + "Started APP '" + self.str_client + "' at: " + today_f + "\n" + self.sdtString + "\n")
 
+        #SET BUTTONS
+        self.processEnableDisable(True)
+
     #---------------------------------------------------------------------------------------------------------
     def CmdSource_get(self):
         self.CmdPathGet()
@@ -488,13 +499,47 @@ class CopyFilesHomeScreen:
 
         lstSource = self.modelSource.getALLDataByCol(self.nColPath)
         lstDestination = self.modelDestination.getALLDataByCol(self.nColPath)
-        bResult, sError = process_CopyFiles(self.log_file, lstSource, lstDestination)
+
+        self.processEnableDisable(False)
+        bResult, sError = process_CopyFiles(self.log_file, self.txt_log, lstSource, lstDestination)
 
         if not bResult:   
            log_writeWordsInColorYellow(sError)
            pyqt_MsgBox_Warning("Process", sError)
 
+        self.processEnableDisable(True)
+
         return bResult
+
+    #---------------------------------------------------------------------------------------------------------
+    def CmdProcessStop(self):
+        bStop = False
+        if bProcessGblRunning:
+           sMsg = "Stop processing ?"
+           sMsg = sMsg + "\nRecords: " + str(nProcessGblRecord) + " - at: " + process_GetDateTimeNow()
+           sReturn = pyqt_MsgBoxYesNo(self.window, "Processing", sMsg, False)
+           if str(sReturn).upper() == "YES":
+              bStop = process_GbStop_True()
+               
+        return bStop
+     
+    #---------------------------------------------------------------------------------------------------------
+    def processEnableDisable(self, bNotRunning=False):
+
+        #AT INIT - NOT PROCESSING
+        pyqt_EnableDisable(self.btn_process, bNotRunning)
+        pyqt_EnableDisable(self.btn_source_get, bNotRunning)
+        pyqt_EnableDisable(self.btn_source_del, bNotRunning)
+        pyqt_EnableDisable(self.btn_destination_get, bNotRunning)
+        pyqt_EnableDisable(self.btn_destination_del, bNotRunning)
+        pyqt_EnableDisable(self.btn_clean, bNotRunning)
+        pyqt_EnableDisable(self.btn_clean_log, bNotRunning)
+        pyqt_EnableDisable(self.btn_exit, bNotRunning)
+
+       #PROCESSING
+        pyqt_EnableDisable(self.btn_process_stop, not bNotRunning)
+
+        return                             
 
     #---------------------------------------------------------------------------------------------------------
     def CmdClean(self):

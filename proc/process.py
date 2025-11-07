@@ -12,11 +12,34 @@ sys.path.append(parent_directory+"/constants")
 from pathlib import Path
 from libs.str import *
 from libs.log import *
+from libs.pyqt import *
 from libs.files import *
+from libs.dt import *
+
+from PyQt5.QtWidgets import QMessageBox, QTextEdit, QFileDialog, QTableView
+
+nProcessGblRecord = 0
+dtProcessGblStarted = ""
+dtProcessGblFinished = ""
+dtProcessGblDateTimeFormat = "%Y-%m-%d %H.%M.%S.%f"
+#dtProcessGblDateTimeFormat = "%Y-%m-%d %H.%M.%S"
+sProcessGblMsg = ""
+bProcessGblStop = False
+bProcessGblRunning = False
+nProcessLogNro= 0
 
 # process_CopyFiles ----------------------------------------------------------------------------------------------------------
-def process_CopyFiles(logFile, lstSource, lstDestination, bCancelByError=False):
+def process_CopyFiles(logFile, pyqtTxtLog, lstSource, lstDestination, bCancelByError=False):
     
+    process_GblRecord_Clean()
+    process_GblMessage_Clean()
+    
+    process_GbDateTimeStartedFinished_CleanBoth()
+    process_GbDateTimeStartedFinished_Set(True)
+
+    process_GbStop_False()
+    process_GbRunning_True()
+
     bProcess = True
     sError = ""
     sWarning = "WARNING !!! "
@@ -46,16 +69,20 @@ def process_CopyFiles(logFile, lstSource, lstDestination, bCancelByError=False):
     n = 0
     nSource = len(lstSource)
 
-    while n < nSource:
+    while n < nSource and not bProcessGblStop:
 
           lstSource[n]= file_fNormalPathForWindowsLinux(lstSource[n])
-          print("Processing source: " + str(n) + " - " + str(lstSource[n]))
+          sProcessing = "Processing source: " + process_CalculateNofTotal(n, nSource) + " - " + str(lstSource[n])
+          print(sProcessing)
 
+          process_GblRecord_SumValue()
+          process_GblMessage_Set(pyqtTxtLog, sProcessing)
+          
           lstFilesTemp = process_CopyFiles_GetDirsAndFiles(lstSource[n], logFile)
           if len(lstFilesTemp) > 0:
 
               m = 0
-              while m < len(lstFilesTemp):
+              while m < len(lstFilesTemp) and not bProcessGblStop:
                     if lstFilesTemp[m] not in lstFiles:
 
                        #ADDED FOR FILES TO BE PROCESSED
@@ -72,11 +99,19 @@ def process_CopyFiles(logFile, lstSource, lstDestination, bCancelByError=False):
                        #print("process_CopyFiles - file " + str(m) + ": " + str(lstFilesTemp[m]) + " - Directory for source " + str(n) + ": " + str(sPathNext))
                        lstFilesPathSubdir.append(sPathSubdir) 
 
+                       sProcessing = "process_CopyFiles - file " + process_CalculateNofTotal(m, len(lstFilesTemp)) + " : " + str(lstFilesTemp[m]) + " - Directory for source " + str(n) + ": " + str(sPathSubdir)
+                       process_GblMessage_Set(pyqtTxtLog, sProcessing, True)
+
                     m = m + 1
     
           n = n + 1 
 
     log_write_Normal(logFile, "Total Files records before Pandas = " + str(len(lstFiles)) + " from: " + str(len(lstFilesPathSubdir)))
+
+    process_GblRecord_Clean()
+    process_GblMessage_Clean()
+    sProcessing = "Preparing Pandas Data Frame with founded files..."
+    process_GblMessage_Set(pyqtTxtLog, sProcessing)
 
     #PREPARING A PANDAS DICT WITH THE PREVIOUS LIST
     dict_df_file = file_pandasFileRecord_CreateDicWithFileLstAddingStats(lstFiles, lstFilesPathSubdir)
@@ -99,6 +134,9 @@ def process_CopyFiles(logFile, lstSource, lstDestination, bCancelByError=False):
     n = 0
     for row1 in dict_df_file.itertuples():
 
+          if bProcessGblStop:
+             break
+                 
           if sSlash == "":
              #GET SLASH ONLY ONCE
              sSlash = file_getFileSlash(lstSource[n])
@@ -113,11 +151,15 @@ def process_CopyFiles(logFile, lstSource, lstDestination, bCancelByError=False):
           #sPrint = "\n" + str(n) + " File: " + sPrint
           #log_write_Normal(logFile, sPrint)
 
+          sProcessing = "File " + process_CalculateNofTotal(n, rows) + ": " + sPathFileFrom + " - Path Subdir: " + sPathFileSubdir + " - Data: " + sPrint
+          process_GblMessage_Set(pyqtTxtLog, sProcessing, True)
+          process_GblRecord_SumValue()
+
           m = 0
-          while m < len(lstDestination):
+          while m < len(lstDestination) and not bProcessGblStop:
 
               sPathFileTo = lstDestination[m]
-              print("\nCopying File " + str(n) + ": " + sPathFileFrom + " - to: " + sPathFileTo + " - Subdir: " + str(sPathFileSubdir))
+              print("\nCopying File " + process_CalculateNofTotal(m, len(lstDestination)) + ": " + sPathFileFrom + " - to: " + sPathFileTo + " - Subdir: " + str(sPathFileSubdir))
               
               bError, sError = process_CopyFiles_CopyFromTo(dict_df_file, n, sPathFileFrom, sPathFileTo, sPathFileSubdir, logFile)
               if bError and bCancelByError:
@@ -129,6 +171,21 @@ def process_CopyFiles(logFile, lstSource, lstDestination, bCancelByError=False):
 
     #UPDATE CSV FILE
     dict_df_file.to_csv(sDFFile, index=True)
+
+    process_GbRunning_False()
+    process_GbDateTimeStartedFinished_Set(False)
+
+    #ENDED PROCESS
+    sProcessing = "Process for Copying Files finished!\nStarted at: " + dtProcessGblStarted + "\nFinished at: " + dtProcessGblFinished 
+    delta = dt_difference(dtProcessGblDateTimeFormat, dtProcessGblStarted, dtProcessGblFinished, False)
+    sProcessing = sProcessing + "\nElapsed: " + delta
+    sProcessing = sProcessing + "\n\nTotal files processed: " + str(rows) + "\nOutput File:\n" + sDFFile
+    if logFile != "":
+       sProcessing = sProcessing + "\nLog File:\n" + logFile
+    process_GblMessage_Set(pyqtTxtLog, sProcessing, True)
+    pyqt_MsgBox_Info("Copying Files", sProcessing)
+    if logFile != "":
+         log_write_Normal(logFile, sProcessing)
 
     return True, ""
 
@@ -246,5 +303,132 @@ def process_CopyFiles_CopyFromTo(df, nRecord, sFilePath, sPathTo, sPathSubdir, l
 
     return bReturn, sError
    
+# process_GblRecord_Clean ----------------------------------------------------------------------------------------------------------
+def process_GblRecord_Clean():
+    # GLOBAL VARIABLE
+    global nProcessGblRecord
+    nProcessGblRecord = 0
+    return nProcessGblRecord
+
+# process_GblRecord_SumValue ----------------------------------------------------------------------------------------------------------
+def process_GblRecord_SumValue(nSum=1):
+    # GLOBAL VARIABLE
+    global nProcessGblRecord
+    nProcessGblRecord = nProcessGblRecord + nSum
+    return nProcessGblRecord
+
+# process_GblMessage_Clean ----------------------------------------------------------------------------------------------------------
+def process_GblMessage_Clean():
+    # GLOBAL VARIABLE
+    global sProcessGblMsg
+    sProcessGblMsg = ""
+    return sProcessGblMsg
+
+# process_GblMessage_Set ----------------------------------------------------------------------------------------------------------
+def process_GblMessage_Set(pyqt_TextBoxSetText, sText="", bAppend=False, bSetTime=True):
+    # GLOBAL VARIABLE
+    global sProcessGblMsg
+    global nProcessLogNro
+
+    if not bAppend:
+       nProcessLogNro = 0
+       sProcessGblMsg = sText
+    else:
+       #REVERSE ORDER - VIEW LAST FIRST
+       if sText != "":
+          sProcessGblMsg = sText + "\n\n" + sProcessGblMsg
+    
+    if bSetTime and sProcessGblMsg != "":
+       nProcessLogNro = nProcessLogNro + 1
+       sProcessLogNro = str_formatNro(nProcessLogNro, 5)
+
+       today_prn = process_GetDateTimeNow()
+       sProcessGblMsg =  sProcessLogNro + ". " + today_prn + ": " + sProcessGblMsg
+
+    if isinstance(pyqt_TextBoxSetText, customPyQt_TextEdit):
+        pyqt_TextBoxSetText.setText(sProcessGblMsg)
+        #pyqt_TextBoxSetText(pyqt_TextBoxSetText, sProcessGblMsg)
+
+    return sProcessGblMsg
+
+# process_GbStop_True ----------------------------------------------------------------------------------------------------------
+def process_GbStop_True():
+    process_GbRunning_False()
+    return process_GbStop_Set(True)
+
+# process_GbStop_False ----------------------------------------------------------------------------------------------------------
+def process_GbStop_False():
+    return process_GbStop_Set(False)
+
+# process_GbStop_Set ----------------------------------------------------------------------------------------------------------
+def process_GbStop_Set(bStop=False):
+    # GLOBAL VARIABLE
+    global bProcessGblStop
+    bProcessGblStop = bStop
+    return bProcessGblStop
+
+# process_GbRunning_True ----------------------------------------------------------------------------------------------------------
+def process_GbRunning_True():
+    return process_GbRunning_Set(True)
+
+# process_GbRunning_False ----------------------------------------------------------------------------------------------------------
+def process_GbRunning_False():
+    return process_GbRunning_Set(False)
+
+# process_GbRunning_Set ----------------------------------------------------------------------------------------------------------
+def process_GbRunning_Set(bRunnung=False):
+    # GLOBAL VARIABLE
+    global bProcessGblRunning
+    bProcessGblRunning = bRunnung
+    return bProcessGblRunning
+
+# process_GbDateTimeStartedFinished_CleanBoth ----------------------------------------------------------------------------------------------------------
+def process_GbDateTimeStartedFinished_CleanBoth():
+    process_GbDateTimeStartedFinished_Clean(True)
+    process_GbDateTimeStartedFinished_Clean(False)
+
+# process_GbDateTimeStartedFinished_Clean ----------------------------------------------------------------------------------------------------------
+def process_GbDateTimeStartedFinished_Clean(bStarted=True):
+    # GLOBAL VARIABLE
+    global dtProcessGblStarted
+    global dtProcessGblFinished
+
+    if bStarted:
+       dtProcessGblStarted = ""
+       return dtProcessGblStarted
+    else:
+       dtProcessGblFinished = ""
+       return dtProcessGblFinished
+
+# process_GbDateTimeStartedFinished_Set ----------------------------------------------------------------------------------------------------------
+def process_GbDateTimeStartedFinished_Set(bStarted=True):
+    # GLOBAL VARIABLE
+    global dtProcessGblStarted
+    global dtProcessGblFinished
+
+    today_prn = process_GetDateTimeNow()
+    if bStarted:
+       dtProcessGblStarted = today_prn
+       return dtProcessGblStarted
+    else:
+       dtProcessGblFinished = today_prn
+       return dtProcessGblFinished
+
+# process_GetDateTimeNow ----------------------------------------------------------------------------------------------------------
+def process_GetDateTimeNow():
+    today = datetime.now()
+    today_prn = str(today.strftime(dtProcessGblDateTimeFormat))
+    return str(today_prn)
+
+# process_CalculateNofTotal ----------------------------------------------------------------------------------------------------------
+def process_CalculateNofTotal(nItem, nTotal):
+    
+    #BECAUSE IT STARTS WITH 0 (zero)
+    nItem = nItem + 1
+
+    sPorcentage = str_GetPorcentageToString(nTotal, nItem, 2)
+    sTotal = str(nItem) + " of total " + str(nTotal) + " - processing = % " + sPorcentage
+    log_writeWordsInColorBlue(sTotal)
+    return sTotal
 
 # --------------------------------------------------------------------------------------------------------------------------------------------------------

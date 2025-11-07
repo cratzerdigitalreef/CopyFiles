@@ -32,8 +32,7 @@ import argparse
 
 #-------------------------------------------------------------------------
 #FOR FILE DICTIONARY
-# IT STARTS WITH 1 BECAUSE OF INDEX
-n = 1
+n = 0
 file_dic_path_file = "file_dic_path_file"
 file_dic_path_file_nro = n
 n = n + 1
@@ -693,6 +692,8 @@ def file_dic_pandasFileRecord_get(df_row, nItem):
     # For a row, the first item is the index
     if nItem >= 0 and nItem < len(df_row):
         #print("file_pandasFilefile_pandasFileRecord_getRecord_get - df_row[nItem] = " + str(df_row[nItem]) + " - nItem = " + str(nItem))
+        #It starts with 1 for nItem because of index is zero reference df_row[0]
+        nItem = nItem + 1
         return df_row[nItem]
     else:
         return ""
@@ -708,7 +709,7 @@ def file_dic_pandasFileRecord_set(df, nRowIndex, nColumn, sValue):
     nColumn = int(nColumn)
 
     #For a column, to set a value it is not being taken into account the index because it is not updatable
-    nColumn = nColumn - 1
+    #Column starts with 0 (zero)
 
     #print("file_pandasFileRecord_set - nRows = " + str(nRows) + " - nCols = " + str(nCols) + " - nRowIndex = " + str(nRowIndex) + " - nColumn = " + str(nColumn) + " sValue = " + str(sValue))
     if nColumn >= 0 and nColumn <= nCols and nRowIndex >= 0 and nRowIndex <= nRows:

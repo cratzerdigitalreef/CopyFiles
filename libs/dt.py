@@ -26,7 +26,21 @@ def dt_difference_sec(dtStart, dtEnd):
 def dt_difference(sdtFormat, dtStart, dtEnd, bReturnCompleteMsg):
     
     sF = ".%f"
-    if str_right(sdtFormat, len(sF)) != sF and str_instrBool(str(dtStart), "."):
+    sFZero = "000000"
+    sPoint = "."
+
+    #IT IS NEEDED THE FRACTION POR DELTA
+    nPoint = len(dtStart.split(sPoint))
+    if nPoint <= 0:
+       sPoint = ":"
+       nPoint = len(dtStart.split(sPoint))
+    if nPoint <= 3:
+       #IT IS NEEDED TO BE ADDED THE FRACTION
+       dtStart = dtStart + sPoint + sFZero
+       dtEnd = dtEnd + sPoint + sFZero
+       sdtFormat = sdtFormat + sF
+
+    if str_right(sdtFormat, len(sF)) != sF and len(dtStart.split(sPoint)) > 1:
        sdtFormat = sdtFormat + sF
 
     #print("dt_difference - Start: " + str(dtStart))
@@ -96,7 +110,7 @@ def dt_difference(sdtFormat, dtStart, dtEnd, bReturnCompleteMsg):
        
     sRet = sRet + str(nday) + " days, " + str(nhor) + " hours, " + str(nmin) + " minutes, " + str(nsec) + " seconds"
     if nmsec != "0":
-       sRet = sRet + ", " + str_AddThousandToNumber(str(nmsec), "") + " miliseconds"
+       sRet = sRet + ", " + str_AddThousandToNumber(str(nmsec), "") + " milliseconds"
     sRet = sRet + "."
     
     #dt_difference(sdtFormat, "2022/08/17-22:28:52", "2022/08/18-06:35:06", False)
