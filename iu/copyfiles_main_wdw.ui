@@ -269,25 +269,6 @@
     </property>
     <layout class="QVBoxLayout" name="verticalLayoutLogFile"/>
    </widget>
-   <widget class="QPushButton" name="pbStop">
-    <property name="geometry">
-     <rect>
-      <x>588</x>
-      <y>440</y>
-      <width>91</width>
-      <height>23</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <weight>75</weight>
-      <bold>true</bold>
-     </font>
-    </property>
-    <property name="text">
-     <string>Stop Process</string>
-    </property>
-   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">

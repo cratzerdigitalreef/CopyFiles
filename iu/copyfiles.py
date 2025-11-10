@@ -62,7 +62,6 @@ class CopyFilesHomeScreen:
         self.status = "Success"
         self.is_error = False
 
-
         #---------------------------------------------------------------------------------------
         #FOR XML SAVING - LOADING DATA
         current = os.path.dirname(os.path.realpath(__file__))
@@ -149,6 +148,9 @@ class CopyFilesHomeScreen:
         self.create_widgets()
 
         self.window.show()
+
+        self.window_process = processWindow(parent=self.window)
+        self.window_process.hide()
         
         sys.exit(self.app.exec()) # Start the event loop 
 
@@ -216,14 +218,6 @@ class CopyFilesHomeScreen:
            self.btn_process.clicked.connect(self.CmdProcess)
         else:
             print(sErrorNotExist + "QPushButton pbProcess")   
-
-        #---------------------------------------------------------------------------------------------------------
-        # BUTTON STOP PROCESS
-        self.btn_process_stop = self.window.findChild(QPushButton, "pbStop") 
-        if self.btn_process_stop: # Check if the object exists
-           self.btn_process_stop.clicked.connect(self.CmdProcessStop)
-        else:
-            print(sErrorNotExist + "QPushButton pbStop")   
 
         #---------------------------------------------------------------------------------------------------------
         # BUTTON CLEAN
@@ -501,7 +495,12 @@ class CopyFilesHomeScreen:
         lstDestination = self.modelDestination.getALLDataByCol(self.nColPath)
 
         self.processEnableDisable(False)
-        bResult, sError = process_CopyFiles(self.log_file, self.txt_log, lstSource, lstDestination)
+        process_CopyFiles(self.log_file, self.window, self.window_process, lstSource, lstDestination)
+
+        sMsg = self.window_process.sFinishResult
+        bResult = self.window_process.bFinishResult
+
+        pyqt_TextBoxSetText(self.txt_log,sMsg)
 
         if not bResult:   
            log_writeWordsInColorYellow(sError)
@@ -509,20 +508,13 @@ class CopyFilesHomeScreen:
 
         self.processEnableDisable(True)
 
+        if sProcessFlagEnded in sMsg:
+            sMsgEnded = str_getSubStringFromOcur(sMsg, sProcessFlagEnded, 1)
+            sMsgEnded = sProcessFlagEnded + sMsgEnded
+            pyqt_MsgBox_Info("Copying Files", sMsgEnded)
+
         return bResult
 
-    #---------------------------------------------------------------------------------------------------------
-    def CmdProcessStop(self):
-        bStop = False
-        if bProcessGblRunning:
-           sMsg = "Stop processing ?"
-           sMsg = sMsg + "\nRecords: " + str(nProcessGblRecord) + " - at: " + process_GetDateTimeNow()
-           sReturn = pyqt_MsgBoxYesNo(self.window, "Processing", sMsg, False)
-           if str(sReturn).upper() == "YES":
-              bStop = process_GbStop_True()
-               
-        return bStop
-     
     #---------------------------------------------------------------------------------------------------------
     def processEnableDisable(self, bNotRunning=False):
 
@@ -537,7 +529,7 @@ class CopyFilesHomeScreen:
         pyqt_EnableDisable(self.btn_exit, bNotRunning)
 
        #PROCESSING
-        pyqt_EnableDisable(self.btn_process_stop, not bNotRunning)
+        #pyqt_EnableDisable(self.btn_process_stop, not bNotRunning)
 
         return                             
 
@@ -760,7 +752,11 @@ class CopyFilesHomeScreen:
         print(self.sdtString + "\n" + "Finished APP '" + self.str_client + "' at: " + today_f + "\n" + self.sdtString + "\n")
 
         self.xml_save()
+
+        #close windows
+        self.window_process.destroy()
         self.window.destroy()
+
         sys.exit(0)
 
     #---------------------------------------------------------------------------------------------------------

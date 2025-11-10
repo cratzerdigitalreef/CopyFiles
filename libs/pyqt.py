@@ -10,7 +10,7 @@ import os
 
 from PyQt5.uic import loadUi
 from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget, QLabel
-from PyQt5.QtWidgets import QMessageBox, QTextEdit, QFileDialog, QTableView
+from PyQt5.QtWidgets import QMessageBox, QTextEdit, QFileDialog, QTableView, QDesktopWidget
 from PyQt5.QtCore import QFile, QIODevice, Qt
 
 from str import *
@@ -283,6 +283,10 @@ def pyqt_MsgBoxAbortRetryIgnore(parent, sHeader, sText, bDefaultAbort, bDefaultR
     return sReturn
 
 #---------------------------------------------------------------------------------------------------------
+def pyqt_MsgBoxQuestionWithoutParent(sHeader, sText, btns=QMessageBox.Ok, btnDefault=QMessageBox.StandardButton.Ok):
+    return pyqt_MsgBoxQuestion(None, sHeader, sText, btns, btnDefault)
+
+#---------------------------------------------------------------------------------------------------------
 def pyqt_MsgBoxQuestion(parent, sHeader, sText, btns=QMessageBox.Ok, btnDefault=QMessageBox.StandardButton.Ok):
     #https://www.tutorialspoint.com/pyqt/pyqt_qmessagebox.htm
     if not btns:
@@ -368,6 +372,40 @@ class customPyQt_TextEdit(QTextEdit):
 
         # Call the base class implementation to maintain default behavior
         super().mouseDoubleClickEvent(event)
+
+#---------------------------------------------------------------------------------------------------------
+# pyqt_windowRefresh
+#---------------------------------------------------------------------------------------------------------
+def pyqt_windowRefresh(mnWindow):
+    try:
+       mnWindow.update()
+       return True, ""
+    except Exception as e:
+       sError = "ERROR for 'update' windows object '" + str(mnWindow) + ". ERROR: " + str(e)
+       print(sError)
+       return False, sError
+
+
+#---------------------------------------------------------------------------------------------------------
+# pyqt_centerWindow
+#---------------------------------------------------------------------------------------------------------
+def pyqt_centerWindow(window):
+        # Get the screen geometry
+        screen = QDesktopWidget().screenGeometry()
+        
+        # Get the window geometry
+        window_geometry = window.frameGeometry()
+        
+        # Calculate the center point of the screen
+        center_point = screen.center()
+        
+        # Move the window's center to the screen's center
+        window_geometry.moveCenter(center_point)
+        
+        # Apply the new geometry to the window
+        window.setGeometry(window_geometry)
+        
+        return
 
 #---------------------------------------------------------------------------------------------------------
     

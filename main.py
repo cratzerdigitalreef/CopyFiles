@@ -31,5 +31,5 @@ if __name__ == "__main__":
     copyfiles = CopyFilesHomeScreen(str_client, str_log_file)
 
     
-    copyfiles.run()
+    #copyfiles.run()
     
