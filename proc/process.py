@@ -41,8 +41,9 @@ class Worker(QThread):
     Emits signals for progress updates and completion.
     Includes a flag for cancellation.
     """
-    signalProgress = pyqtSignal(int, str)
-    signalFinished = pyqtSignal(int, bool, str)
+    signalProgress = pyqtSignal(str)
+    signalFinished = pyqtSignal(bool, str)
+    signalCancel = pyqtSignal()
 
     def __init__(self):
         super().__init__()
@@ -57,7 +58,7 @@ class Worker(QThread):
         self._bCancelByError = bCancelByError
 
     def progress(self, sMsg):
-        self.signalProgress.emit(1, sMsg)
+        self.signalProgress.emit(sMsg)
 
     def run(self):
         """
@@ -81,8 +82,8 @@ class Worker(QThread):
         bFinishResult, sFinishResult = process_CopyFiles_sub(self._logFile, self._mainWindow, self._procWindows, self._lstSource, self._lstDestination, self._bCancelByError)
         #print("After process_CopyFiles_sub")
         
-        print("run finished: sFinishResult = " + str(sFinishResult))
-        self.signalFinished.emit(1, bFinishResult, sFinishResult)
+        #print("run finished: sFinishResult = " + str(sFinishResult))
+        self.signalFinished.emit(bFinishResult, sFinishResult)
 
     def cancel(self):
         """
@@ -93,11 +94,17 @@ class Worker(QThread):
         sReturn = pyqt_MsgBoxQuestionWithoutParent("Processing", sMsg, False)
         if str(sReturn).upper() == "YES":
            self._is_canceled = True
+           self.signalCancel.emit()
 
-class processWindow(QMainWindow):
+class processWindow(QMainWindow, QThread):
     """
     The main application window, managing the GUI and interacting with the worker thread.
     """
+
+    #SIGNAL FOR MAIN WINDOW
+    signal_task_finished = pyqtSignal(bool, str)
+    signal_task_close = pyqtSignal()
+
     def __init__(self, parent=None):
         super().__init__(parent)
 
@@ -126,16 +133,18 @@ class processWindow(QMainWindow):
         #self.layout.addWidget(self.start_button)
         self.layout.addWidget(self.cancel_button)
 
+        #WORKER FOR PROCESSING
         self.worker_thread  = Worker()
+        #LINK TO WORKER SIGNAL
         self.worker_thread.signalProgress.connect(self.update_progress)
         self.worker_thread.signalFinished.connect(self.task_finished)
+        self.worker_thread.signalCancel.connect(self.cancel_task)
 
         #self.start_button.clicked.connect(self.start_task)
         self.cancel_button.clicked.connect(self.cancel_task)
 
         self.bFinishResult = True
         self.sFinishResult = ""
-
 
     @pyqtSlot()
     def start_task(self, logFile, mainWindow, procWindows, lstSource, lstDestination, bCancelByError=False):
@@ -148,7 +157,9 @@ class processWindow(QMainWindow):
         #self.label.setText("Task running...")
         sMsg = "Task running... at " + process_GetDateTimeNow()
         self.txt.setText(sMsg)
-        print(sMsg)
+        #print(sMsg)
+        self.txt.update()
+
         #self.progress_bar.setValue(0)
         #self.start_button.setEnabled(False)
         self.cancel_button.setEnabled(True)
@@ -166,24 +177,23 @@ class processWindow(QMainWindow):
         #print("After starting worker")
         self.update()
 
-    @pyqtSlot(int, str)
-    def update_progress(self, value, sMsg):
+    @pyqtSlot(str)
+    def update_progress(self, sMsg):
         """
         Receives progress updates from the worker thread and updates the progress bar.
         """
         #self.progress_bar.setValue(value)
-        value = str(value)
-        if sMsg == "":
-            sMsg = sProcessGblMsg
+        sMsg = sProcessGblMsg
 
-        print("Before setText - update_progress : sMsg = " + str(sMsg))    
+        #print("Before setText - update_progress : sMsg = " + str(sMsg))    
         self.txt.setText(sMsg)
-        print("After setText - update_progress : sMsg = " + str(sMsg))    
-        print(sMsg)
+        self.txt.update()
+
+        #print("After setText - update_progress : sMsg = " + str(sMsg))    
         #self.update()
 
-    @pyqtSlot(int, bool, str)
-    def task_finished(self, number, bFinishResult, sFinishResult):
+    @pyqtSlot(bool, str)
+    def task_finished(self, bFinishResult, sFinishResult):
         """
         Handles the completion of the task, whether naturally or by cancellation.
         Resets GUI elements.
@@ -201,30 +211,57 @@ class processWindow(QMainWindow):
             sTask = "finished"
         #self.start_button.setEnabled(True)
         #self.cancel_button.setEnabled(False)
-        sMsg = "Task " + sTask + " ... at " + process_GetDateTimeNow()
-        print(sMsg)
-        self.txt.setText(sMsg)
 
         self.bFinishResult = bFinishResult
         self.sFinishResult = sFinishResult
 
-        self.hide()
+        sMsg = "Task " + sTask + " ... at " + process_GetDateTimeNow()
+        if self.sFinishResult != "":
+            sMsg = sMsg + "\n\n" + self.sFinishResult
+        print(sMsg)
+        self.txt.setText(sMsg)
+
+        pyqt_ButtonSetText(self.cancel_button, "Close")
+
+        if sProcessFlagEnded in self.sFinishResult:
+            sMsgEnded = str_getSubStringFromOcur(self.sFinishResult, sProcessFlagEnded, 1)
+            sMsgEnded = sProcessFlagEnded + sMsgEnded
+            pyqt_MsgBox_Info("Copying Files", sMsgEnded)
+        else:
+            sMsgEnded = sMsg    
+
+        self.signal_task_finished.emit(bFinishResult, str(sMsgEnded))
+        #self.hide()
 
     @pyqtSlot()
     def cancel_task(self):
         """
         Requests cancellation of the running task in the worker thread.
         """
-        self.worker.cancel()
+        #self.worker_thread.cancel()
         #self.label.setText("Cancelling task...")
-        self.txt.setText("Cancelling task... at " + process_GetDateTimeNow())
+        sProcess = "Cancelling task"
+        bClose = False
+        if pyqt_ButtonGetText(self.cancel_button).upper() == "CLOSE":
+            sProcess = "Close process"
+            bClose = True
+            self.hide()
+
+        self.txt.setText(sProcess + " ... at " + process_GetDateTimeNow())
         process_GbStop_True()
         #self.cancel_button.setEnabled(False) # Disable while waiting for cancellation
+        
+        if bClose:
+           self.signal_task_close.emit()
 
+        return
 
 # process_CopyFiles ----------------------------------------------------------------------------------------------------------
 def process_CopyFiles(logFile, mainWindow, procWindows, lstSource, lstDestination, bCancelByError=False):
+    #print("process_CopyFiles - Before start_task")
     procWindows.start_task(logFile, mainWindow, procWindows, lstSource, lstDestination, bCancelByError)
+    #print("process_CopyFiles - After start_task")
+
     return
 
 # process_CopyFiles_sub ----------------------------------------------------------------------------------------------------------
@@ -308,7 +345,7 @@ def process_CopyFiles_sub(logFile, mainWindow, procWindows, lstSource, lstDestin
                        lstFilesPathSubdir.append(sPathSubdir) 
 
                        sProcessing = "process_CopyFiles - file " + process_CalculateNofTotal(m, len(lstFilesTemp)) + " : " + str(lstFilesTemp[m]) + " - Directory for source " + str(n) + ": " + str(sPathSubdir)
-                       process_GblMessage_Set(sProcessing, True)
+                       process_GblMessage_Set(sProcessing)
 
                     
                     pyqt_windowRefresh(mainWindow)
@@ -365,7 +402,7 @@ def process_CopyFiles_sub(logFile, mainWindow, procWindows, lstSource, lstDestin
           #log_write_Normal(logFile, sPrint)
 
           sProcessing = "File " + process_CalculateNofTotal(n, rows) + ": " + sPathFileFrom + " - Path Subdir: " + sPathFileSubdir + " - Data: " + sPrint
-          process_GblMessage_Set(sProcessing, True)
+          process_GblMessage_Set(sProcessing)
           process_GblRecord_SumValue()
           process_EmitMsgProcessing(procWindows, sProcessing)
 
@@ -412,7 +449,7 @@ def process_CopyFiles_sub(logFile, mainWindow, procWindows, lstSource, lstDestin
     sProcessing = sProcessing + "\n\nTotal files processed: " + str(rows) + "\nOutput File:\n" + sDFFile
     if logFile != "":
        sProcessing = sProcessing + "\nLog File:\n" + logFile
-    process_GblMessage_Set(sProcessing, True)
+    process_GblMessage_Set(sProcessing)
     if logFile != "":
          log_write_Normal(logFile, sProcessing)
 
@@ -662,9 +699,13 @@ def process_EmitMsgProcessing(procWindow, sMsg):
     global sProcessGblMsg 
     sProcessGblMsg = sMsg
     print("process_EmitMsgProcessing: sProcessGblMsg"+ str(sProcessGblMsg))
-    #procWindow.worker_thread.signalProgress(1, sMsg)
-    #procWindow.update_progress(1, sMsg)
+    procWindow.worker_thread.signalProgress.emit(sMsg)
     print("process_EmitMsgProcessing: sProcessGblMsg"+ str(sProcessGblMsg))
 
+
+# --------------------------------------------------------------------------------------------------------------------------------------------------------
+def process_Time(nSleepSeconds=1):
+    time.sleep(nSleepSeconds)  # Pause for 1 second
+    
 # --------------------------------------------------------------------------------------------------------------------------------------------------------
        

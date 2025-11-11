@@ -52,6 +52,7 @@ from proc.process import *
 from libs.log import *
 
 import sys
+import time
 
 class CopyFilesHomeScreen:
 
@@ -61,6 +62,8 @@ class CopyFilesHomeScreen:
         self.str_client = client
         self.status = "Success"
         self.is_error = False
+
+        self.nProcessSeparaExec = 150
 
         #---------------------------------------------------------------------------------------
         #FOR XML SAVING - LOADING DATA
@@ -149,8 +152,14 @@ class CopyFilesHomeScreen:
 
         self.window.show()
 
+        #PROCESS WINDOWS
         self.window_process = processWindow(parent=self.window)
+        #IT IS HIDDEN BECAUSE PYQT
         self.window_process.hide()
+
+        #SIGNALS FROM PROCESS WINDOWS
+        self.window_process.signal_task_finished.connect(self.process_window_finished)
+        self.window_process.signal_task_close.connect(self.process_window_close)
         
         sys.exit(self.app.exec()) # Start the event loop 
 
@@ -335,7 +344,7 @@ class CopyFilesHomeScreen:
         self.layout_txt_log.addWidget(self.txt_log)
         if self.txt_log: # Check if the object exists
            pyqt_TextEditableReadOnly(self.txt_log)
-           pyqt_TextBoxSetText(self.txt_log, "LOG")
+           pyqt_TextBoxSetText(self.txt_log, "")
         else:
             print(sErrorNotExist + "QTextEdit txtLog")   
 
@@ -494,26 +503,32 @@ class CopyFilesHomeScreen:
         lstSource = self.modelSource.getALLDataByCol(self.nColPath)
         lstDestination = self.modelDestination.getALLDataByCol(self.nColPath)
 
+        #DISABLE MAIN SCREEN
         self.processEnableDisable(False)
+        #START PROCESSING
         process_CopyFiles(self.log_file, self.window, self.window_process, lstSource, lstDestination)
+        return
 
-        sMsg = self.window_process.sFinishResult
-        bResult = self.window_process.bFinishResult
+    #---------------------------------------------------------------------------------------------------------
+    #@pyqtSlot(bool, str)
+    def process_window_finished(self, bResult, sMsg):
 
-        pyqt_TextBoxSetText(self.txt_log,sMsg)
+        print("process_window_finished - bResult: " + str(bResult) + " - sMsg: " + str(sMsg))
+        sTxt = pyqt_TextBoxGetText(self.txt_log)
+        sTxt = str(sMsg) + "\n" + str_RepeatString(self.nProcessSeparaExec, "-") + "\n\n" + sTxt
+        pyqt_TextBoxSetText(self.txt_log, sTxt)
 
         if not bResult:   
-           log_writeWordsInColorYellow(sError)
-           pyqt_MsgBox_Warning("Process", sError)
-
-        self.processEnableDisable(True)
-
-        if sProcessFlagEnded in sMsg:
-            sMsgEnded = str_getSubStringFromOcur(sMsg, sProcessFlagEnded, 1)
-            sMsgEnded = sProcessFlagEnded + sMsgEnded
-            pyqt_MsgBox_Info("Copying Files", sMsgEnded)
+           log_writeWordsInColorYellow(sMsg)
+           pyqt_MsgBox_Warning("Process", sMsg)
 
         return bResult
+
+    #---------------------------------------------------------------------------------------------------------
+    #@pyqtSlot()
+    def process_window_close(self):
+        self.processEnableDisable(True)
+        return
 
     #---------------------------------------------------------------------------------------------------------
     def processEnableDisable(self, bNotRunning=False):
