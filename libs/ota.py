@@ -21,8 +21,9 @@ ota_sDef_SIMSupplierValid = "Valid"
 ota_sDef_SIMSupplierGyD = "GyD"
 ota_sDef_SIMSupplierIdemia = "Idemia"
 ota_sDef_SIMSupplierWordCards = "WorldCards"
+ota_sDef_SIMSupplierNXP = "NXP"
 
-ota_sDef_SIMSupplierValidGyDIdemia = ota_sDef_SIMSupplierValid + ota_sDef_SIMSupplierGyD + ota_sDef_SIMSupplierIdemia + ota_sDef_SIMSupplierWordCards
+ota_sDef_SIMSupplierValidGyDIdemia = ota_sDef_SIMSupplierValid + ota_sDef_SIMSupplierGyD + ota_sDef_SIMSupplierIdemia + ota_sDef_SIMSupplierWordCards + ota_sDef_SIMSupplierNXP
 
 ota_sDef_OTAExtThales = ".script"
 ota_sDef_OTAExtValid = ".xml"
@@ -180,7 +181,7 @@ def ota_OTAForDeletePackageAndInstance(OTAScriptsName, sPathOut, sAIDPackage, sA
        
     # -------------------------------------------------------------------------------------------------------------------------------
     # VALID CLASSIC OTA
-    # VALID, GyD e IDEMIA
+    # VALID, GyD, IDEMIA, Worldcards y NXP
     sFileNameProc = sFileName
     sFileNameProc = sFileNameProc + ota_sDef_FileNameSepara + ota_sDef_SIMSupplierValidGyDIdemia
     sFileNameProc = sFileNameProc + sExt
@@ -212,7 +213,7 @@ def ota_OTAForLoadPackageAndInstallApplet(OTAScriptsName, sOTAScriptsAmount, sPa
 
     nOTAScriptsAmount = 10
     if not valid_nro_IsCharValidNro(sOTAScriptsAmount, True): 
-       return Falase
+       return False
     else:
        nOTAScriptsAmount = int(sOTAScriptsAmount)
 

@@ -5,10 +5,12 @@ a = Analysis(
     ['../main.py'],
     pathex=[],
     binaries=[],
-    datas=[('../libs', 'libs'), ('../../Images/smpp_sim_icon_red.ico', 'Images'), ('../../smpptransmitter/helloworldusim.ijc', 'ijc'), ('../../smpptransmitter/SMPP_Transmitter.xml', '.')],
+    datas=[
+    ('../libs', 'libs'), ('../CopyFiles.xml', '.'), ('../iu/copyfiles_main_wdw.ui', 'iu')
+    ],
     hiddenimports=[
     'customtkinter','_cffi_backend','colorama','prettytable',
-    'pycryptodome','pytz','tzlocal','CTkMessagebox'
+    'pycryptodome','pytz','tzlocal','CTkMessagebox', 'pyqt', 'numpy'
     ],
     hookspath=[],
     hooksconfig={},
@@ -25,7 +27,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name='SMPP-Transmitter-Python',
+    name='CopyFiles-Python',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -38,9 +40,8 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=['../../Images/smpp_sim_icon_red.ico'],
-    ijc=['../../smpptransmitter/helloworldusim.ijc'],
-    xml=['../../smpptransmitter/SMPP_Transmitter.xml'],
+    xml=['../CopyFiles.xml'],
+    iu=['../iu/copyfiles_main_wdw.ui'],
     onefile=False
 )
 
@@ -51,5 +52,5 @@ coll = COLLECT(
     strip=False,
     upx=True,
     upx_exclude=[],
-    name='SMPP_Transmitter_python'
+    name='CopyFiles_python'
 )
