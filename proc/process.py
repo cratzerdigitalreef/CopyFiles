@@ -42,6 +42,7 @@ class Worker(QThread):
     Includes a flag for cancellation.
     """
     signalProgress = pyqtSignal(str)
+    signalProgressBar = pyqtSignal(int)
     signalFinished = pyqtSignal(bool, str)
     signalCancel = pyqtSignal()
 
@@ -59,6 +60,9 @@ class Worker(QThread):
 
     def progress(self, sMsg):
         self.signalProgress.emit(sMsg)
+
+    def progress_bar(self, nValue):
+        self.signalProgressBar.emit(nValue)
 
     def run(self):
         """
@@ -109,7 +113,7 @@ class processWindow(QMainWindow, QThread):
         super().__init__(parent)
 
         self.setWindowTitle("Process Threding")
-        self.setGeometry(100, 100, 400, 200)
+        self.setGeometry(100, 100, 600, 400)
         pyqt_centerWindow(self)
 
         self.central_widget = QWidget()
@@ -120,8 +124,8 @@ class processWindow(QMainWindow, QThread):
         self.txt = QTextEdit("Ready to start task.")
         self.txt.setReadOnly(True)
 
-        #self.progress_bar = QProgressBar()
-        #self.progress_bar.setRange(0, 100)
+        self.progress_bar = QProgressBar()
+        self.progress_bar.setRange(0, 100)
 
         #self.start_button = QPushButton("Start Task")
         self.cancel_button = QPushButton("Cancel Process")
@@ -129,7 +133,7 @@ class processWindow(QMainWindow, QThread):
 
         #self.layout.addWidget(self.label)
         self.layout.addWidget(self.txt)
-        #self.layout.addWidget(self.progress_bar)
+        self.layout.addWidget(self.progress_bar)
         #self.layout.addWidget(self.start_button)
         self.layout.addWidget(self.cancel_button)
 
@@ -137,6 +141,7 @@ class processWindow(QMainWindow, QThread):
         self.worker_thread  = Worker()
         #LINK TO WORKER SIGNAL
         self.worker_thread.signalProgress.connect(self.update_progress)
+        self.worker_thread.signalProgressBar.connect(self.update_progress_bar)
         self.worker_thread.signalFinished.connect(self.task_finished)
         self.worker_thread.signalCancel.connect(self.cancel_task)
 
@@ -163,6 +168,8 @@ class processWindow(QMainWindow, QThread):
         #self.progress_bar.setValue(0)
         #self.start_button.setEnabled(False)
         self.cancel_button.setEnabled(True)
+
+        self.progress_bar.setRange(0, 100)
 
         #START WORKER
         #print("Before starting worker")
@@ -191,6 +198,14 @@ class processWindow(QMainWindow, QThread):
 
         #print("After setText - update_progress : sMsg = " + str(sMsg))    
         #self.update()
+
+    @pyqtSlot(int)
+    def update_progress_bar(self, nValue):
+        """
+        Receives progress updates from the worker thread and updates the progress bar.
+        """
+        self.progress_bar.setValue(nValue)
+        self.progress_bar.update()
 
     @pyqtSlot(bool, str)
     def task_finished(self, bFinishResult, sFinishResult):
@@ -378,6 +393,18 @@ def process_CopyFiles_sub(logFile, mainWindow, procWindows, lstSource, lstDestin
     log_write_Normal(logFile, "Pandas Columns header = " + str(dict_df_file_cols) + " Total Columns=" + str(cols))
     log_write_Normal(logFile, "Total records with Pandas = " + str(rows))
 
+    #SET PROGRESS BAR RANGE
+    procWindows.progress_bar.setRange(0, rows)
+
+    #TOTALs
+    nfile_dic_status_copied = 0
+    nfile_dic_status_equal = 0
+    nfile_dic_status_error = 0
+    nfile_dic_status_warning = 0
+    nfile_dic_status_warning_dir = 0
+    sfile_dic_status_warning = ""
+    sfile_dic_status_error = ""
+
     nCols = 0
     n = 0
     for row1 in dict_df_file.itertuples():
@@ -401,34 +428,64 @@ def process_CopyFiles_sub(logFile, mainWindow, procWindows, lstSource, lstDestin
           #sPrint = "\n" + str(n) + " File: " + sPrint
           #log_write_Normal(logFile, sPrint)
 
-          sProcessing = "File " + process_CalculateNofTotal(n, rows) + ": " + sPathFileFrom + " - Path Subdir: " + sPathFileSubdir + " - Data: " + sPrint
-          process_GblMessage_Set(sProcessing)
-          process_GblRecord_SumValue()
-          process_EmitMsgProcessing(procWindows, sProcessing)
+          #SIGNAL TO PROCESS WIINDOW FOR PROGRESS BAR
+          process_EmitMsgProcessingProgressBar(procWindows, n+1)
 
+          #--------------------------------------------------------------------------------------------------------------------------------
+          # PROCESS EACH RECORD IN DATA FRAME
           m = 0
           while m < len(lstDestination) and not bProcessGblStop:
+
+              sProcessing = "Processing item from Data Frame: " + process_CalculateNofTotal(n, rows) + "\n\nSourth File:\n" + sPathFileFrom
+              sProcessing = sProcessing + " - Path Subdir: " + sPathFileSubdir + "\n\nData from Sourth File:\n" + sPrint
+              sProcessing = sProcessing + "\n\nDestination: " +  lstDestination[m]
+
+              process_GblMessage_Set(sProcessing)
+              process_GblRecord_SumValue()
+
+              #SIGNALs to PROCESS WINDOW
+              process_EmitMsgProcessing(procWindows, sProcessing)
 
               sPathFileTo = lstDestination[m]
               print("\nCopying File " + process_CalculateNofTotal(m, len(lstDestination)) + ": " + sPathFileFrom + " - to: " + sPathFileTo + " - Subdir: " + str(sPathFileSubdir))
               
               bError, sError = process_CopyFiles_CopyFromTo(dict_df_file, n, sPathFileFrom, sPathFileTo, sPathFileSubdir, logFile)
+              sFileStatus = str(file_dic_pandasFileRecord_get_status(dict_df_file, n))
+
+              print("Status: " + str(sFileStatus))
+              #-------------------------------------------------------------------------------------------------------------------------
+              #TOTALs
+              if file_dic_status_copied in sFileStatus:
+                  nfile_dic_status_copied = nfile_dic_status_copied+ 1
+              else:    
+                  if file_dic_status_equal in sFileStatus:
+                     nfile_dic_status_equal = nfile_dic_status_equal+ 1
+                  else:
+                      if file_dic_status_dir in sFileStatus: 
+                          #TO IS A DIRECTORY
+                          nfile_dic_status_warning_dir = nfile_dic_status_warning_dir + 1
+                      else:    
+                          #ANALIZE WARNINGS
+                          if file_dic_status_warning in sFileStatus:
+                             if file_dic_status_warning_dir in sFileStatus:
+                                nfile_dic_status_warning_dir = nfile_dic_status_warning_dir + 1
+                             else:
+                                nfile_dic_status_warning = nfile_dic_status_warning + 1   
+                             sfile_dic_status_warning = sfile_dic_status_warning + "\n"
+                             sfile_dic_status_warning = sfile_dic_status_warning + "Item [" + str_AddThousandToNumber(str(n)) + "] - Status: " + sFileStatus    
+                          else:    
+                             nfile_dic_status_error = nfile_dic_status_error + 1
+                             sfile_dic_status_error = sfile_dic_status_error + "\n"
+                             sfile_dic_status_error = sfile_dic_status_error + "Item [" + str_AddThousandToNumber(str(n)) + "] - Status: " + sFileStatus    
+              #-------------------------------------------------------------------------------------------------------------------------
+                         
               if bError and bCancelByError:
                   m = len(lstDestination)
 
               m = m + 1
+          #--------------------------------------------------------------------------------------------------------------------------------
 
           n = n + 1 
-
-    #VER EL TEMA DE LOS HILOS - THREAD
-    #n = 0
-    #while n < 10000000 and not bProcessGblStop:
-    #      sProcessing = "processing n: " + str(n)
-    #      process_GblMessage_Set(pyqtTxtLog, sProcessing, True)
-    #      print("process n: " + str(n))
-    #      mainWindow.update()
-    #      #pyqt_windowRefresh(mainWindow)
-    #      n = n + 1
 
     #UPDATE CSV FILE
     dict_df_file.to_csv(sDFFile, index=True)
@@ -436,7 +493,7 @@ def process_CopyFiles_sub(logFile, mainWindow, procWindows, lstSource, lstDestin
     process_GbRunning_False()
     process_GbDateTimeStartedFinished_Set(False)
 
-        #ENDED PROCESS
+    #ENDED PROCESS
     sProcessing = sProcessFlagEnded + " Process for Copying Files "
     if bProcessGblStop:
         sProcessing = sProcessing + "stopped"
@@ -446,14 +503,37 @@ def process_CopyFiles_sub(logFile, mainWindow, procWindows, lstSource, lstDestin
     sProcessing = sProcessing + " !\nStarted at: " + dtProcessGblStarted + "\nFinished at: " + dtProcessGblFinished 
     delta = dt_difference(dtProcessGblDateTimeFormat, dtProcessGblStarted, dtProcessGblFinished, False)
     sProcessing = sProcessing + "\nElapsed: " + delta
-    sProcessing = sProcessing + "\n\nTotal files processed: " + str(rows) + "\nOutput File:\n" + sDFFile
+    sProcessing = sProcessing + "\n\nTotal files processed: " + str_AddThousandToNumber(str(rows))
+
+    #ADDING TOTALs
+    sProcessing = sProcessing + process_TotalsPrepare("Total files copied", rows, nfile_dic_status_copied)
+    sProcessing = sProcessing + process_TotalsPrepare("Total files equal", rows, nfile_dic_status_equal) 
+    if nfile_dic_status_error > 0:
+       sProcessing = sProcessing + process_TotalsPrepare("Total files with problems/errors", rows, nfile_dic_status_error)
+    if nfile_dic_status_warning > 0:   
+       sProcessing = sProcessing + process_TotalsPrepare("Total files with WARNINGs", rows, nfile_dic_status_warning)
+    if nfile_dic_status_warning_dir > 0:
+       sProcessing = sProcessing + process_TotalsPrepare("Total files with WARININGs because DIRECTORY", rows, nfile_dic_status_warning_dir)
+    if len(sfile_dic_status_warning) > 0:
+       sProcessing = sProcessing + "\nWARNINGs: " + str(sfile_dic_status_warning)
+    if len(sfile_dic_status_error) > 0:
+       sProcessing = sProcessing + "\nERRORs: " + str(sfile_dic_status_error)
+
+    sProcessing = sProcessing + "\n\nOutput File:\n" + sDFFile
+
     if logFile != "":
        sProcessing = sProcessing + "\nLog File:\n" + logFile
+
     process_GblMessage_Set(sProcessing)
     if logFile != "":
          log_write_Normal(logFile, sProcessing)
 
     return True, sProcessGblMsg
+
+# process_TotalsPrepare ----------------------------------------------------------------------------------------------------------
+def process_TotalsPrepare(sDes, nTotal, nValue):
+    sProcessing = "\n" + sDes + ": " + str_AddThousandToNumber(str(nValue)) + " (% " + str_GetPorcentageToString(nTotal, nValue) + ")"
+    return sProcessing
 
 # process_CopyFiles_GetDirsAndFiles ----------------------------------------------------------------------------------------------------------
 def process_CopyFiles_GetDirsAndFiles(sPathFile, logFile=""):
@@ -497,9 +577,9 @@ def process_CopyFiles_CopyFromTo(df, nRecord, sFilePath, sPathTo, sPathSubdir, l
     if not bFromExists:
         sError = "File 'FROM' does not exist. File From: " + sFilePath
         if logFile != "":
-           log_write_Normal(logFile, sError)
+           log_write_ErrorInRed(logFile, sError)
         else:
-           print(sError)    
+           log_writePrintOnlyError(sError)    
         return False, ""
 
     sPath, sFileName, sExt = file_PathAndFile_GetSeparated(sFilePath)
@@ -533,10 +613,20 @@ def process_CopyFiles_CopyFromTo(df, nRecord, sFilePath, sPathTo, sPathSubdir, l
            if logFile != "":
               log_write_Normal(logFile, sError)
 
+           if bToDirectory:
+              #DESTINATION IS A DIRECTORY AND IT IS NOT DELETED
+              sError = "File is a directory, not to be deleted. File: " + sToPathFile
+              log_write_WarningInYellow(logFile, sError)
+              file_dic_pandasFileRecord_set_status(df, nRecord, file_dic_status_dir)
+              return True, sError
+
            bReturn, sError = file_delete(sToPathFile)
            if not bReturn and logFile != "":
               sStatus = sError      
-              log_write_Normal(logFile, sError)
+              if file_dic_status_warning in sError:
+                  log_write_WarningInYellow(logFile, sError)
+              else:    
+                 log_write_ErrorInRed(logFile, sError)
            else:
                sPrint = "File was deleted. File: " + sToPathFile
                if logFile != "":
@@ -555,11 +645,11 @@ def process_CopyFiles_CopyFromTo(df, nRecord, sFilePath, sPathTo, sPathSubdir, l
         bReturn, sError = file_copy(sFilePath, sToPathFile) 
         if not bReturn and logFile != "":
            sStatus = sError      
-           log_write_Normal(logFile, sError)
+           log_write_ErrorInRed(logFile, sError)
         else:
            sPrint = "File was copied. File From: " + sFilePath + " - File To: " + sToPathFile
            if logFile != "":
-              log_write_Normal(logFile, sPrint)
+              log_write_OKInGreen(logFile, sPrint)
            sStatus = file_dic_status_copied      
 
     file_dic_pandasFileRecord_set_status(df, nRecord, sStatus)
@@ -689,8 +779,10 @@ def process_CalculateNofTotal(nItem, nTotal):
     nItem = nItem + 1
 
     sPorcentage = str_GetPorcentageToString(nTotal, nItem, 2)
-    sTotal = str(nItem) + " of total " + str(nTotal) + " - processing = % " + sPorcentage
+    sTotal = str_AddThousandToNumber(str(nItem)) + " of total " + str_AddThousandToNumber(str(nTotal)) + " - processing = % " + sPorcentage
+    
     log_writeWordsInColorBlue(sTotal)
+
     return sTotal
 
 
@@ -698,10 +790,14 @@ def process_CalculateNofTotal(nItem, nTotal):
 def process_EmitMsgProcessing(procWindow, sMsg):      
     global sProcessGblMsg 
     sProcessGblMsg = sMsg
-    print("process_EmitMsgProcessing: sProcessGblMsg"+ str(sProcessGblMsg))
+    #print("process_EmitMsgProcessing: sProcessGblMsg"+ str(sProcessGblMsg))
     procWindow.worker_thread.signalProgress.emit(sMsg)
-    print("process_EmitMsgProcessing: sProcessGblMsg"+ str(sProcessGblMsg))
+    #print("process_EmitMsgProcessing: sProcessGblMsg"+ str(sProcessGblMsg))
 
+# --------------------------------------------------------------------------------------------------------------------------------------------------------
+def process_EmitMsgProcessingProgressBar(procWindow, nValue):      
+    procWindow.worker_thread.signalProgressBar.emit(nValue)
+    return
 
 # --------------------------------------------------------------------------------------------------------------------------------------------------------
 def process_Time(nSleepSeconds=1):

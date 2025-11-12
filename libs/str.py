@@ -875,7 +875,7 @@ def str_FloatToString(Nro, Decimals):
     return str(sReturn)
 
 # str_GetPorcentageToString ----------------------------------------------------------------------------------------------------------------------
-def str_GetPorcentageToString(NroBaseFrom100, Nro, Decimals):
+def str_GetPorcentageToString(NroBaseFrom100, Nro, Decimals=2):
     nNro100 = Nro * 100
     #print(nNro100)
     nReturn = float(nNro100 / NroBaseFrom100)

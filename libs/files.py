@@ -72,6 +72,9 @@ n = n + 1
 
 file_dic_status_copied = "file_status_copied"
 file_dic_status_equal = "file_status_equal"
+file_dic_status_dir = "file_status_directory"
+file_dic_status_warning = "WARNING"
+file_dic_status_warning_dir = "WARNING - DIRECTORY"
 
 #-------------------------------------------------------------------------
 
@@ -699,6 +702,26 @@ def file_dic_pandasFileRecord_get(df_row, nItem):
         return ""
 
 #---------------------------------------------------------------------------------------------------------
+# file_dic_pandasFileRecord_getByDF
+#---------------------------------------------------------------------------------------------------------
+def file_dic_pandasFileRecord_getByDF(df, nRowIndex, nColumn):
+    tShape = df.shape
+    nRows = tShape[0]
+    nCols = tShape[1]
+    nRowIndex = int(nRowIndex)
+    nColumn = int(nColumn)
+
+    #For a column, to set a value it is not being taken into account the index because it is not updatable
+    #Column starts with 0 (zero)
+
+    #print("file_pandasFileRecord_set - nRows = " + str(nRows) + " - nCols = " + str(nCols) + " - nRowIndex = " + str(nRowIndex) + " - nColumn = " + str(nColumn) + " sValue = " + str(sValue))
+    if nColumn >= 0 and nColumn <= nCols and nRowIndex >= 0 and nRowIndex <= nRows:
+        #print("df before: " + str(df.iloc[nRowIndex, nColumn]))
+        return df.iloc[nRowIndex, nColumn]
+        #print("df after: " + str(df.iloc[nRowIndex, nColumn]))
+    return ""
+
+#---------------------------------------------------------------------------------------------------------
 # file_pandasFileRecord_set
 #---------------------------------------------------------------------------------------------------------
 def file_dic_pandasFileRecord_set(df, nRowIndex, nColumn, sValue):
@@ -743,6 +766,11 @@ def file_dic_pandasFileRecord_get_path_subdir(df_row):
 def file_dic_pandasFileRecord_get_fileext(df_row):
     return file_dic_pandasFileRecord_get(df_row, file_dic_fileext_nro)
 
+#---------------------------------------------------------------------------------------------------------
+# file_dic_pandasFileRecord_get_status
+#---------------------------------------------------------------------------------------------------------
+def file_dic_pandasFileRecord_get_status(df, nRow):
+    return file_dic_pandasFileRecord_getByDF(df, nRow, file_dic_status_nro)
 
 #---------------------------------------------------------------------------------------------------------
 # file_pandasFileRecord_set_status
@@ -927,7 +955,7 @@ def file_delete(sPathFileSource):
             return False, "No file for deletion. File: '" + sPathFileSource + '"'
         
         if file_Is_a_Directory(sPathFileSource):
-            return False, "It is a directory. It must be removed as a directory with rmdir, not delete command. Path: '" + sPathFileSource + "'"
+            return False, file_dic_status_warning_dir + ": It is a directory. It must be removed as a directory with rmdir, not delete command. Path: '" + sPathFileSource + "'"
         
         if os.path.exists(sPathFileSource):
            os.remove(sPathFileSource)
