@@ -11,5 +11,10 @@
 *.toc
 *.pyz
 *.zip
+*.7z
 /logs_CopyFiles
-/logs_CopyFiles
+/Installers/build
+/dist
+
+
+
