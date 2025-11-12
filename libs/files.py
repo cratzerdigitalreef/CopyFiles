@@ -35,6 +35,9 @@ import argparse
 n = 0
 file_dic_path_file = "file_dic_path_file"
 file_dic_path_file_nro = n
+n = 0
+file_dic_path_file_parent = "file_dic_path_file_parent"
+file_dic_path_file_parent_nro = n
 n = n + 1
 file_dic_size = "file_dic_file_size"
 file_dic_size_nro = n
@@ -351,8 +354,15 @@ def file_OpenFileExplorer(sPath):
 # file_PathAndFile_GetPath
 #---------------------------------------------------------------------------------------------------------
 def file_PathAndFile_GetPath(sPathAndFile):
-    sPath, sFileName, sExt = file_PathAndFile_GetSeparated(sPathAndFile)
+    sPath, sFileName, sExt, sParent = file_PathAndFile_GetSeparated(sPathAndFile)
     return sPath
+
+#---------------------------------------------------------------------------------------------------------
+# file_PathAndFile_GetParent
+#---------------------------------------------------------------------------------------------------------
+def file_PathAndFile_GetParent(sPathAndFile):
+    sPath, sFileName, sExt, sParent = file_PathAndFile_GetSeparated(sPathAndFile)
+    return sParent
 
 #---------------------------------------------------------------------------------------------------------
 # file_GetPath_From_Next
@@ -362,9 +372,10 @@ def file_PathAndFile_GetPath(sPathAndFile):
 # Returns => 
 #           sPath = D:\Temp\Outputs\Siprocal\
 #           sNext = Siprocal\
+#           sSlash = \
 #---------------------------------------------------------------------------------------------------------
 def file_GetPath_From_Next(sPathAndOrFile, sPathFrom):
-    sPath, sFileName, sExt = file_PathAndFile_GetSeparated(sPathAndOrFile)
+    sPath, sFileName, sExt, sParent = file_PathAndFile_GetSeparated(sPathAndOrFile)
 
     sSlash = file_getFileSlash(sPath)
 
@@ -380,20 +391,20 @@ def file_GetPath_From_Next(sPathAndOrFile, sPathFrom):
 
     #print("file_PathAndFile_GetPath_From - sPath: " + str(sPath))
 
-    return sPath, sNext
+    return sPath, sNext, sSlash
 
 #---------------------------------------------------------------------------------------------------------
 # file_PathAndFile_GetFileName
 #---------------------------------------------------------------------------------------------------------
 def file_PathAndFile_GetFileName(sPathAndFile):
-    sPath, sFileName, sExt = file_PathAndFile_GetSeparated(sPathAndFile)
+    sPath, sFileName, sExt, sParent = file_PathAndFile_GetSeparated(sPathAndFile)
     return sFileName
 
 #---------------------------------------------------------------------------------------------------------
 # file_PathAndFile_GetFileNameExtension
 #---------------------------------------------------------------------------------------------------------
 def file_PathAndFile_GetFileNameExtension(sPathAndFile):
-    sPath, sFileName, sExt = file_PathAndFile_GetSeparated(sPathAndFile)
+    sPath, sFileName, sExt, sParent = file_PathAndFile_GetSeparated(sPathAndFile)
     return sExt
 
 #---------------------------------------------------------------------------------------------------------
@@ -425,6 +436,7 @@ def file_addSlashToPathIfNeeded(sPath):
 #         sPath => D:\Temp\Outputs\
 #         sFileName => CTI20444.sec.xml
 #         sExt => xml
+#         sParent => Outputs\
 #---------------------------------------------------------------------------------------------------------
 def file_PathAndFile_GetSeparated(sPathAndFile):
     
@@ -437,10 +449,12 @@ def file_PathAndFile_GetSeparated(sPathAndFile):
     #print("file_PathAndFile_GetSeparated - sSepara = " + str(sSepara))
     tFiles = sPathAndFile.split(sSepara)
     
+    sParent = ""
     if len(tFiles) > 0:
        n = 0 
        while n < len(tFiles)-1:
              sPath = sPath + tFiles[n] + sSepara
+             sParent = tFiles[n]
              n = n + 1
        sFileName = tFiles[len(tFiles)-1]    
      
@@ -456,7 +470,7 @@ def file_PathAndFile_GetSeparated(sPathAndFile):
 
     #print("file_PathAndFile_GetSeparated - sExt = " + str(sExt))
 
-    return sPath, sFileName, sExt      
+    return sPath, sFileName, sExt, sParent      
     
 #---------------------------------------------------------------------------------------------------------
 # file_IsOSWindows
@@ -657,8 +671,9 @@ def file_pandasFileRecord_CreateDicWithFileLstAddingStats(lstFiles, lstFilesFrom
                file_record[file_dic_access_date] = str(access_date)
                file_record[file_dic_directory_type] = str(bDirectory)
 
-               sPath, sFileName, sExt = file_PathAndFile_GetSeparated(file_record[file_dic_path_file])
+               sPath, sFileName, sExt, sParent = file_PathAndFile_GetSeparated(file_record[file_dic_path_file])
                file_record[file_dic_path] = str(sPath)
+               file_record[file_dic_path_file_parent] = str(sParent)
                file_record[file_dic_filename] = str(sFileName)
                file_record[file_dic_fileext] = str(sExt)
 

@@ -314,8 +314,6 @@ def process_CopyFiles_sub(logFile, mainWindow, procWindows, lstSource, lstDestin
        sWarning = sWarning + sError
        return False, sWarning
 
-    sSlash = ""
-
     pyqt_windowRefresh(mainWindow)
 
     #GETTING ALL PATHs AND FILEs    
@@ -342,6 +340,7 @@ def process_CopyFiles_sub(logFile, mainWindow, procWindows, lstSource, lstDestin
           if len(lstFilesTemp) > 0:
 
               m = 0
+              sLastPath = ""
               while m < len(lstFilesTemp) and not bProcessGblStop:
                     if lstFilesTemp[m] not in lstFiles:
 
@@ -353,10 +352,15 @@ def process_CopyFiles_sub(logFile, mainWindow, procWindows, lstSource, lstDestin
                           #print("process_CopyFiles - Added new directory for source: " + str(lstFilesTemp[m]))
                           lstSource.append(lstFilesTemp[m])
                           nSource = len(lstSource)
+                          sLastPath = lstFilesTemp[m]
 
-                       sPath, sPathSubdir = file_GetPath_From_Next(lstFilesTemp[m], lstSource[n])
+                       sPath, sPathSubdir, sSlash = file_GetPath_From_Next(lstFilesTemp[m], lstSource[n])
                        #ADDED FOR SOURTH PATH FOR FILES TO BE PREOCESSED
                        #print("process_CopyFiles - file " + str(m) + ": " + str(lstFilesTemp[m]) + " - Directory for source " + str(n) + ": " + str(sPathNext))
+                       if sPathSubdir != "":
+                           #ADDING PARENT FOR SUB DIRECTORIES
+                           sPathSubdir = file_PathAndFile_GetParent(sLastPath) + sSlash + sPathSubdir
+                           #print("process_CopyFiles_sub - sLastPath: " + sLastPath + " - sPathSubdir: " + sPathSubdir)
                        lstFilesPathSubdir.append(sPathSubdir) 
 
                        sProcessing = "process_CopyFiles - file " + process_CalculateNofTotal(m, len(lstFilesTemp)) + " : " + str(lstFilesTemp[m]) + " - Directory for source " + str(n) + ": " + str(sPathSubdir)
@@ -407,6 +411,8 @@ def process_CopyFiles_sub(logFile, mainWindow, procWindows, lstSource, lstDestin
 
     nCols = 0
     n = 0
+    sSlash = ""
+
     for row1 in dict_df_file.itertuples():
 
           pyqt_windowRefresh(mainWindow)
@@ -582,15 +588,17 @@ def process_CopyFiles_CopyFromTo(df, nRecord, sFilePath, sPathTo, sPathSubdir, l
            log_writePrintOnlyError(sError)    
         return False, ""
 
-    sPath, sFileName, sExt = file_PathAndFile_GetSeparated(sFilePath)
+    sPath, sFileName, sExt, sParent = file_PathAndFile_GetSeparated(sFilePath)
 
     sPathTo = file_addSlashToPathIfNeeded(sPathTo)
     #print("process_CopyFiles_CopyFromTo - sPathTo=" + str(sPathTo)) 
     if sPathSubdir != "":
         sPathTo = sPathTo + sPathSubdir
+        print("process_CopyFiles_CopyFromTo - sPathTo=" + str(sPathTo)) 
+        exit(0)
     sPathTo = file_addSlashToPathIfNeeded(sPathTo)
 
-    #print("process_CopyFiles_CopyFromTo - sPathTo=" + str(sPathTo)) 
+    print("process_CopyFiles_CopyFromTo - sPathTo=" + str(sPathTo)) 
 
     sToPathFile = file_fNormalPathForWindowsLinux(sPathTo + sFileName)
     file_dic_pandasFileRecord_set_path_to(df, nRecord, sToPathFile)
