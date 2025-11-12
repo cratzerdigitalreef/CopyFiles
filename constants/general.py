@@ -11,6 +11,9 @@ import os
 
 #Prepared with a Main Window
 app_ui_file_name = os.path.join("iu","copyfiles_main_wdw.ui")
+app_ui_ico_file_name = os.path.join("iu","copy.ico")
+app_ui_ico_file_name_process = os.path.join("iu","process.ico")
+
 #Prepared with a Dialog
 #app_ui_file_name = "\iu\copyfiles.ui"
 

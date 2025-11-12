@@ -6,7 +6,7 @@ a = Analysis(
     pathex=[],
     binaries=[],
     datas=[
-    ('../libs', 'libs'), ('../CopyFiles.xml', '.'), ('../iu/copyfiles_main_wdw.ui', 'iu')
+    ('../libs', 'libs'), ('../CopyFiles.xml', '.'), ('../iu/copyfiles_main_wdw.ui', 'iu'), ('../iu/copy.ico', 'iu'), ('../iu/process.ico', 'iu')
     ],
     hiddenimports=[
     'customtkinter','_cffi_backend','colorama','prettytable',
@@ -40,8 +40,9 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
+    icon=['../iu/copy.ico'],
     xml=['../CopyFiles.xml'],
-    iu=['../iu/copyfiles_main_wdw.ui'],
+    iu=['../iu/copyfiles_main_wdw.ui', '../iu/copy.ico', '../iu/process.ico'],
     onefile=False
 )
 

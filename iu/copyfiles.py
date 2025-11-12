@@ -18,7 +18,7 @@ import os
 from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget, QLabel
 from PyQt5.QtWidgets import QMessageBox, QTextEdit, QFileDialog, QTableView, QTableWidget, QTableWidgetItem, QGroupBox
 from PyQt5.QtCore import QFile, QIODevice
-
+from PyQt5 import QtGui 
 
 # from ..constants.general import color_dark_button, color_app_background_light, color_app_background_dark, \
 #     color_red_dark, color_green_dark
@@ -152,9 +152,15 @@ class CopyFilesHomeScreen:
 
         self.window.show()
 
+        #ICO FOR MAIN WINDOWS
+        self.ui_ico_file_name = os.path.join(parent_directory, app_ui_ico_file_name)
+        self.window.setWindowIcon(QtGui.QIcon(self.ui_ico_file_name))
+
         #PROCESS WINDOWS
         self.window_process = processWindow(parent=self.window)
         #IT IS HIDDEN BECAUSE PYQT
+        self.ui_ico_file_name_process = os.path.join(parent_directory, app_ui_ico_file_name_process)
+        self.window_process.setWindowIcon(QtGui.QIcon(self.ui_ico_file_name_process))
         self.window_process.hide()
 
         #SIGNALS FROM PROCESS WINDOWS
