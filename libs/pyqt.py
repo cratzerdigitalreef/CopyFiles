@@ -10,7 +10,7 @@ import os
 
 from PyQt5.uic import loadUi
 from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget, QLabel
-from PyQt5.QtWidgets import QMessageBox, QTextEdit, QFileDialog, QTableView, QDesktopWidget
+from PyQt5.QtWidgets import QMessageBox, QTextEdit, QFileDialog, QTableView, QDesktopWidget, QAbstractItemView, QTreeView, QListView
 from PyQt5.QtCore import QFile, QIODevice, Qt
 
 from str import *
@@ -158,8 +158,6 @@ def pyqt_OpenFileDlg(parent, sTitle, sPath, sFilters="All Files (*)", bDirOnly=F
     #print("pyqt_OpenFileDlg - sPath = " + str(sPath))
 
     option = 0
-    if bDirOnly:
-       option = QFileDialog.Option.ShowDirsOnly
 
     if bSave:
        if option == 0:
@@ -179,18 +177,55 @@ def pyqt_OpenFileDlg(parent, sTitle, sPath, sFilters="All Files (*)", bDirOnly=F
                          sFiltersDefault,
                          options=option #Options
                   )
-    else:    
-       if bMoreFiles:
-          if option == 0:
-             filename = QFileDialog.getOpenFileNames(
+    else:
+       if bDirOnly:
+          #option = QFileDialog.Option.ShowDirsOnly
+          option = QFileDialog.Options()
+          option |= QFileDialog.DontUseNativeDialog
+          option |= QFileDialog.ShowDirsOnly  # This will now be effective
+
+          if bMoreFiles:
+              
+              file_dialog = QFileDialog()
+              file_dialog.setFileMode(QFileDialog.DirectoryOnly)
+              file_dialog.setOption(QFileDialog.DontUseNativeDialog, True)
+              #file_dialog.setParent(parent)
+              file_dialog.setWindowTitle(sTitle)
+              file_dialog.setDirectory(sPath)
+
+              file_view = file_dialog.findChild(QListView, 'listView')
+
+              # to make it possible to select multiple directories:
+              if file_view:
+                 file_view.setSelectionMode(QAbstractItemView.MultiSelection)
+
+              f_tree_view = file_dialog.findChild(QTreeView)
+              if f_tree_view:
+                 f_tree_view.setSelectionMode(QAbstractItemView.MultiSelection)
+
+              if file_dialog.exec():
+                 filename = file_dialog.selectedFiles()
+
+          else:            
+                filename = QFileDialog.getExistingDirectory(
+                         parent,  # Parent widget
+                         sTitle,  # Dialog title
+                         sPath,  # Initial directory (empty string means current working directory)
+                         options=option #Options
+                )
+           
+       else:        
+          if bMoreFiles:
+             if option == 0:
+                filename = QFileDialog.getOpenFileNames(
                          parent,  # Parent widget
                          sTitle,  # Dialog title
                          sPath,  # Initial directory (empty string means current working directory)
                          sFilters,  # File filters
                          sFiltersDefault
                   )
-          else:
-             filename = QFileDialog.getOpenFileNames(
+             else:
+                filename = QFileDialog.getOpenFileNames(
                          parent,  # Parent widget
                          sTitle,  # Dialog title
                          sPath,  # Initial directory (empty string means current working directory)
@@ -198,17 +233,17 @@ def pyqt_OpenFileDlg(parent, sTitle, sPath, sFilters="All Files (*)", bDirOnly=F
                          sFiltersDefault,
                          options=option #Options
                   )
-       else:   
-          if option == 0:
-             filename = QFileDialog.getOpenFileName(
+          else:   
+             if option == 0:
+                filename = QFileDialog.getOpenFileName(
                          parent,  # Parent widget
                          sTitle,  # Dialog title
                          sPath,  # Initial directory (empty string means current working directory)
                          sFilters,  # File filters
                          sFiltersDefault
                   )
-          else:
-             filename = QFileDialog.getOpenFileName(
+             else:
+                filename = QFileDialog.getOpenFileName(
                          parent,  # Parent widget
                          sTitle,  # Dialog title
                          sPath,  # Initial directory (empty string means current working directory)
@@ -222,20 +257,23 @@ def pyqt_OpenFileDlg(parent, sTitle, sPath, sFilters="All Files (*)", bDirOnly=F
 
     if filename:  # If a file was selected (not cancelled)
 
+       #print("filename = " + str(filename))
+       
        tReturn = filename[0]
        #print("tReturn length = " + str(len(tReturn)) + " - " + str(tReturn))
 
        if bDirOnly:
-          n = 0
-          tDirs = tReturn
-          tReturn = []
-          while n < len(tDirs):
-                tDirs[n] = file_PathAndFile_GetPath(str(tDirs[n]))
-                if not str(tDirs[n]) in str(tReturn):
-                    tReturn.append(tDirs[n])
-                n = n + 1
+          #n = 0
+          #tDirs = tReturn
+          #tReturn = []
+          #while n < len(tDirs):
+          #      tDirs[n] = file_PathAndFile_GetPath(str(tDirs[n]))
+          #      if not str(tDirs[n]) in str(tReturn):
+          #          tReturn.append(tDirs[n])
+          #      n = n + 1
           #print("tReturn len = " + str(len(tReturn)) + " => " + str(tReturn))
-       
+          tReturn = filename
+        
     return tReturn
     
 #---------------------------------------------------------------------------------------------------------
@@ -418,6 +456,82 @@ def pyqt_centerWindow(window):
         window.setGeometry(window_geometry)
         
         return
+
+#---------------------------------------------------------------------------------------------------------
+# LoadingDialog
+#---------------------------------------------------------------------------------------------------------
+class LoadingDialog(QDialog):
+    """
+    A simple modal dialog designed to block user interaction while a background
+    task is processing.
+
+    This dialog displays a status message and optionally provides a 'Cancel'
+    button if a callback is supplied.
+
+    Attributes:
+        message_label (QLabel): The label displaying the body text/status.
+        cancel_button (QPushButton): The button created only if a cancel_callback
+                                     is provided.
+    """
+
+    def __init__(self, title_text: str = "Loading", content_text: str = "Please wait...", cancel_callback=None):
+        """
+        Initialize the loading dialog.
+
+        Args:
+            title_text (str, optional): The text to display in the window title bar.
+                                        Defaults to "Loading".
+            content_text (str, optional): The initial message body text.
+                                          Defaults to "Please wait...".
+            cancel_callback (callable, optional): A function or method to be connected
+                                                  to the Cancel button's clicked signal.
+                                                  If None, no Cancel button is shown.
+        """
+        super().__init__()
+        self.setWindowTitle(title_text)
+        self.setModal(True)
+        self.setFixedSize(200, 100)
+
+        # CustomizeWindowHint and WindowTitleHint keep the title bar but often
+        # remove the "X" close button depending on the OS/Window Manager.
+        self.setWindowFlags(Qt.Dialog | Qt.CustomizeWindowHint | Qt.WindowTitleHint)
+
+        layout = QVBoxLayout()
+        layout.setAlignment(Qt.AlignCenter)
+        layout.setSpacing(20)
+
+        self.message_label: QLabel = QLabel(content_text)
+        self.message_label.setAlignment(Qt.AlignCenter)
+        self.message_label.setStyleSheet("font-size: 16px;")
+
+        layout.addWidget(self.message_label)
+
+        if cancel_callback:
+            self.cancel_button: QPushButton = QPushButton("Cancel")
+            self.cancel_button.clicked.connect(cancel_callback)
+            layout.addWidget(self.cancel_button)
+
+        self.setLayout(layout)
+
+    def update_text(self, text: str):
+        """
+        Updates the message displayed in the center of the dialog.
+
+        Args:
+            text (str): The new message string to display.
+        """
+        self.message_label.setText(text)
+
+    def update_title(self, title: str):
+        """
+        Updates the text in the window's title bar.
+
+        Args:
+            title (str): The new title string to set.
+        """
+        self.setWindowTitle(title)
+
+#---------------------------------------------------------------------------------------------------------
 
 #---------------------------------------------------------------------------------------------------------
     

@@ -10,6 +10,7 @@ sys.path.append(current+"/libs")
 # LIBS
 from log import * 
 from str import *
+from files import *
 
 current = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(current+"/constants")

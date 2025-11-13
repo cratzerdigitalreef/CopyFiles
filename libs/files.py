@@ -35,7 +35,7 @@ import argparse
 n = 0
 file_dic_path_file = "file_dic_path_file"
 file_dic_path_file_nro = n
-n = 0
+n = n + 1
 file_dic_path_file_parent = "file_dic_path_file_parent"
 file_dic_path_file_parent_nro = n
 n = n + 1
@@ -367,12 +367,20 @@ def file_PathAndFile_GetParent(sPathAndFile):
 #---------------------------------------------------------------------------------------------------------
 # file_GetPath_From_Next
 # This method separates the following:
-# sPathAndOrFile => D:\Temp\Outputs\Siprocal\loci_answers_2025-09-05_10-26_Mexico_V3.txt
-# sPathFrom => D:\Temp\Outputs\
-# Returns => 
-#           sPath = D:\Temp\Outputs\Siprocal\
-#           sNext = Siprocal\
-#           sSlash = \
+# Example 1:
+#           sPathAndOrFile => D:\Temp\Outputs\Siprocal\loci_answers_2025-09-05_10-26_Mexico_V3.txt
+#           sPathFrom => D:\Temp\Outputs\
+#           Returns => 
+#                     sPath = D:\Temp\Outputs\Siprocal
+#                     sNext = Siprocal\
+#                     sSlash = \
+# Example 2:
+#           sPathAndOrFile => D:/Temp/vbp/GSMApp/Digitel-Ricardo/Backup/DIG00071.inp
+#           sPathFrom => D:/Temp/vbp/GSMApp
+#           Returns => 
+#                     sPath = D:/Temp/vbp/GSMApp/Digitel-Ricardo/Backup/
+#                     sNext = Digitel-Ricardo/Backup/
+#                     sSlash = /
 #---------------------------------------------------------------------------------------------------------
 def file_GetPath_From_Next(sPathAndOrFile, sPathFrom):
     sPath, sFileName, sExt, sParent = file_PathAndFile_GetSeparated(sPathAndOrFile)
@@ -550,7 +558,7 @@ def file_Error_handlerWithDes(err, sLogFile="", sMsgOptional=""):
 
     sError = sMsgOptional
     if str(err) != "":
-       sError = sError + str(err)
+       sError = sError + str(err).upper()
 
     # You could also log the error, or raise a different exception
     # For example, to stop the walk on any error:
@@ -893,20 +901,22 @@ def file_OpenFileWithNotepadInWindows(sPathFileName):
 #---------------------------------------------------------------------------------------------------------
 def file_mkDir(sPathSource):
 
+    sProcess = "Creating Directory: "
+
     try:
 
         if sPathSource == "":
-            return False, "No path to create. Path: '" + sPathSource + "'"
+            return False, sProcess + "No path to create. Path: '" + sPathSource + "'"
 
         if file_Is_a_Directory(sPathSource):
-            return False, "Path already exists. Source: '" + sPathSource + "'"
+            return False, sProcess + "Path already exists. Source: '" + sPathSource + "'"
 
         os.makedirs(sPathSource)
 
         return True, ""
     
     except Exception as e:
-       sError = file_Error_handlerWithDes(e, "", "Trying to create a directory. Path: '" + sPathSource + "'")
+       sError = file_Error_handlerWithDes(e, "", sProcess + "Trying to create a directory. Path: '" + sPathSource + "'")
        return False, sError
 
 
@@ -915,33 +925,36 @@ def file_mkDir(sPathSource):
 #---------------------------------------------------------------------------------------------------------
 def file_rmDir(sPathSource):
 
+    sProcess = "Deleting Directory: "
+
     try:
 
         if sPathSource == "":
-            return False, "No path to remove. Path: '" + sPathSource + "'"
+            return False, sProcess + "No path to remove. Path: '" + sPathSource + "'"
 
         if not file_Is_a_Directory(sPathSource):
-            return False, "File is not a directory. Source: '" + sPathSource + "'"
+            return False, sProcess + "File is not a directory. Source: '" + sPathSource + "'"
 
         os.rmdir(sPathSource)
 
         return True, ""
     
     except Exception as e:
-       sError = file_Error_handlerWithDes(e, "", "Trying to remove a directory. Path: '" + sPathSource + "'")
+       sError = file_Error_handlerWithDes(e, "", sProcess + "Trying to remove a directory. Path: '" + sPathSource + "'")
        return False, sError
 #---------------------------------------------------------------------------------------------------------
 # file_copy
 #---------------------------------------------------------------------------------------------------------
 def file_copy(sPathFileSource, sPathFileDestination):
 
+    sProcess = "Copying Files: "
     try:
 
         if sPathFileSource == "" or sPathFileDestination == "":
-            return False, "No file for copy. Source: '" + sPathFileSource + "', Destination: '" + sPathFileDestination + "'"
+            return False, sProcess + "No file for copy. Source: '" + sPathFileSource + "', Destination: '" + sPathFileDestination + "'"
 
         if not file_FileExists(sPathFileSource):
-            return False, "File to copy does not exist. Source: '" + sPathFileSource + "', Destination: '" + sPathFileDestination + "'"
+            return False, sProcess + "File to copy does not exist. Source: '" + sPathFileSource + "', Destination: '" + sPathFileDestination + "'"
 
         bReturn = True
         sError = ""
@@ -949,13 +962,20 @@ def file_copy(sPathFileSource, sPathFileDestination):
         if file_Is_a_Directory(sPathFileSource):
            bReturn, sError = file_mkDir(sPathFileDestination)
         else:
+
+           sPathDestination = file_PathAndFile_GetPath(sPathFileDestination)
+           if not file_FileExists(sPathDestination):
+              bReturn, sError = file_mkDir(sPathDestination)
+              if not bReturn:
+                  return False, sProcess + "Destination path does not exist and it cannot be created. Destination Path: " + sPathDestination + ". ERROR: " + sError
+ 
            #https://stackoverflow.com/questions/123198/how-do-i-copy-a-file
            shutil.copy2(sPathFileSource, sPathFileDestination)
 
         return bReturn, sError
     
     except Exception as e:
-       sError = file_Error_handlerWithDes(e, "", "Trying to copy file. From: '" + sPathFileSource + "' - To: '" + sPathFileDestination + "'")
+       sError = file_Error_handlerWithDes(e, "", sProcess + "Trying to copy file. From: '" + sPathFileSource + "' - To: '" + sPathFileDestination + "'")
        return False, sError
 
 
@@ -964,13 +984,15 @@ def file_copy(sPathFileSource, sPathFileDestination):
 #---------------------------------------------------------------------------------------------------------
 def file_delete(sPathFileSource):
 
+    sProcess = "Deleting File: "
+
     try:
    
         if sPathFileSource == "":
-            return False, "No file for deletion. File: '" + sPathFileSource + '"'
+            return False, sProcess + "Delete File: No file for deletion. File: '" + sPathFileSource + '"'
         
         if file_Is_a_Directory(sPathFileSource):
-            return False, file_dic_status_warning_dir + ": It is a directory. It must be removed as a directory with rmdir, not delete command. Path: '" + sPathFileSource + "'"
+            return False, sProcess + file_dic_status_warning_dir + ": It is a directory. It must be removed as a directory with rmdir, not delete command. Path: '" + sPathFileSource + "'"
         
         if os.path.exists(sPathFileSource):
            os.remove(sPathFileSource)
@@ -978,7 +1000,7 @@ def file_delete(sPathFileSource):
         return True, ""
     
     except Exception as e:
-       sError = file_Error_handlerWithDes(e, "", "Trying to delete file '" + sPathFileSource + "'")
+       sError = file_Error_handlerWithDes(e, "", sProcess + "Delete File: Trying to delete file '" + sPathFileSource + "'")
        return False, sError
 
 #---------------------------------------------------------------------------------------------------------
@@ -990,7 +1012,8 @@ def file_delete(sPathFileSource):
 #---------------------------------------------------------------------------------------------------------
 def file_compare(sPathFileSource, sPathFileDestination, bValidateDateCreation=False):
 
-    sError = "Comparing files. Source: '" + sPathFileSource + "', Destination: '" + sPathFileDestination + "'. ERROR: "
+    sProcess = "Compating Files: "
+    sError = sProcess + "Source = '" + sPathFileSource + "', Destination = '" + sPathFileDestination + "'. ERROR: "
 
     try:
 
@@ -1028,7 +1051,51 @@ def file_compare(sPathFileSource, sPathFileDestination, bValidateDateCreation=Fa
         return True, ""
     
     except Exception as e:
-       sError = file_Error_handlerWithDes(e, "", "Trying to copy file. From: '" + sPathFileSource + "' - To: '" + sPathFileDestination + "'")
+       sError = file_Error_handlerWithDes(e, "", sProcess + "Trying to copy file. From: '" + sPathFileSource + "' - To: '" + sPathFileDestination + "'")
        return False, sError
 
+#---------------------------------------------------------------------------------------------------------
+# file_getSubDirFromPath
+# Example:
+#         1)
+#         sPathFile: D:\Temp\vbp\GSMApp\Temp\DatabaseRead\mdbplus.ini
+#         sPattern: D:\Temp\vbp\GSMApp\
+#         bRemoveFileName = True
+#         2)
+#         sPathFile: D:/Temp/vbp/GSMApp/Digitel-Ricardo/Backup/DIG00071.inp
+#         sPattern: D:/Temp/vbp/GSMApp
+#         bRemoveFileName = True        
+# Returns:
+#         1)
+#         Temp\DatabaseRead\
+#         2)
+#         /Digitel-Ricardo/Backup/
+#---------------------------------------------------------------------------------------------------------
+def file_getSubDirFromPath(sPathFile, sPattern, bRemoveFileName=True):
+    sReturn = ""
+
+    sSlash = file_getFileSlash(sPathFile)
+
+    #print("file_getSubDirFromPath - sPathFile: " + str(sPathFile) + " - sPattern: " + str(sPattern))
+    if sPattern in sPathFile:
+       sReturn = str_midToEnd(sPathFile, len(sPattern))
+
+       if bRemoveFileName and sReturn != "":
+           sReturnT = file_PathAndFile_GetFileName(sReturn)
+           if sReturnT != "":
+               sReturn = str_getSubStringFromOcur(sReturn, sReturnT, 0)
+
+    #print("file_getSubDirFromPath - sReturn: " + str(sReturn))
+
+    #FOR TESTING
+    #sFile = str("D:/Temp/vbp/GSMApp/Digitel-Ricardo/Backup/DIG00071.inp")
+    #sPattern = str("D:/Temp/vbp/GSMApp")
+    #sTemp = file_getSubDirFromPath(sFile, sPattern)
+    #print("sFile: " + str(sFile) + " - sPattern: " + str(sPattern) + " - sResult: " + str(sTemp))
+    #exit(0)
+
+    if sReturn == sSlash:
+        sReturn = ""
+
+    return sReturn
 #------------------------------------------------------------------------------------

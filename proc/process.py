@@ -21,6 +21,8 @@ from PyQt5.QtCore import QThread, pyqtSignal, pyqtSlot
 import time
 
 from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, QProgressBar, QVBoxLayout, QWidget
+from PyQt5.QtCore import QEvent
+from PyQt5.QtGui import QCloseEvent
 
 nProcessGblRecord = 0
 dtProcessGblStarted = ""
@@ -33,6 +35,7 @@ bProcessGblStop = False
 bProcessGblRunning = False
 nProcessLogNro= 0
 sProcessFlagEnded = "ENDED:"
+sProcessStoppedWord = "stopped"
 
 
 class Worker(QThread):
@@ -151,6 +154,14 @@ class processWindow(QMainWindow, QThread):
         self.bFinishResult = True
         self.sFinishResult = ""
 
+   #---------------------------------------------------------------------------------------------------------
+    def closeEvent(self, event: QCloseEvent):
+        log_writeWordsInColorRed("While processing it CANNOT BE closed this Window. If you want, you should just cancel the process and then close the Window!")
+        log_writeWordsInColorRed("Close Window Event is IGNORED!")
+        event.ignore()
+        return
+
+   #---------------------------------------------------------------------------------------------------------
     @pyqtSlot()
     def start_task(self, logFile, mainWindow, procWindows, lstSource, lstDestination, bCancelByError=False):
         """
@@ -184,6 +195,7 @@ class processWindow(QMainWindow, QThread):
         #print("After starting worker")
         self.update()
 
+   #---------------------------------------------------------------------------------------------------------
     @pyqtSlot(str)
     def update_progress(self, sMsg):
         """
@@ -199,6 +211,7 @@ class processWindow(QMainWindow, QThread):
         #print("After setText - update_progress : sMsg = " + str(sMsg))    
         #self.update()
 
+   #---------------------------------------------------------------------------------------------------------
     @pyqtSlot(int)
     def update_progress_bar(self, nValue):
         """
@@ -207,6 +220,7 @@ class processWindow(QMainWindow, QThread):
         self.progress_bar.setValue(nValue)
         self.progress_bar.update()
 
+   #---------------------------------------------------------------------------------------------------------
     @pyqtSlot(bool, str)
     def task_finished(self, bFinishResult, sFinishResult):
         """
@@ -214,13 +228,12 @@ class processWindow(QMainWindow, QThread):
         Resets GUI elements.
         """
         sTask = ""
-        
-        print("task_finished")
+        #print("task_finished")
 
-        if self.worker_thread._is_canceled:
+        #if self.worker_thread._is_canceled:
+        if bProcessGblStop:    
             #self.label.setText("Task canceled.")
             sTask = "canceled"
-            self.worker_thread._is_canceled = False # Reset for next run
         else:
             #self.label.setText("Task finished.")
             sTask = "finished"
@@ -233,7 +246,10 @@ class processWindow(QMainWindow, QThread):
         sMsg = "Task " + sTask + " ... at " + process_GetDateTimeNow()
         if self.sFinishResult != "":
             sMsg = sMsg + "\n\n" + self.sFinishResult
-        print(sMsg)
+        if bProcessGblStop:    
+            log_writeWordsInColorYellow(sMsg)
+        else:    
+            log_writeWordsInColorGreen(sMsg)
         self.txt.setText(sMsg)
 
         pyqt_ButtonSetText(self.cancel_button, "Close")
@@ -245,9 +261,12 @@ class processWindow(QMainWindow, QThread):
         else:
             sMsgEnded = sMsg    
 
+        self.worker_thread._is_canceled = False # Reset for next run
         self.signal_task_finished.emit(bFinishResult, str(sMsgEnded))
+
         #self.hide()
 
+   #---------------------------------------------------------------------------------------------------------
     @pyqtSlot()
     def cancel_task(self):
         """
@@ -322,19 +341,19 @@ def process_CopyFiles_sub(logFile, mainWindow, procWindows, lstSource, lstDestin
     n = 0
     nSource = len(lstSource)
 
+    #------------------------------------------------------------------------------------------------------------------
+    #PREPARING DICTONARY GETTING ALL FILES AND DIRECTORIES FROM SOURCE LIST
     while n < nSource and not bProcessGblStop:
 
           lstSource[n]= file_fNormalPathForWindowsLinux(lstSource[n])
           sProcessing = "Processing source: " + process_CalculateNofTotal(n, nSource) + " - " + str(lstSource[n])
 
-          print(sProcessing)
+          log_writeWordsInColorBlue(sProcessing)
+          
           process_EmitMsgProcessing(procWindows, sProcessing)
 
           process_GblRecord_SumValue()
           process_GblMessage_Set(sProcessing)
-
-          sProcessing = "Processing source: " + process_CalculateNofTotal(n, nSource) + " - " + str(lstSource[n])
-          print(sProcessing)
 
           lstFilesTemp = process_CopyFiles_GetDirsAndFiles(lstSource[n], logFile)
           if len(lstFilesTemp) > 0:
@@ -354,32 +373,35 @@ def process_CopyFiles_sub(logFile, mainWindow, procWindows, lstSource, lstDestin
                           nSource = len(lstSource)
                           sLastPath = lstFilesTemp[m]
 
-                       sPath, sPathSubdir, sSlash = file_GetPath_From_Next(lstFilesTemp[m], lstSource[n])
-                       #ADDED FOR SOURTH PATH FOR FILES TO BE PREOCESSED
-                       #print("process_CopyFiles - file " + str(m) + ": " + str(lstFilesTemp[m]) + " - Directory for source " + str(n) + ": " + str(sPathNext))
+                       #sPath, sPathSubdir, sSlash = file_GetPath_From_Next(lstFilesTemp[m], lstSource[n])
+                       sPathSubdir = file_getSubDirFromPath(lstFilesTemp[m], lstSource[n]) 
+                       #ADDED FOR SOURCE PATH FOR FILES TO BE PREOCESSED
+                       sProcessing = "File found " + str(m) + ": " + str(lstFilesTemp[m]) + " - Directory for source " + str(n) + ": " + str(lstSource[n])
                        if sPathSubdir != "":
-                           #ADDING PARENT FOR SUB DIRECTORIES
-                           sPathSubdir = file_PathAndFile_GetParent(sLastPath) + sSlash + sPathSubdir
-                           #print("process_CopyFiles_sub - sLastPath: " + sLastPath + " - sPathSubdir: " + sPathSubdir)
+                          sProcessing = sProcessing + " - sPathSubdir: " + str(sPathSubdir)
+                       log_writeWordsInColorBlue(sProcessing)
                        lstFilesPathSubdir.append(sPathSubdir) 
 
-                       sProcessing = "process_CopyFiles - file " + process_CalculateNofTotal(m, len(lstFilesTemp)) + " : " + str(lstFilesTemp[m]) + " - Directory for source " + str(n) + ": " + str(sPathSubdir)
                        process_GblMessage_Set(sProcessing)
 
-                    
-                    pyqt_windowRefresh(mainWindow)
+                       #SIGNALs to PROCESS WINDOW
+                       process_EmitMsgProcessing(procWindows, sProcessing)
+
+                    #pyqt_windowRefresh(mainWindow)
                     m = m + 1
     
           pyqt_windowRefresh(mainWindow)
           n = n + 1 
+    #------------------------------------------------------------------------------------------------------------------
 
-    log_write_Normal(logFile, "Total Files records before Pandas = " + str(len(lstFiles)) + " from: " + str(len(lstFilesPathSubdir)))
+    log_write_OKInGreen(logFile, "Total Files records before Pandas = " + str(len(lstFiles)) + " from: " + str(len(lstFilesPathSubdir)))
 
     process_GblRecord_Clean()
     process_GblMessage_Clean()
     sProcessing = "Preparing Pandas Data Frame with founded files..."
     process_GblMessage_Set(sProcessing)
 
+    #------------------------------------------------------------------------------------------------------------------
     #PREPARING A PANDAS DICT WITH THE PREVIOUS LIST
     dict_df_file = file_pandasFileRecord_CreateDicWithFileLstAddingStats(lstFiles, lstFilesPathSubdir)
 
@@ -390,6 +412,7 @@ def process_CopyFiles_sub(logFile, mainWindow, procWindows, lstSource, lstDestin
     if logFile != "":
          sDFFile = logFile + "_DF.csv"
     dict_df_file.to_csv(sDFFile, index=True)
+    #------------------------------------------------------------------------------------------------------------------
 
     #START PROCESS
     dict_df_file_cols = dict_df_file.columns.tolist()
@@ -412,10 +435,13 @@ def process_CopyFiles_sub(logFile, mainWindow, procWindows, lstSource, lstDestin
     nCols = 0
     n = 0
     sSlash = ""
+    
+    #------------------------------------------------------------------------------------------------------------------
+    # READING PANDAS DATA FRAME
 
     for row1 in dict_df_file.itertuples():
 
-          pyqt_windowRefresh(mainWindow)
+          #pyqt_windowRefresh(mainWindow)
 
           if bProcessGblStop:
              break
@@ -442,9 +468,10 @@ def process_CopyFiles_sub(logFile, mainWindow, procWindows, lstSource, lstDestin
           m = 0
           while m < len(lstDestination) and not bProcessGblStop:
 
-              sProcessing = "Processing item from Data Frame: " + process_CalculateNofTotal(n, rows) + "\n\nSourth File:\n" + sPathFileFrom
+              sProcessing = "Processing item from Data Frame: " + process_CalculateNofTotal(n, rows) + "\n\nSource File:\n" + sPathFileFrom
               sProcessing = sProcessing + " - Path Subdir: " + sPathFileSubdir + "\n\nData from Sourth File:\n" + sPrint
               sProcessing = sProcessing + "\n\nDestination: " +  lstDestination[m]
+              print(sProcessing)
 
               process_GblMessage_Set(sProcessing)
               process_GblRecord_SumValue()
@@ -453,12 +480,12 @@ def process_CopyFiles_sub(logFile, mainWindow, procWindows, lstSource, lstDestin
               process_EmitMsgProcessing(procWindows, sProcessing)
 
               sPathFileTo = lstDestination[m]
-              print("\nCopying File " + process_CalculateNofTotal(m, len(lstDestination)) + ": " + sPathFileFrom + " - to: " + sPathFileTo + " - Subdir: " + str(sPathFileSubdir))
+              #print("\nCopying File for Destination " + process_CalculateNofTotal(m, len(lstDestination)) + ": " + sPathFileFrom + " - to: " + sPathFileTo + " - Subdir: " + str(sPathFileSubdir))
               
               bError, sError = process_CopyFiles_CopyFromTo(dict_df_file, n, sPathFileFrom, sPathFileTo, sPathFileSubdir, logFile)
               sFileStatus = str(file_dic_pandasFileRecord_get_status(dict_df_file, n))
 
-              print("Status: " + str(sFileStatus))
+              #print("Status: " + str(sFileStatus))
               #-------------------------------------------------------------------------------------------------------------------------
               #TOTALs
               if file_dic_status_copied in sFileStatus:
@@ -492,6 +519,7 @@ def process_CopyFiles_sub(logFile, mainWindow, procWindows, lstSource, lstDestin
           #--------------------------------------------------------------------------------------------------------------------------------
 
           n = n + 1 
+    #------------------------------------------------------------------------------------------------------------------
 
     #UPDATE CSV FILE
     dict_df_file.to_csv(sDFFile, index=True)
@@ -502,7 +530,7 @@ def process_CopyFiles_sub(logFile, mainWindow, procWindows, lstSource, lstDestin
     #ENDED PROCESS
     sProcessing = sProcessFlagEnded + " Process for Copying Files "
     if bProcessGblStop:
-        sProcessing = sProcessing + "stopped"
+        sProcessing = sProcessing + sProcessStoppedWord
     else:
         sProcessing = sProcessing + "finished"
             
@@ -532,7 +560,9 @@ def process_CopyFiles_sub(logFile, mainWindow, procWindows, lstSource, lstDestin
 
     process_GblMessage_Set(sProcessing)
     if logFile != "":
-         log_write_Normal(logFile, sProcessing)
+         log_write_InfoInBlue(logFile, sProcessing)
+    else:
+        log_writePrintOnlyInfo(sProcessing)     
 
     return True, sProcessGblMsg
 
@@ -547,9 +577,9 @@ def process_CopyFiles_GetDirsAndFiles(sPathFile, logFile=""):
     if file_Is_a_Directory(sPathFile):
        lstFilesTemp = file_getDirsAndFiles(sPathFile, logFile)
        nFound = len(lstFilesTemp)
-       print("process_CopyFiles_GetDirsAndFiles - found for path: " + str(sPathFile) + "' = " + str(nFound))
+       log_writePrintOnlyDebug("process_CopyFiles_GetDirsAndFiles - Total files found for path: " + str(sPathFile) + "' = " + str(nFound))
     else:
-       print("process_CopyFiles_GetDirsAndFiles - path: '" + str(sPathFile) + "' not a DIRECTORY!")
+       log_writePrintOnlyDebug("process_CopyFiles_GetDirsAndFiles - Path '" + str(sPathFile) + "' is not a DIRECTORY.")
            
     return lstFilesTemp
 
@@ -594,8 +624,7 @@ def process_CopyFiles_CopyFromTo(df, nRecord, sFilePath, sPathTo, sPathSubdir, l
     #print("process_CopyFiles_CopyFromTo - sPathTo=" + str(sPathTo)) 
     if sPathSubdir != "":
         sPathTo = sPathTo + sPathSubdir
-        print("process_CopyFiles_CopyFromTo - sPathTo=" + str(sPathTo)) 
-        exit(0)
+    print("process_CopyFiles_CopyFromTo - sPathTo=" + str(sPathTo) + " - sPathSubdir: " + str(sPathSubdir)) 
     sPathTo = file_addSlashToPathIfNeeded(sPathTo)
 
     print("process_CopyFiles_CopyFromTo - sPathTo=" + str(sPathTo)) 
@@ -789,8 +818,6 @@ def process_CalculateNofTotal(nItem, nTotal):
     sPorcentage = str_GetPorcentageToString(nTotal, nItem, 2)
     sTotal = str_AddThousandToNumber(str(nItem)) + " of total " + str_AddThousandToNumber(str(nTotal)) + " - processing = % " + sPorcentage
     
-    log_writeWordsInColorBlue(sTotal)
-
     return sTotal
 
 

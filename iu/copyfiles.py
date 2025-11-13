@@ -15,10 +15,11 @@ import os
 #from PyQt5.QtCore import Qt, QModelIndex, pyqtSignal, QThread, QPropertyAnimation, QAbstractTableModel
 
 #from PySide2.QtUiTools import QUiLoader
-from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget, QLabel
+from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget, QLabel, QAction
 from PyQt5.QtWidgets import QMessageBox, QTextEdit, QFileDialog, QTableView, QTableWidget, QTableWidgetItem, QGroupBox
 from PyQt5.QtCore import QFile, QIODevice
 from PyQt5 import QtGui 
+from PyQt5.QtCore import QEvent
 
 # from ..constants.general import color_dark_button, color_app_background_light, color_app_background_dark, \
 #     color_red_dark, color_green_dark
@@ -57,6 +58,7 @@ import time
 class CopyFilesHomeScreen:
 
     def __init__(self, client, log_file):
+        super().__init__()
 
         self.log_file = log_file
         self.str_client = client
@@ -167,9 +169,20 @@ class CopyFilesHomeScreen:
         self.window_process.signal_task_finished.connect(self.process_window_finished)
         self.window_process.signal_task_close.connect(self.process_window_close)
         
+        QMainWindow.closeEvent = self.closeEvent
+
         sys.exit(self.app.exec()) # Start the event loop 
 
-        #---------------------------------------------------------------------------------------------------------
+    #---------------------------------------------------------------------------------------------------------
+    def closeEvent(self, event: QEvent):
+        """
+        Intercepts the window close event (WM_DELETE_WINDOW in X11 terms).
+        """
+        #print("EXIT")
+        self.exit()
+        event.accept()
+
+    #---------------------------------------------------------------------------------------------------------
     def create_widgets(self):
 
         # GET ALL OBJECTS FROM PYQT
@@ -519,14 +532,16 @@ class CopyFilesHomeScreen:
     #@pyqtSlot(bool, str)
     def process_window_finished(self, bResult, sMsg):
 
-        print("process_window_finished - bResult: " + str(bResult) + " - sMsg: " + str(sMsg))
+        #print("process_window_finished - bResult: " + str(bResult) + " - sMsg: " + str(sMsg))
         sTxt = pyqt_TextBoxGetText(self.txt_log)
         sTxt = str(sMsg) + "\n" + str_RepeatString(self.nProcessSeparaExec, "-") + "\n\n" + sTxt
         pyqt_TextBoxSetText(self.txt_log, sTxt)
 
-        if not bResult:   
+        if not bResult or sProcessStoppedWord in sMsg:   
            log_writeWordsInColorYellow(sMsg)
            pyqt_MsgBox_Warning("Process", sMsg)
+        else:   
+           log_writePrintOnlyOK(sMsg)
 
         return bResult
 
