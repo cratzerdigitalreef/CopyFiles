@@ -9,7 +9,7 @@ import os
 #from PySide6.QtCore import QFile, QIODevice
 
 from PyQt5.uic import loadUi
-from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget, QLabel
+from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget, QLabel, QDialog
 from PyQt5.QtWidgets import QMessageBox, QTextEdit, QFileDialog, QTableView, QDesktopWidget, QAbstractItemView, QTreeView, QListView
 from PyQt5.QtCore import QFile, QIODevice, Qt
 
@@ -158,6 +158,13 @@ def pyqt_OpenFileDlg(parent, sTitle, sPath, sFilters="All Files (*)", bDirOnly=F
     #print("pyqt_OpenFileDlg - sPath = " + str(sPath))
 
     option = 0
+    if bDirOnly:
+       #option = QFileDialog.Option.ShowDirsOnly
+       option = QFileDialog.Options()
+       option |= QFileDialog.DontUseNativeDialog
+       option |= QFileDialog.ShowDirsOnly  # This will now be effective
+
+    filename = []
 
     if bSave:
        if option == 0:
@@ -179,10 +186,6 @@ def pyqt_OpenFileDlg(parent, sTitle, sPath, sFilters="All Files (*)", bDirOnly=F
                   )
     else:
        if bDirOnly:
-          #option = QFileDialog.Option.ShowDirsOnly
-          option = QFileDialog.Options()
-          option |= QFileDialog.DontUseNativeDialog
-          option |= QFileDialog.ShowDirsOnly  # This will now be effective
 
           if bMoreFiles:
               

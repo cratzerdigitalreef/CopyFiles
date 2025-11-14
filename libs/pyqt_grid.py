@@ -183,19 +183,21 @@ class pyqtTableModel(QAbstractTableModel):
         return False
 
     #---------------------------------------------------------------------------------------------------------
-    def update_table(self, rows, tvGrid):
+    def update_table(self, rows, tvGrid, bResizeRowsToContents=True):
         self.beginResetModel()  # refresh data  
         self._data = rows  # Replace data with results
         self.endResetModel()
-        tvGrid.resizeRowsToContents()  #
+        if bResizeRowsToContents:
+           tvGrid.resizeRowsToContents()  #
 
     #---------------------------------------------------------------------------------------------------------
-    def update_table_single_row(self, row, tvGrid):
+    def update_table_single_row(self, row, tvGrid, bResizeRowsToContents=True):
         self.beginResetModel()  # refresh data
         #print("row = " + str(row))
         self._data.append(row)  # Append new row
         self.endResetModel()
-        #vGrid.resizeRowsToContents()  #
+        if bResizeRowsToContents:
+           tvGrid.resizeRowsToContents()  #
 
     #---------------------------------------------------------------------------------------------------------
     def export_table_to_csv(self):
@@ -203,11 +205,12 @@ class pyqtTableModel(QAbstractTableModel):
         return
 
     #---------------------------------------------------------------------------------------------------------
-    def clean_table(self, tvGrid):
+    def clean_table(self, tvGrid, bResizeRowsToContents=True):
         self.beginResetModel()  # refresh data
         self._data = []  # Replace data with results
         self.endResetModel()
-        tvGrid.resizeRowsToContents()  #
+        if bResizeRowsToContents:
+           tvGrid.resizeRowsToContents()  #
 
     #---------------------------------------------------------------------------------------------------------
     def table_selectedRow(self, tvGrid):
