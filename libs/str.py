@@ -584,6 +584,8 @@ def str_CleanEnter(st):
 # str_CleanPattern ----------------------------------------------------------------------------------------------------------------------
 def str_CleanPattern(st, sPattern):
     
+    st = str(st)
+    sPattern = str(sPattern)
     out = st.replace(sPattern, "")
 
     #FOR TESTING:
@@ -875,7 +877,7 @@ def str_FloatToString(Nro, Decimals):
     return str(sReturn)
 
 # str_GetPorcentageToString ----------------------------------------------------------------------------------------------------------------------
-def str_GetPorcentageToString(NroBaseFrom100, Nro, Decimals=2):
+def str_GetPorcentageToString(NroBaseFrom100, Nro, Decimals):
     nNro100 = Nro * 100
     #print(nNro100)
     nReturn = float(nNro100 / NroBaseFrom100)

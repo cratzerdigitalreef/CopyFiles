@@ -44,10 +44,12 @@ ctk_utils_window = None
 #---------------------------------------------------------------------------------------------------------
 # ctk_utils_TextBoxSet => Setting value from init in a CTkTextbox
 #---------------------------------------------------------------------------------------------------------
-def ctk_utils_TextBoxSet(obj, Value):
+def ctk_utils_TextBoxSet(obj, Value, bDisableAfterNewText=False):
     ctk_utils_ObjEnable(obj)
     obj.delete(0.0, 'end')
     obj.insert(ctk.INSERT,  Value)
+    if bDisableAfterNewText:
+       ctk_utils_ObjDisable(obj) 
 
 #---------------------------------------------------------------------------------------------------------
 # ctk_utils_TextBoxAppend => Adding value at the end of a CTkTextbox

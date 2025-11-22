@@ -9,10 +9,16 @@ from tzlocal import get_localzone # $ pip install tzlocal
 
 from str import *
 
+sDateTimeF = ".%f"
+sDateTimeFZero = "000000"
+sDateTimePoint = "."
+
+sDateTimeFormatSuggested = "%Y/%m/%d-%H:%M:%S.%f"
+
 # dt_now ---------------------------------------------------------------------------------------------------------------------------------------------------------
 def dt_now(sFormat):
     if str(sFormat)=="":
-       sFormat = "%d/%m/%Y-%H:%M:%S"
+       sFormat = sDateTimeFormatSuggested
     
     dateStart = datetime.now()    
     return dateStart.strftime(sFormat)
@@ -22,35 +28,111 @@ def dt_difference_sec(dtStart, dtEnd):
     dt = dtStart - dtEnd
     return str(dt.total_seconds())
 
+# dt_difference_sec ---------------------------------------------------------------------------------------------------------------------------------------------------------
+def dt_difference_isFractionInData(sDt):
+    sFraction = dt_difference_get_fraction(sDt)
+    bReturn = True
+    if len(sFraction) != len(sDateTimeFZero):
+       bReturn = False
+    #print("dt_difference_isFractionInData - sDt = " + sDt + " - return = " + str(bReturn))
+    return bReturn
+
+# dt_difference_get_fraction ---------------------------------------------------------------------------------------------------------------------------------------------------------
+def dt_difference_get_fraction(sDt):
+    sDt = str(sDt)
+    sFraction = str_mid(sDt, len(sDt)-len(sDateTimeFZero), len(sDateTimeFZero))
+    sFraction = str(sFraction)
+    #print("dt_difference_get_fraction - sDt = " + sDt + " - sFraction = " + sFraction)
+    if "-" in sFraction or "." in sFraction or ":" in sFraction:
+       sFraction = ""
+
+    #print("dt_difference_get_fraction - sDt = " + sDt + " - sFraction = " + sFraction)
+    return sFraction
+
+# dt_difference_testing ---------------------------------------------------------------------------------------------------------------------------------------------------------
+def dt_difference_testing():
+    
+    n = 1
+    dtNow1 = datetime.now()   
+    sdtFormat = sDateTimeFormatSuggested
+    date1 = dtNow1.strftime(sdtFormat)
+    dtNow = datetime.now()   
+    date2 = dtNow.strftime(sdtFormat)
+    sDif = dt_difference(sdtFormat, date1, date2, False)
+    print(str(n) + ". dt_difference_testing - date1 = " + str(date1) + " - date2 = " + str(date2) + " - difference: " + str(sDif))
+    n = n + 1
+
+    sdtFormat = "%Y-%m-%d %H.%M.%S.%f"
+    date1 = dtNow1.strftime(sdtFormat)
+    dtNow = datetime.now()   
+    date2 = dtNow.strftime(sdtFormat)
+    sDif = dt_difference(sdtFormat, date1, date2, False)
+    print(str(n) + ". dt_difference_testing - date1 = " + str(date1) + " - date2 = " + str(date2) + " - difference: " + str(sDif))
+    n = n + 1
+
+    sdtFormat = "%Y/%m/%d-%H:%M:%S.%f"
+    date1 = dtNow1.strftime(sdtFormat)
+    dtNow = datetime.now()   
+    date2 = dtNow.strftime(sdtFormat)
+    sDif = dt_difference(sdtFormat, date1, date2, False)
+    print(str(n) + ". dt_difference_testing - date1 = " + str(date1) + " - date2 = " + str(date2) + " - difference: " + str(sDif))
+    n = n + 1
+
+    sdtFormat = "%Y/%m/%d-%H:%M:%S"
+    date1 = dtNow1.strftime(sdtFormat)
+    dtNow = datetime.now()   
+    date2 = dtNow.strftime(sdtFormat)
+    sDif = dt_difference(sdtFormat, date1, date2, False)
+    print(str(n) + ". dt_difference_testing - date1 = " + str(date1) + " - date2 = " + str(date2) + " - difference: " + str(sDif))
+    n = n + 1
+
+    sdtFormat = "%Y/%m/%d-%H.%M.%S"
+    date1 = dtNow1.strftime(sdtFormat)
+    dtNow = datetime.now()   
+    date2 = dtNow.strftime(sdtFormat)
+    sDif = dt_difference(sdtFormat, date1, date2, False)
+    print(str(n) + ". dt_difference_testing - date1 = " + str(date1) + " - date2 = " + str(date2) + " - difference: " + str(sDif))
+    n = n + 1
+
+    return
+
 # dt_difference ---------------------------------------------------------------------------------------------------------------------------------------------------------
 def dt_difference(sdtFormat, dtStart, dtEnd, bReturnCompleteMsg):
     
-    sF = ".%f"
-    sFZero = "000000"
-    sPoint = "."
+
+    sdtStart = str(dtStart)
+    sdtEnd = str(dtEnd)
 
     #IT IS NEEDED THE FRACTION POR DELTA
-    nPoint = len(dtStart.split(sPoint))
-    if nPoint <= 0:
-       sPoint = ":"
-       nPoint = len(dtStart.split(sPoint))
-    if nPoint <= 3:
-       #IT IS NEEDED TO BE ADDED THE FRACTION
-       dtStart = dtStart + sPoint + sFZero
-       dtEnd = dtEnd + sPoint + sFZero
-       sdtFormat = sdtFormat + sF
+    #Example 1: dtProcessGblDateTimeFormat = "%Y-%m-%d %H.%M.%S.%f"
+    #Example 2: sdtFormat: %Y/%m/%d-%H:%M:%S.%f
 
-    if str_right(sdtFormat, len(sF)) != sF and len(dtStart.split(sPoint)) > 1:
-       sdtFormat = sdtFormat + sF
+    if not sDateTimeF in sdtFormat:
+       sdtFormat = sdtFormat + sDateTimeF
+
+    #CHECKING THE FRACTION
+    #strftime: Formats a datetime object into a human-readable string according to a specified format code.
+    if not dt_difference_isFractionInData(sdtStart):
+       sdtStart = sdtStart + sDateTimePoint + sDateTimeFZero
+       dtStart = datetime.strptime(sdtStart, sdtFormat)
+    else:
+       dtStart = datetime.strptime(str(dtStart),sdtFormat)
+
+    if not dt_difference_isFractionInData(sdtEnd):
+       sdtEnd = sdtEnd + sDateTimePoint + sDateTimeFZero
+       dtEnd = datetime.strptime(sdtEnd, sdtFormat)
+    else:   
+       dtEnd = datetime.strptime(str(dtEnd),sdtFormat)
+
+    #print("dt_difference - sdtFormat: " + str(sdtFormat))
+
+    #strptime: Parses a string representation of a date and time and converts it into a datetime object.
 
     #print("dt_difference - Start: " + str(dtStart))
     #print("dt_difference - End: " + str(dtEnd))
-    #print("dt_difference - sdtFormat: " + str(sdtFormat))
        
     #sFormatDT = "%d/%m/%Y-%H:%M:%S"
     #sFormatDT = "%Y%m%d%H%M%S"
-    dtStart = datetime.strptime(str(dtStart),sdtFormat)
-    dtEnd = datetime.strptime(str(dtEnd),sdtFormat)
     
     dt = dtEnd - dtStart
     sdt = str(dt)

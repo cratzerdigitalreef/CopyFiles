@@ -250,14 +250,14 @@ def simcard_StatusCommand(cardservice, sLogFileName):
     return sSW1 + sSW2
 
 # STATUS COMMAND: simcard_StatusCommandALLResponses ----------------------------------------------------------------------------------------------------------
-def simcard_StatusCommandALLResponses(cardservice, sLogFileName, bNetworkOKOrChangeIMEI):
+def simcard_StatusCommandALLResponses(cardservice, sLogFileName, bChangeIMEI, bNetworkOk=True):
     sSeparaAPDUForLastAPDUs = ""
-    sReturn = simcard_StatusCommandALLResponsesWithLastAPDUs_List(cardservice, sLogFileName, bNetworkOKOrChangeIMEI, sSeparaAPDUForLastAPDUs)
+    sReturn = simcard_StatusCommandALLResponsesWithLastAPDUs_List(cardservice, sLogFileName, bChangeIMEI, sSeparaAPDUForLastAPDUs, "", "", bNetworkOk)
     
     return sReturn[0]
 
 # STATUS COMMAND: simcard_StatusCommandALLResponsesinList ----------------------------------------------------------------------------------------------------------
-def simcard_StatusCommandALLResponsesWithLastAPDUs_List(cardservice, sLogFileName, bNetworkOKOrChangeIMEI, sSeparaAPDUForLastAPDUs=str_GetBETWEENPARAM(), sMCC="", sMNC=""):
+def simcard_StatusCommandALLResponsesWithLastAPDUs_List(cardservice, sLogFileName, bChangeIMEI, sSeparaAPDUForLastAPDUs=str_GetBETWEENPARAM(), sMCC="", sMNC="", bNetworkOk=True):
     """
     Process the STATUS COMMAND and all responses from SIM card.
 
@@ -310,7 +310,7 @@ def simcard_StatusCommandALLResponsesWithLastAPDUs_List(cardservice, sLogFileNam
                  
              
              #PROCESS TERMINAL RESPONSE ACCORDING TO STATUS COMMAND
-             sTempFetchResponse = simcard_StatusCommandALLResponses_TerminalResponse(cardservice, sLogFileName, sResAndSW1SW2, bNetworkOKOrChangeIMEI, sMCC, sMNC)
+             sTempFetchResponse = simcard_StatusCommandALLResponses_TerminalResponse(cardservice, sLogFileName, sResAndSW1SW2, bChangeIMEI, sMCC, sMNC, bNetworkOk)
              log_write_InfoInBlue(sLogFileName, "0x" + str_SpaceHexa(sTempFetchResponse) + ". " + sWhileMsg + ": " + str(n))
              sResAndSW1SW2 = simcard_Response(cardservice, sTempFetchResponse, sLogFileName)
              sSW1 = simcard_SW1SW2ProcessReturnSW1(sResAndSW1SW2, sLogFileName)
@@ -339,8 +339,8 @@ def simcard_StatusCommandALLResponsesWithLastAPDUs_List(cardservice, sLogFileNam
     return sSW1 + sSW2, sLastAPDU, allResponses_List
 
 # STATUS COMMAND: simcard_StatusCommandALLResponses_TerminalResponse ----------------------------------------------------------------------------------------------------------
-def simcard_StatusCommandALLResponses_TerminalResponse(cardservice, sLogFileName, sResponse, bNetworkOKOrChangeIMEI, sMCC="", sMNC=""):
-    sTemp = simcard_StatusCommandALLResponses_TerminalResponseDes(sLogFileName, sResponse, bNetworkOKOrChangeIMEI, sMCC, sMNC)
+def simcard_StatusCommandALLResponses_TerminalResponse(cardservice, sLogFileName, sResponse, bChangeIMEI, sMCC="", sMNC="", bNetworkOK=True):
+    sTemp = simcard_StatusCommandALLResponses_TerminalResponseDes(sLogFileName, sResponse, bChangeIMEI, sMCC, sMNC, bNetworkOK)
     #print("Len: " + str(len(sTemp)))
     #print("sTemp[0]: " + str(sTemp[0]))
     #print("sTemp[1]: " + str(sTemp[1]))
@@ -351,8 +351,8 @@ def simcard_StatusCommandALLResponses_TerminalResponse(cardservice, sLogFileName
        return sTemp   
 
 # STATUS COMMAND: simcard_StatusCommandALLResponses_TerminalResponse ----------------------------------------------------------------------------------------------------------
-def simcard_StatusCommandALLResponses_TerminalResponseGetDesOnly(sResponse, bNetworkOKOrChangeIMEI=True, sMCC="", sMNC=""):
-    sTemp = simcard_StatusCommandALLResponses_TerminalResponseDes("", sResponse, bNetworkOKOrChangeIMEI, sMCC, sMNC)
+def simcard_StatusCommandALLResponses_TerminalResponseGetDesOnly(sResponse, bChangeIMEI=True, sMCC="", sMNC="", bNetworkOK=True):
+    sTemp = simcard_StatusCommandALLResponses_TerminalResponseDes("", sResponse, bChangeIMEI, sMCC, sMNC, bNetworkOK)
     #print("Len: " + str(len(sTemp)))
     #print("sTemp[0]: " + str(sTemp[0]))
     #print("sTemp[1]: " + str(sTemp[1]))
@@ -400,7 +400,7 @@ def simcard_StatusCommandALLResponses_TerminalResponseGetCmd(sResponse):
 
 
 # STATUS COMMAND: simcard_StatusCommandALLResponses_TerminalResponseDes ----------------------------------------------------------------------------------------------------------
-def simcard_StatusCommandALLResponses_TerminalResponseDes(sLogFileName, sResponseParam, bNetworkOKOrChangeIMEIOrChangeMCCMNC, sMCC="", sMNC=""):
+def simcard_StatusCommandALLResponses_TerminalResponseDes(sLogFileName, sResponseParam, bChangeIMEIOrChangeMCCMNC, sMCC="", sMNC="", bNetworkOK=True):
     sReturn = ""
     sResponse = str_TrimCleanSpaces(sResponseParam)
 
@@ -434,7 +434,7 @@ def simcard_StatusCommandALLResponses_TerminalResponseDes(sLogFileName, sRespons
        #0x03 01 21 = SEND SMS NOT OK - Network currently unable to process the command 21
        sReturn = "80 14 00 00 0C 01 03 01 13 00 02 02 82 81 03 01 00"
        
-       if bNetworkOKOrChangeIMEIOrChangeMCCMNC == False:
+       if bNetworkOK == False:
           sReturn = "80 14 00 00 0C 01 03 01 13 00 02 02 82 81 03 01 21"
        sLog = sLog + sOK
        sSMSProc = simcard_SendSMSCmd_Process(sLogFileName, sResponse)
@@ -479,7 +479,7 @@ def simcard_StatusCommandALLResponses_TerminalResponseDes(sLogFileName, sRespons
        if sMCC != "" and sMNC == "":
           #ROAMING NATIONAL
           sLOCI = loci_MCC_MNC_To_Hexa(sMCC, str_right(sRandom,3))
-       if bNetworkOKOrChangeIMEIOrChangeMCCMNC == True:
+       if bChangeIMEIOrChangeMCCMNC:
           #ROAMING INTERNATIONAL - IT (bNetworkOKOrChangeIMEIOrChangeMCCMNC) HAS MORE PRIORITY THAN MCC-MNC
           sLOCI = str_left(sRandom,6) 
        sLOCI = sLOCI + " FF FE AA" + str_right(sRandom, 6)   
@@ -495,11 +495,11 @@ def simcard_StatusCommandALLResponses_TerminalResponseDes(sLogFileName, sRespons
        #sReturn = "80 14 00 00 16 01 03 01 26 01 02 02 82 81 03 01 00 94 08 8A 16 49 01 94 73 95 08"
        sLog = sLog + " - IMEI"
        sIMEI = str_SpaceHexa("8A 16 49 01 94 73 95 08")
-       if bNetworkOKOrChangeIMEIOrChangeMCCMNC == True:
+       if bChangeIMEIOrChangeMCCMNC == True:
           sIMEI = simcard_generate_random_imei()
        # ToDo: We changed from 80 14 00 00 16 01 03 01 26 01 to 80 14 00 00 16 01 03 01 26 00 temporarily
        sReturn = "80 14 00 00 16 01 03 01 26 01 02 02 82 81 03 01 00 94 08 " + sIMEI
-       sLog = sLog + ". IMEI answered: 0x" + sIMEI + " - bNetworkOKOrChangeIMEIOrChangeMCCMNC: " + str(bNetworkOKOrChangeIMEIOrChangeMCCMNC)
+       sLog = sLog + ". IMEI answered: 0x" + sIMEI + " - bChangeIMEIOrChangeMCCMNC: " + str(bChangeIMEIOrChangeMCCMNC)
        print(sLog)
 
     if sCmd == "26" and sCmdQualif == "06":
@@ -2421,7 +2421,9 @@ def simcard_DataResponseDesHexaAndASCII(sResponse, bDES):
        
        #GET SEND SMS DESCRIPTION
        sInterpret, sData = simcard_SendSMSCmd_Interpret(sResponse)
-       if sInterpret != "":
+       #print("simcard_DataResponseDesHexaAndASCII - sInterpret = " + str(sInterpret))
+       #if sInterpret != "" and str_left(sInterpret, 2) == sSimcard_BERTV_SIMtoME:
+       if sInterpret != "" :
           sLog = sLog + "\n" + sInterpret
 
     if bDES == False:
@@ -3598,7 +3600,8 @@ def simcard_interpret_dynamic_bytecode(bytecode, tpda=None, bool_campaign_id=Fal
                                 sdk_id = bytecode[sdk_id_len_index:sdk_id_len_index + length_decimal]
                         else:
                             sdk_id = bytecode[sdk_id_len_index:sdk_id_len_index + length_decimal]
-                        sdk_id_ascii = bytes.fromhex(sdk_id).decode('utf-8')
+                        #sdk_id_ascii = bytes.fromhex(sdk_id).decode('utf-8')
+                        sdk_id_ascii = bytes_HexaToASCII(sdk_id)
 
         interpretation = {
             "Counter": counter,
@@ -6063,7 +6066,7 @@ def simcard_GlobalPlatformGetStatus(CardService, sLogFileName, sTPDA, sTAR, sMSL
     lstLastPoR = []
 
     # GETTING SECURITY DOMAIN APPLETs    
-    #P1 = GET STATUS - '80' – Issuer Security Domain
+    #P1 = GET STATUS - '80' ï¿½ Issuer Security Domain
     #It is added the GET RESPONSE at the end for responses such as 0x61 XX
     #P2 - 0x02 => Response data structure according to Table 11-36 and 37
     sAPDU = "80 F2 80 02 02 4F 00 00 C0 00 00 00"        
@@ -6076,7 +6079,7 @@ def simcard_GlobalPlatformGetStatus(CardService, sLogFileName, sTPDA, sTAR, sMSL
 
     if bReturn:       
        # GETTING APPLICATIONS AND SUPPLEMENTARY APPLETs    
-       #P1 = GET STATUS - '40' – Applications and Supplementary Security Domains only. - APPLETS
+       #P1 = GET STATUS - '40' ï¿½ Applications and Supplementary Security Domains only. - APPLETS
        sP1 = "40"
        bReturn, lstLastAPDUsT, lstLastPoRT, sCounter, tAIDsT = simcard_GlobalPlatformGetStatus_MoreDataExpected(CardService, sLogFileName, sTPDA, sTAR, sMSL, sKIC, sKID, sCounter, tAIDsToSearch, sP1, sSeparaResult)
 
@@ -6085,7 +6088,7 @@ def simcard_GlobalPlatformGetStatus(CardService, sLogFileName, sTPDA, sTAR, sMSL
        tAIDs.extend(tAIDsT)       
     
     if bReturn:
-       #P1 = GET STATUS - '10' – Executable Load Files and their Executable Modules only.
+       #P1 = GET STATUS - '10' ï¿½ Executable Load Files and their Executable Modules only.
        sP1 = "10"
        bReturn, lstLastAPDUsT, lstLastPoRT, sCounter, tAIDsT = simcard_GlobalPlatformGetStatus_MoreDataExpected(CardService, sLogFileName, sTPDA, sTAR, sMSL, sKIC, sKID, sCounter, tAIDsToSearch,  sP1, sSeparaResult)
 
@@ -6111,7 +6114,7 @@ def simcard_GlobalPlatformGetStatus_MoreDataExpected(CardService, sLogFileName, 
     lstLastPoR = []
 
     # GETTING APPLICATIONS AND SUPPLEMENTARY APPLETs    
-    #P1 = GET STATUS - '40' – Applications and Supplementary Security Domains only. - APPLETS
+    #P1 = GET STATUS - '40' ï¿½ Applications and Supplementary Security Domains only. - APPLETS
     #It is added the GET RESPONSE at the end for responses such as 0x61 XX
     sAPDU_CLAINSPI1 = "80 F2 " + sP1 
 
@@ -6860,6 +6863,10 @@ def simcard_GlobalPlatformGetData_FreeMemory_ProcessBeforeAndAfter(sProcess, sAp
     sDes = sDes + str_AddThousandToNumber(str(nFreeVolatileMemory)) + " bytes."
     sDes = sDes + "\nBefore process '" + sProcess + "' there were = " + str_AddThousandToNumber(str(nFreeVolatileMemoryBefore)) + " bytes." 
     sDes = sDes + "\nAfter process '" + sProcess + "' there are = " + str_AddThousandToNumber(str(nFreeVolatileMemoryAfter)) + " bytes." 
+
+    sDes = sDes + "\n\nSummary:"
+    sDes = sDes + "\nApplet Non Volatile Memory (EEPROM): " + str_AddThousandToNumber(str(nFreeNonVolatileMemory)) + " bytes."
+    sDes = sDes + "\nApplet Volatile Memory (RAM): " + str_AddThousandToNumber(str(nFreeVolatileMemory)) + " bytes."
 
     print("simcard_GlobalPlatformGetData_FreeMemory_ProcessBeforeAndAfter - sDes = " + str(sDes))
     
