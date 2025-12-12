@@ -426,18 +426,42 @@ def fPLociGetDateTimePreparedForSIM():
 
 
 # fPLociGetDateTimeFromSIM ---------------------------------------------------------------------------------------------------------------------------------------------------------
-def fPLociGetDateTimeFromSIM(sHexa):
+def fPLociGetDateTimeFromSIM(sHexa, bAddHexaValueInDes=False, sDesReference=""):
     sHexa = str_SpacesOut(sHexa)
     if len(sHexa) < 14:
-        return "Wrong data for processing Date/Time: 0x" + sHexa
-
+        return "Wrong data for processing Date/Time: 0x" + sHexa + " - length: " + str(len(sHexa)//2) + " bytes"
+    
     sDateTime = ""
+    if sDesReference != "":
+       sDateTime = sDesReference
+
+    if bAddHexaValueInDes:
+       if sDateTime != "":
+          sDateTime = sDateTime + " - "
+       sDateTime = sDateTime + "Date/Time hexa value: 0x" + str_SpaceHexa(sHexa) 
+
+    if sHexa == str_RepeatString(len(sHexa),"0"):
+
+        sReturn = "Date/Time is NULL."
+        sReturn = sReturn + " Length: " + str(len(sHexa)//2) + " bytes"
+
+        if sDateTime != "":
+            sReturn = sDateTime + ". " + sReturn
+        if sDateTime == "":    
+            sReturn = sReturn + ". Value: 0x" + sHexa 
+        return sReturn
+
+    if sDateTime != "":
+        sDateTime = sDateTime + " - "
 
     n = 0
     #GET YEAR BUT TURNED
     sTemp = str_mid(sHexa, n, 2)
     sDateTime = sDateTime + str_right(sTemp, 1)
     sDateTime = sDateTime + str_left(sTemp, 1)
+    if sTemp == "99":
+        #THIS MEANS THAT THE DATE TIME WILL BE REQUESTED IN NEXT STATUS COMMAND
+        sDateTime = sDateTime + " (0x99 means that Date/Time will be requested in next Status Command by the applet) "
     sDateTime = sDateTime + "\\"
     n = n + 2
 
@@ -589,6 +613,9 @@ def fPLociTimeZoneFromSIM(sTZ):
     nTZ = bytes_fHexaByBinary("0" + str_mid(nTZ, 1, 7))
     #print("nTZ 2: " + nTZ)
 
+    if not valid_nro_IsCharValidNro(nTZ):
+       return nTZ
+    
     nTZ = str(int(int(nTZ) * 0.25))
     #print("nTZ 3: " + str(nTZ))
 

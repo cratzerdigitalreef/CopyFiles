@@ -266,8 +266,9 @@ def apk_APDU_FC(cardservice, sLogFileName, sChannel, sP2, sSDKID):
    sSW1 = simcard_SW1SW2ProcessReturnSW1(sResAndSW1SW2, sLogFileName)
    sSW2 = simcard_SW1SW2GetSW2(sResAndSW1SW2)
 
-   sLog = "APDU Sent from APK to Applet COTA/SAP: " + simcard_DataResponseDesHexaAndASCII(sResAndSW1SW2, True)
-   sLog = sLog + ". Response: " + sResAndSW1SW2
+   sLog = apk_APDU_ResponseFormat(sResAndSW1SW2)
+
+   
    log_write(sLogFileName, sLog)
 
    bReturn = False
@@ -275,7 +276,24 @@ def apk_APDU_FC(cardservice, sLogFileName, sChannel, sP2, sSDKID):
       bReturn = True
          
    return bReturn
- 
+
+# apk_APDU_ResponseIsOK -----------------------------------------------------------------------------------------------------------
+def apk_APDU_ResponseIsOK(sResAndSW1SW2):
+   sResAndSW1SW2 = simcard_Clean9000(sResAndSW1SW2)
+   sOK = "4F4B"
+   if sOK in sResAndSW1SW2:
+      #IT IS NOT COMPARED TO EQUALS BECAUSE THE 'OK' CAN BE AT THE END OF DATA
+      return True
+   else:
+      return False
+
+# apk_APDU_ResponseFormat -----------------------------------------------------------------------------------------------------------
+def apk_APDU_ResponseFormat(sResAndSW1SW2):
+   sLog = "Response from the applet to APK/SDK: " + simcard_DataResponseDesHexaAndASCII(sResAndSW1SW2, True)
+   sResponse = str_SpacesOut(sResAndSW1SW2)
+   sLog = sLog + ". Response: 0x" + str_SpaceHexa(sResponse) + " "
+   sLog = sLog + simcard_LengthReference(sResponse)
+   return sLog
    
 # apk_APDU_FA -----------------------------------------------------------------------------------------------------------
 def apk_APDU_FA(cardservice, sLogFileName, sChannel, sMSISDN=""):
@@ -442,8 +460,7 @@ def apk_APDU_E2(cardservice, sLogFileName, sChannel, sSDKID):
    sSW1 = simcard_SW1SW2ProcessReturnSW1(sResAndSW1SW2, sLogFileName)
    sSW2 = simcard_SW1SW2GetSW2(sResAndSW1SW2)
 
-   sLog = "APDU Sent from APK to Applet COTA/SAP: " + simcard_DataResponseDesHexaAndASCII(sResAndSW1SW2, True)
-   sLog = sLog + ". Response: " + sResAndSW1SW2
+   sLog = apk_APDU_ResponseFormat(sResAndSW1SW2)
    log_write(sLogFileName, sLog)
 
    bReturn = False
@@ -453,18 +470,18 @@ def apk_APDU_E2(cardservice, sLogFileName, sChannel, sSDKID):
    return bReturn
  
 # apk_StatusCommands -----------------------------------------------------------------------------------------------------------
-def apk_StatusCommands(cardservice, sLogFileName, sSTATUSCOMMAND_MAX):
-    tReturn = apk_StatusCommandsGetLastCommandProcess(cardservice, sLogFileName, sSTATUSCOMMAND_MAX, str_GetENTER())
+def apk_StatusCommands(cardservice, sLogFileName, sSTATUSCOMMAND_MAX, bChangeIMEI=False, sMCC="", sMNC="", bNetworkOK=True):
+    tReturn = apk_StatusCommandsGetLastCommandProcess(cardservice, sLogFileName, sSTATUSCOMMAND_MAX, str_GetENTER(), bChangeIMEI, sMCC, sMNC, bNetworkOK)
     return tReturn[0]
 
 # apk_StatusCommandsGetLastCommand -----------------------------------------------------------------------------------------------------------
-def apk_StatusCommandsGetLastCommand(cardservice, sLogFileName, sSTATUSCOMMAND_MAX, sSeparaAPDU):
-    tReturn = apk_StatusCommandsGetLastCommandProcess(cardservice, sLogFileName, sSTATUSCOMMAND_MAX, sSeparaAPDU)
+def apk_StatusCommandsGetLastCommand(cardservice, sLogFileName, sSTATUSCOMMAND_MAX, sSeparaAPDU, bChangeIMEI=False, sMCC="", sMNC="", bNetworkOK=True):
+    tReturn = apk_StatusCommandsGetLastCommandProcess(cardservice, sLogFileName, sSTATUSCOMMAND_MAX, sSeparaAPDU, bChangeIMEI, sMCC, sMNC, bNetworkOK)
     return tReturn[1]
     
 # apk_StatusCommandsGetLastCommandProcess -----------------------------------------------------------------------------------------------------------
-def apk_StatusCommandsGetLastCommandProcess(cardservice, sLogFileName, sSTATUSCOMMAND_MAX, sSeparaAPDU):
-    return simcard_StatusCommandsGetLastCommandProcess(cardservice, sLogFileName, sSTATUSCOMMAND_MAX, sSeparaAPDU)
+def apk_StatusCommandsGetLastCommandProcess(cardservice, sLogFileName, sSTATUSCOMMAND_MAX, sSeparaAPDU, bChangeIMEI=False, sMCC="", sMNC="", bNetworkOK=True):
+    return simcard_StatusCommandsGetLastCommandProcess(cardservice, sLogFileName, sSTATUSCOMMAND_MAX, sSeparaAPDU, bChangeIMEI, sMCC, sMNC, bNetworkOK)
 
 # apk_APDU_D6_LaunchBrowser -----------------------------------------------------------------------------------------------------------
 def apk_APDU_D6_LaunchBrowser(cardservice, sLogFileName, sChannel):
@@ -492,8 +509,7 @@ def apk_APDU_D6_LaunchBrowser(cardservice, sLogFileName, sChannel):
    sLog = "APDU to be sent from APK to Applet COTA/SAP: 0x" + str_SpaceHexa(sAPDU)
    log_write(sLogFileName, sLog)
       
-   sLog = "APDU Sent from APK to Applet COTA/SAP: " + simcard_DataResponseDesHexaAndASCII(sResAndSW1SW2, True)
-   sLog = sLog + ". Response: " + sResAndSW1SW2
+   sLog = apk_APDU_ResponseFormat(sResAndSW1SW2)
    log_write(sLogFileName, sLog)
 
    bReturn = False
@@ -526,8 +542,7 @@ def apk_APDU_D6_PopUp(cardservice, sLogFileName, sChannel):
    sLog = "APDU to be sent from APK to Applet COTA/SAP: 0x" + str_SpaceHexa(sAPDU)
    log_write(sLogFileName, sLog)
       
-   sLog = "APDU Sent from APK to Applet COTA/SAP: " + simcard_DataResponseDesHexaAndASCII(sResAndSW1SW2, True)
-   sLog = sLog + ". Response: " + sResAndSW1SW2
+   sLog = apk_APDU_ResponseFormat(sResAndSW1SW2)
    log_write(sLogFileName, sLog)
 
    bReturn = False

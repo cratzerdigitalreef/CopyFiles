@@ -877,7 +877,7 @@ def str_FloatToString(Nro, Decimals):
     return str(sReturn)
 
 # str_GetPorcentageToString ----------------------------------------------------------------------------------------------------------------------
-def str_GetPorcentageToString(NroBaseFrom100, Nro, Decimals):
+def str_GetPorcentageToString(NroBaseFrom100, Nro, Decimals=2):
     nNro100 = Nro * 100
     #print(nNro100)
     nReturn = float(nNro100 / NroBaseFrom100)
@@ -913,8 +913,12 @@ def str_GetTimer(interval):
     stimer = str(timer)
     return stimer
 
+# str_CleanNotPrintableASCIIWithoutExceptions ----------------------------------------------------------------------------------------------------------------------
+def str_CleanNotPrintableASCIIWithoutExceptions(sData):
+    return str_CleanNotPrintableASCII(sData, "", False)
+
 # bytes_CleanPrintableASCII ----------------------------------------------------------------------------------------------------------------------
-def str_CleanNotPrintableASCII(sData, sReplace):
+def str_CleanNotPrintableASCII(sData, sReplace="", bManageExceptions=True):
 
     nMax = len(sData)
     sReturn = ""    
@@ -922,13 +926,13 @@ def str_CleanNotPrintableASCII(sData, sReplace):
     while n < nMax:
           s = sData[n:n+1]
           #print("n: " + str(n) + " - s: " + s)
-          sReturn = sReturn + str_CleanNotPrintableASCIIChar(s, sReplace)
+          sReturn = sReturn + str_CleanNotPrintableASCIIChar(s, sReplace, bManageExceptions)
           n = n + 1
           
     return sReturn
 
 # str_CleanNotPrintableASCIIChar ----------------------------------------------------------------------------------------------------------------------
-def str_CleanNotPrintableASCIIChar(sChar, sReplace):
+def str_CleanNotPrintableASCIIChar(sChar, sReplace="", bManageExceptions=True):
 
     if sChar == "":
        return ""
@@ -948,8 +952,9 @@ def str_CleanNotPrintableASCIIChar(sChar, sReplace):
     nLst = len(str_lst_NotPrintableASCIICharExceptions)
     n = 0
     while n < nLst:
-          if nVal == str_lst_NotPrintableASCIICharExceptions[n]:
-             return sChar
+          if bManageExceptions:
+             if nVal == str_lst_NotPrintableASCIICharExceptions[n]:
+                return sChar
           n = n + 1   
     
     #if (nVal >= 32 and nVal <= 126 or (nVal == 10 or nVal == 13 or nVal == 9 or nVal == 8226)):

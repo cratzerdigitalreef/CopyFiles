@@ -10,6 +10,7 @@ from ota import *
 
 from smartcard.CardType import AnyCardType
 from smartcard.CardRequest import CardRequest
+from smartcard.System import readers
 from smartcard.CardConnectionObserver import ConsoleCardConnectionObserver
 #from smartcard.Exceptions import CardRequestTimeoutException
 from smartcard.Exceptions import *
@@ -45,6 +46,15 @@ sSimcard_LastEnvelopeHeader = "Last Envelope sent:"
 sSimcard_SendSMSTPDAPattern = "TPDA: 0x"
 sSimcard_SendSMSDATAPattern = "SMS Data: 0x"
 sSimcard_SendSMSDATAPatternASCII = "- ASCII:"
+
+#Device identities Tag: 0x82
+#Device identities Tag Length: 0x02
+#Source device identity: 0x81 - SIM
+#Destination device identity: 0x83 - Network
+#3GPP 51.014 SMS TPDU tag: 0x0B
+sSimcard_SendSMSData_3GPP51_014_SMS_TPDU_tag1 = "0281830B"
+sSimcard_SendSMSData_3GPP51_014_SMS_TPDU_tag2 = "0281838B"
+
 sSimcard_ResponseForTAR = "3GPP 23.048 response for TAR"
 sSimcard_Header3GPP23040 = "3GPP 23.040"
 sSimcard_HeaderAPDUDescription = "APDU details"
@@ -119,6 +129,16 @@ sSimcard_BERTLV_SMPP_download_tag = "D1"
 #sTerminalResponseAPDU2 = "80 F2 00 00"
 sTerminalResponseAPDU2 = sSimcard_StatusCommand
 sProactiveCommandPattern = "810301"
+
+# --------------------------------------------------------------------------------
+# DEFAULT VALUES FOR PROVIDE LOCI
+sSimcard_MCC = "722"
+sSimcard_MNC = "310"
+sSimcard_IMEI = "8A 16 49 01 94 73 95 08"
+sSimcard_NetwotkNOT_OK_Byte = "21"
+
+#SAVING THE LAST READER SELECTED
+sSimcard_ReaderSelected = ""
 
 # GET ATR --------------------------------------------------------------------------------------------------
 def simcard_GetATR(cardservice, sLogFileName):
@@ -339,7 +359,7 @@ def simcard_StatusCommandALLResponsesWithLastAPDUs_List(cardservice, sLogFileNam
     return sSW1 + sSW2, sLastAPDU, allResponses_List
 
 # STATUS COMMAND: simcard_StatusCommandALLResponses_TerminalResponse ----------------------------------------------------------------------------------------------------------
-def simcard_StatusCommandALLResponses_TerminalResponse(cardservice, sLogFileName, sResponse, bChangeIMEI, sMCC="", sMNC="", bNetworkOK=True):
+def simcard_StatusCommandALLResponses_TerminalResponse(cardservice, sLogFileName, sResponse, bChangeIMEI=False, sMCC="", sMNC="", bNetworkOK=True):
     sTemp = simcard_StatusCommandALLResponses_TerminalResponseDes(sLogFileName, sResponse, bChangeIMEI, sMCC, sMNC, bNetworkOK)
     #print("Len: " + str(len(sTemp)))
     #print("sTemp[0]: " + str(sTemp[0]))
@@ -351,7 +371,7 @@ def simcard_StatusCommandALLResponses_TerminalResponse(cardservice, sLogFileName
        return sTemp   
 
 # STATUS COMMAND: simcard_StatusCommandALLResponses_TerminalResponse ----------------------------------------------------------------------------------------------------------
-def simcard_StatusCommandALLResponses_TerminalResponseGetDesOnly(sResponse, bChangeIMEI=True, sMCC="", sMNC="", bNetworkOK=True):
+def simcard_StatusCommandALLResponses_TerminalResponseGetDesOnly(sResponse, bChangeIMEI=False, sMCC="", sMNC="", bNetworkOK=True):
     sTemp = simcard_StatusCommandALLResponses_TerminalResponseDes("", sResponse, bChangeIMEI, sMCC, sMNC, bNetworkOK)
     #print("Len: " + str(len(sTemp)))
     #print("sTemp[0]: " + str(sTemp[0]))
@@ -400,7 +420,7 @@ def simcard_StatusCommandALLResponses_TerminalResponseGetCmd(sResponse):
 
 
 # STATUS COMMAND: simcard_StatusCommandALLResponses_TerminalResponseDes ----------------------------------------------------------------------------------------------------------
-def simcard_StatusCommandALLResponses_TerminalResponseDes(sLogFileName, sResponseParam, bChangeIMEIOrChangeMCCMNC, sMCC="", sMNC="", bNetworkOK=True):
+def simcard_StatusCommandALLResponses_TerminalResponseDes(sLogFileName, sResponseParam, bChangeIMEIOrChangeMCCMNC=False, sMCC="", sMNC="", bNetworkOK=True):
     sReturn = ""
     sResponse = str_TrimCleanSpaces(sResponseParam)
 
@@ -416,6 +436,10 @@ def simcard_StatusCommandALLResponses_TerminalResponseDes(sLogFileName, sRespons
     sLog = ""
     if sResponse!="" and sCmd!="" and sCmdQualif!="":
        sLog = sLog + "TERMINAL RESPONSE APDU: 0x" + str_SpaceHexa(sResponse) + ". CMD: " + sCmd + ". Qualifier: " + sCmdQualif
+
+    #VERIFYING THAT THE RESPONSE HAS THE DEFAULT IMEI
+    if str_TrimCleanSpaces(sSimcard_IMEI) in str_TrimCleanSpaces(sResponse):
+       bChangeIMEIOrChangeMCCMNC = False   
 
     #D0 2B 81 03 01 13 00 82 02 81 83 0B 20 05 00 05 81 06 01 F4 00 04 16 270213FFFEAA07080300010002434F544130323041449000
     #3GPP 51.014 SMS TPDU tag: 0x0B
@@ -435,7 +459,11 @@ def simcard_StatusCommandALLResponses_TerminalResponseDes(sLogFileName, sRespons
        sReturn = "80 14 00 00 0C 01 03 01 13 00 02 02 82 81 03 01 00"
        
        if bNetworkOK == False:
-          sReturn = "80 14 00 00 0C 01 03 01 13 00 02 02 82 81 03 01 21"
+          
+          sReturn = "80 14 00 00 0C 01 03 01 13 00 02 02 82 81 03 01 " + sSimcard_NetwotkNOT_OK_Byte
+          sLog = sLog + " - Network status 0x" + sSimcard_NetwotkNOT_OK_Byte + " = " + simcard_STKCmdResponseGetDesFromHexa(sSimcard_NetwotkNOT_OK_Byte) 
+          log_writePrintOnlyWarning(sLog)
+
        sLog = sLog + sOK
        sSMSProc = simcard_SendSMSCmd_Process(sLogFileName, sResponse)
        #if sDes in sSMSProc:
@@ -472,20 +500,32 @@ def simcard_StatusCommandALLResponses_TerminalResponseDes(sLogFileName, sRespons
        sRandom = simcard_GenerateRandom(12)
        #print("sRandom: " + sRandom)
        sReturn = "80 14 00 00 17 01 03 01 26 00 02 02 82 81 03 01 00 93 09 "
-       sLOCI = "27 02 13"
+       
+       sLOCI = loci_MCC_MNC_To_Hexa(sSimcard_MCC, sSimcard_MNC)
+
        if sMCC != "" and sMNC != "":
           #HOME
           sLOCI = loci_MCC_MNC_To_Hexa(sMCC, sMNC)
+          sLog = sLog + ". MCC set: " + sMCC + ", MNC set: " + sMNC
        if sMCC != "" and sMNC == "":
           #ROAMING NATIONAL
-          sLOCI = loci_MCC_MNC_To_Hexa(sMCC, str_right(sRandom,3))
-       if bChangeIMEIOrChangeMCCMNC:
+          sMNC = str_right(sRandom,3)
+          sLOCI = loci_MCC_MNC_To_Hexa(sMCC, sMNC)
+          sLog = sLog + ". MCC set: " + sMCC + ", MNC set (random): " + sMNC
+       if bChangeIMEIOrChangeMCCMNC and sMCC=="" and sMNC=="":
           #ROAMING INTERNATIONAL - IT (bNetworkOKOrChangeIMEIOrChangeMCCMNC) HAS MORE PRIORITY THAN MCC-MNC
           sLOCI = str_left(sRandom,6) 
-       sLOCI = sLOCI + " FF FE AA" + str_right(sRandom, 6)   
+          sMCC = str_left(sLOCI,3)
+          sMNC = str_right(sLOCI, 3)
+          sLOCI = loci_MCC_MNC_To_Hexa(sMCC, sMNC)
+          sLog = sLog + ". MCC set (random): " + sMCC + ", MNC set (random): " + sMNC
+
+       sLACAndCell = "FF FE AA" + str_right(sRandom, 6)
+       sLOCI = sLOCI + sLACAndCell
        sReturn = sReturn + sLOCI
        #sLog = sLog + ". LOCI answered: 0x" + str_SpaceHexa(sLOCI + " FF FE AA" + sRandom)
        sLog = sLog + ". LOCI answered: 0x" + str_SpaceHexa(sReturn) + ". Interpreted: " + loci_lociFromHexa(sLOCI, True)
+       log_writePrintOnlyWarning(sLog)
        
        #print("sLog LOCI: " + sLog + " - sReturn: " + sReturn)
        
@@ -494,13 +534,23 @@ def simcard_StatusCommandALLResponses_TerminalResponseDes(sLogFileName, sRespons
        #IMEI = 8A 16 49 01 94 73 95 08
        #sReturn = "80 14 00 00 16 01 03 01 26 01 02 02 82 81 03 01 00 94 08 8A 16 49 01 94 73 95 08"
        sLog = sLog + " - IMEI"
-       sIMEI = str_SpaceHexa("8A 16 49 01 94 73 95 08")
+
+       sIMEI = str_SpaceHexa(sSimcard_IMEI)
+
        if bChangeIMEIOrChangeMCCMNC == True:
           sIMEI = simcard_generate_random_imei()
        # ToDo: We changed from 80 14 00 00 16 01 03 01 26 01 to 80 14 00 00 16 01 03 01 26 00 temporarily
        sReturn = "80 14 00 00 16 01 03 01 26 01 02 02 82 81 03 01 00 94 08 " + sIMEI
        sLog = sLog + ". IMEI answered: 0x" + sIMEI + " - bChangeIMEIOrChangeMCCMNC: " + str(bChangeIMEIOrChangeMCCMNC)
-       print(sLog)
+
+       if not (str(bChangeIMEIOrChangeMCCMNC) == "True" or str(bChangeIMEIOrChangeMCCMNC) == "False"):
+          sLog = sLog + ". bChangeIMEIOrChangeMCCMNC should be boolean: " + str(bChangeIMEIOrChangeMCCMNC)
+          log_writePrintOnlyWarning(sLog)
+          sys.exit(0)
+       
+       if not bChangeIMEIOrChangeMCCMNC:
+          sLog = sLog + ". IMEI Default value: 0x" + str_SpaceHexa(sSimcard_IMEI) + " (" + loci_imeiFromHexa(sSimcard_IMEI, False, False) + ")"
+       log_writePrintOnlyWarning(sLog)
 
     if sCmd == "26" and sCmdQualif == "06":
        #0x26 = PROVIDE LOCI RESPONSE. Flag: ACCESS TECHNOLOGY
@@ -692,10 +742,18 @@ def simcard_processAPDU(cardservice, sAPDU, sLogFileName):
     sSW1SW2 = ""
     
     if sSW1!="" and sSW2!="":
-       sLog = sLog + "RESPONSE APDU: " + "SW1=" + sSW1 + " - SW2=" + sSW2 + "."
-       sSW1SW2 = bytes_Clean0x(sSW1+sSW2)
+
+       sLog = sLog + "RESPONSE APDU: " + "SW1=" + sSW1 + " - SW2=" + sSW2 + ". "
+       sSW1SW2 = sSW1 + sSW2
+       sSW1SW2 = bytes_Clean0x(sSW1SW2)
        sSW1SW2 = sSW1SW2.upper()
+       sDes = simcard_ErrorListGetDes(sSW1SW2, True)
+
+       if sDes != "":
+          sLog = sLog + simcard_ErrorListGetDes(sSW1SW2, True)
+
     if sResponse != "":
+
        sLog = sLog + " " + simcard_DataResponseDesHexaAndASCII(sResponse, True)
        sResponse = sResponse.upper()
     
@@ -876,7 +934,7 @@ def simcard_sendEnvelopePrepareAPDU(sTPDA, sAPDU, sTAR=sSimcard_sDefTAR_COTA, sM
 
 
 # SEND ENVELOPE simcard_sendEnvelope ------------------------------------------------------------------------------------------------------
-def simcard_sendEnvelope(cardservice, sTPDA, sCMD, sLogFileName, sTAR=sSimcard_sDefTAR_COTA, sMSL=sSimcard_MSLDefNoSecurity, sKIC=sSimcard_MSLDefKIC, sKID=sSimcard_MSLDefKID, sCounter=sSimcard_MSLDefCounter, b9000WithDescription=False):
+def simcard_sendEnvelope(cardservice, sTPDA, sCMD, sLogFileName, sTAR=sSimcard_sDefTAR_COTA, sMSL=sSimcard_MSLDefNoSecurity, sKIC=sSimcard_MSLDefKIC, sKID=sSimcard_MSLDefKID, sCounter=sSimcard_MSLDefCounter, b9000WithDescription=False, bChangeIMEIMCCMNC=True, sMCC="", sMNC="", bNetworkOK=True):
 
     sCMD = str_TrimCleanSpaces(sCMD)
 
@@ -934,7 +992,7 @@ def simcard_sendEnvelope(cardservice, sTPDA, sCMD, sLogFileName, sTAR=sSimcard_s
                 #0x26 = PROVIDE LOCI
                 
                 #sResAndSW1SW2 = simcard_SendOKResponseAnyCmd(cardservice, sCmd, sLogFileName)
-                sResAndSW1SW2 = simcard_StatusCommandALLResponses_TerminalResponse(cardservice, sLogFileName, sResAndSW1SW2, True)
+                sResAndSW1SW2 = simcard_StatusCommandALLResponses_TerminalResponse(cardservice, sLogFileName, sResAndSW1SW2, bChangeIMEIMCCMNC, sMCC, sMNC, bNetworkOK)
 
           else:
         
@@ -1475,13 +1533,17 @@ def simcard_SendSMSCmd_Interpret_GetTPDA(sSendSMSBytecode):
     
     #3GPP 51.014 SMS TPDU tag: 0x8B or 0x0B
     sTPDA_TP_Message_Reference = ""
-    if "8B" in sSendSMS or "0B" in sSendSMS:
 
-       if "8B" in sSendSMS:
-          sSendSMS_t = str_getSubStringFromOcurAfterFirstOnly(sSendSMS, "8B")
+    #sSimcard_SendSMSData_3GPP51_014_SMS_TPDU_tag1 = "0281830B"
+    #sSimcard_SendSMSData_3GPP51_014_SMS_TPDU_tag2 = "0281838B"
+
+    if sSimcard_SendSMSData_3GPP51_014_SMS_TPDU_tag1 in sSendSMS or sSimcard_SendSMSData_3GPP51_014_SMS_TPDU_tag2 in sSendSMS:
+
+       if sSimcard_SendSMSData_3GPP51_014_SMS_TPDU_tag2 in sSendSMS:
+          sSendSMS_t = str_getSubStringFromOcurAfterFirstOnly(sSendSMS, sSimcard_SendSMSData_3GPP51_014_SMS_TPDU_tag2)
        else:   
           #0xD0 16 81 03 01 13 00 82 02 81 83 0B 0B 05 00 05 81 06 01 F4 00 04 01 31
-          sSendSMS_t = str_getSubStringFromOcurAfterFirstOnly(sSendSMS, "0B")
+          sSendSMS_t = str_getSubStringFromOcurAfterFirstOnly(sSendSMS, sSimcard_SendSMSData_3GPP51_014_SMS_TPDU_tag1)
 
        # NEXT BYTES ARE:
        # 3GPP 51.014 SMS TPDU Length
@@ -1492,6 +1554,7 @@ def simcard_SendSMSCmd_Interpret_GetTPDA(sSendSMSBytecode):
        if str_left(sSendSMS_t, 2) == sSimcard_LengthBiggerThan127:
           # Because length is bigger than 127 bytes
           nStart = nStart + 2
+       #print("simcard_SendSMSCmd_Interpret_GetTPDA - nStart: " + str(nStart) + " - sSendSMS_t = " + str(sSendSMS_t))
        sTPDA_TP_Message_Reference = simcard_GetTPDAHexa(sSendSMS_t, nStart)
 
        #print("simcard_SendSMSCmd_Interpret_GetTPDA - sTPDA_TP_Message_Reference = " + str(sTPDA_TP_Message_Reference))
@@ -1668,7 +1731,12 @@ def simcard_SendSMSCmd_InterpretData_IsResponseForPoR(sSMSData):
     sSMS = str_TrimCleanSpaces(sSMSData)
     sData = str_AddSpaceHexa(sSMS)
     sDataASCII = bytes_HexaToASCII(sSMS)
-    sSMSData = sSimcard_SendSMSDATAPattern + sData + " " + sSimcard_SendSMSDATAPatternASCII + " " + sDataASCII
+    sSMSData = sSimcard_SendSMSDATAPattern + sData
+    if sSMS != "":
+       #print("simcard_SendSMSCmd_InterpretData_IsResponseForPoR - sSMS: " + str(sSMS) + " - simcard_LengthReference(sSMS): " + str(simcard_LengthReference(sSMS)))
+       sSMSData = sSMSData + " - " + simcard_LengthReference(sSMS) 
+
+    sSMSData = sSMSData + " " + sSimcard_SendSMSDATAPatternASCII + " " + sDataASCII
 
     # 3GPP 23.048 RESPONSE FOR MSL WITH SPI2
     # sSimcard_SMSAnswerForSPI2Request_Pattern = "027100"
@@ -1692,6 +1760,8 @@ def simcard_STKCommand_Get(sSTKCommand):
     #DATA: D0 17 81 03 01 13 00 82 02 81 83 0B 0C 05 00 05 81 06 01 F4 00 04 02 30 12
     #DATA: D0 81 97 81 03 01 13 00 82 02 81 83 05 00 06 04 81 06 01 F5 8B 81 83 41 00 05 81 06 01 F4 00 F6 79 02 71 00 00 74 0A 00 00 00 00 00 00 00 01 00 00 01 90 00 66 64 73 62 06 07 2A 86 48 86 FC 6B 01 60 0B 06 09 2A 86 48 86 FC 6B 02 02 02 63 09 06 07 2A 86 48 86 FC 6B 03 64 0B 06 09 2A 86 48 86 FC 6B 04 02 55 64 0B 06 09 2A 86 48 86 FC 6B 04 80 00 64 0B 06 09 2A 86 48 86 FC 6B 04 81 07 65 0A 06 08 2A 86 48 86 FC 6B 05 04 66 0C 06 0A 2B 06 01 04 01 2A 02 6E 01 02
     
+    #62 17 82 02 41 21 83 02 2F E2 8A 01 05 8B 03 2F 06 01 80 02 00 0A 88 01 10
+
     sSTKCommand = str_TrimCleanSpaces(sSTKCommand)
     
     sCmd = ""
@@ -1706,7 +1776,13 @@ def simcard_STKCommand_Get(sSTKCommand):
     
        if nSTKCommandLen > (nStart + 2):
           sCmd = str_mid(sSTKCommand,nStart,2)          
-    
+
+       sCmdBefore2Bytes = str_mid(sSTKCommand,nStart-4,4)
+       #print("simcard_STKCommand_Get: " + sCmdBefore2Bytes)
+       if sCmdBefore2Bytes != "0301":
+          #IT IS NOT A SIM TOOLKIT COMMAND
+          sCmd = ""
+
     sCmd = str(str_TrimCleanSpaces(sCmd))
     return sCmd
 
@@ -1782,6 +1858,7 @@ def simcard_DF_EF_Select(cardservice, sLogFileName, sDF_EF):
     sName = simcard_SelectEF_GetFileName(sResAndSW1SW2)
     sSize = simcard_SelectEF_GetSize(sResAndSW1SW2)
     sLog = "SELECT DF/FILE: " + sName
+
     if len(sSize) > 4:
        sRecSize = sSize[4:6].upper()
        sRecs =  sSize[6:].upper()
@@ -1790,8 +1867,9 @@ def simcard_DF_EF_Select(cardservice, sLogFileName, sDF_EF):
        sLog = sLog + " -  Record Size: 0x" + sRecSize + " (decimal: " + bytes_HexaToNro(sRecSize) + ")"
        sLog = sLog + " -  Records: 0x" + sRecs + " (decimal: " + bytes_HexaToNro(sRecs) + ")"
     else:
-       sLog = " - Length (bytes): 0x"
-       sLog = sLog + sSize
+       if sSize != "":
+          sLog = sLog + " - Length (bytes): 0x"
+          sLog = sLog + sSize + " (decimal: " + bytes_HexaToNro(sSize) + ")"
          
     log_write(sLogFileName, sLog)
     
@@ -2310,7 +2388,7 @@ def simcard_ARAM_GetData(cardservice, sLogFileName, sChannel):
                    sResAndSW1SW2 = str_left(sResAndSW1SW2, len(sResAndSW1SW2) - len(sTAGOK))
                 sResAndSW1SW2 = sResAndSW1SW2 + sResAndSW1SW2_2
 
-    print("simcard_ARAM_GetData: sResAndSW1SW2 = 0x" + str_AddSpaceHexa(str(sResAndSW1SW2)) + " - Length: " + str(len(sResAndSW1SW2)//2) + " bytes")
+    print("simcard_ARAM_GetData: sResAndSW1SW2 = 0x" + str_AddSpaceHexa(str(sResAndSW1SW2)) + " - " + simcard_LengthReference(sResAndSW1SW2))
        
     return sResAndSW1SW2
 
@@ -2449,8 +2527,10 @@ def simcard_OpenChannel(cardservice, sLogFileName):
 
     #log_write(sLogFileName, "simcard_OpenChannel response: 0x" + sResAndSW1SW2)
    
+    sChannel = str_left(sResAndSW1SW2, 2)
+    log_write(sLogFileName, "simcard_OpenChannel response: 0x" + str_AddSpaceHexa(sResAndSW1SW2) + ". Channel OPENED: " + sChannel)
+
     if sSW1 == '90' and sSW2 == '00':
-       sChannel = str_left(sResAndSW1SW2, 2)
        return sChannel
     else:
        return ""
@@ -2474,7 +2554,7 @@ def simcard_CloseChannel(cardservice, sLogFileName, sChannel):
     sSW1 = simcard_SW1SW2ProcessReturnSW1(sResAndSW1SW2, sLogFileName)
     sSW2 = simcard_SW1SW2GetSW2(sResAndSW1SW2)
 
-    log_write(sLogFileName, "simcard_CloseChannel response: 0x" + str_AddSpaceHexa(sResAndSW1SW2) + ". Channel closed: " + sChannel)
+    log_write(sLogFileName, "simcard_CloseChannel response: 0x" + str_AddSpaceHexa(sResAndSW1SW2) + ". Channel CLOSED: " + sChannel)
     
     if sSW1 == '90' and sSW2 == '00':
        return True
@@ -2482,27 +2562,28 @@ def simcard_CloseChannel(cardservice, sLogFileName, sChannel):
        return False
 
 # simcard_SendEnvelopeContinuosResponseList -----------------------------------------------------------------------------------------------------------
-def simcard_SendEnvelopeContinuosResponseList(cardservice, sLogFileName, sTPDA, sAPDU, sSeparaAPDUForLastAPDUs="", sTAR=sSimcard_sDefTAR_COTA, bNetworkOKOrChangeIMEI=True, sMCC="", sMNC="", sMSL=sSimcard_MSLDefNoSecurity, sKIC=sSimcard_MSLDefKIC , sKID=sSimcard_MSLDefKID, sCounter=sSimcard_MSLDefCounter):
+def simcard_SendEnvelopeContinuosResponseList(cardservice, sLogFileName, sTPDA, sAPDU, sSeparaAPDUForLastAPDUs="", sTAR=sSimcard_sDefTAR_COTA, bChangeIMEIMCCMNC=True, sMCC="", sMNC="", sMSL=sSimcard_MSLDefNoSecurity, sKIC=sSimcard_MSLDefKIC , sKID=sSimcard_MSLDefKID, sCounter=sSimcard_MSLDefCounter, bNetworkOK=True):
 
-    sResp = simcard_SendEnvelopeContinuos(cardservice, sLogFileName, sTPDA, sAPDU, sSeparaAPDUForLastAPDUs, sTAR, bNetworkOKOrChangeIMEI, sMCC, sMNC, sMSL, sKIC, sKID, sCounter)
+    sResp = simcard_SendEnvelopeContinuos(cardservice, sLogFileName, sTPDA, sAPDU, sSeparaAPDUForLastAPDUs, sTAR, bChangeIMEIMCCMNC, sMCC, sMNC, sMSL, sKIC, sKID, sCounter, bNetworkOK)
     sResp = str_SpacesOut(sResp)
     return sResp.split(sSeparaAPDUForLastAPDUs)
 
 # simcard_SendEnvelopeContinuos -----------------------------------------------------------------------------------------------------------
-def simcard_SendEnvelopeContinuos(cardservice, sLogFileName, sTPDA, sAPDU, sSeparaAPDUForLastAPDUs="", sTAR=sSimcard_sDefTAR_COTA, bNetworkOKOrChangeIMEI=True, sMCC="", sMNC="", sMSL=sSimcard_MSLDefNoSecurity, sKIC=sSimcard_MSLDefKIC , sKID=sSimcard_MSLDefKID, sCounter=sSimcard_MSLDefCounter):
+def simcard_SendEnvelopeContinuos(cardservice, sLogFileName, sTPDA, sAPDU, sSeparaAPDUForLastAPDUs="", sTAR=sSimcard_sDefTAR_COTA, bChangeIMEIMCCMNC=True, sMCC="", sMNC="", sMSL=sSimcard_MSLDefNoSecurity, sKIC=sSimcard_MSLDefKIC , sKID=sSimcard_MSLDefKID, sCounter=sSimcard_MSLDefCounter, bNetworkOK=True):
 
-    sResAndSW1SW2 = simcard_sendEnvelope(cardservice, sTPDA, sAPDU, sLogFileName, sTAR, sMSL, sKIC, sKID, sCounter)
+    sResAndSW1SW2 = simcard_sendEnvelope(cardservice, sTPDA, sAPDU, sLogFileName, sTAR, sMSL, sKIC, sKID, sCounter, False, bChangeIMEIMCCMNC, sMCC, sMNC, bNetworkOK)
     
-    return simcard_SendResponseContinuos(cardservice, sLogFileName, sResAndSW1SW2, sSeparaAPDUForLastAPDUs, sTAR, bNetworkOKOrChangeIMEI, sMCC, sMNC, sMSL, sKIC, sKID, sCounter)
+    return simcard_SendResponseContinuos(cardservice, sLogFileName, sResAndSW1SW2, sSeparaAPDUForLastAPDUs, sTAR, bChangeIMEIMCCMNC, sMCC, sMNC, sMSL, sKIC, sKID, sCounter, bNetworkOK)
 
 # simcard_SendResponseContinuos -----------------------------------------------------------------------------------------------------------
-def simcard_SendResponseContinuos(cardservice, sLogFileName, sResAndSW1SW2, sSeparaAPDUForLastAPDUs="", sTAR=sSimcard_sDefTAR_COTA, bNetworkOKOrChangeIMEI=True, sMCC="", sMNC="", sMSL=sSimcard_MSLDefNoSecurity, sKIC=sSimcard_MSLDefKIC, sKID=sSimcard_MSLDefKID, sCounter=sSimcard_MSLDefCounter):
+def simcard_SendResponseContinuos(cardservice, sLogFileName, sResAndSW1SW2, sSeparaAPDUForLastAPDUs="", sTAR=sSimcard_sDefTAR_COTA, bChangeIMEIMCCMNC=True, sMCC="", sMNC="", sMSL=sSimcard_MSLDefNoSecurity, sKIC=sSimcard_MSLDefKIC, sKID=sSimcard_MSLDefKID, sCounter=sSimcard_MSLDefCounter, bNetworkOK=True):
 
     #print("simcard_SendResponseContinuos - sResAndSW1SW2: " + str(sResAndSW1SW2))
        
     sLog = "RESULT SW1 AND SW2: "
     if bytes_IsHexaValid(sResAndSW1SW2):
        sLog = sLog + str_AddSpaceHexa(sResAndSW1SW2)
+       sLog = sLog + ". " + simcard_ErrorListGetDes(sResAndSW1SW2, True)
     else:
        sLog = sLog + sResAndSW1SW2
     log_write(sLogFileName, sLog)
@@ -2529,8 +2610,10 @@ def simcard_SendResponseContinuos(cardservice, sLogFileName, sResAndSW1SW2, sSep
     n = 0
     bExit = False
     
-    if sSimcard_9300 in str_SpacesOut(sResAndSW1SW2):
+    #if sSimcard_9300 in str_SpacesOut(sResAndSW1SW2):
+    if sSimcard_9300 == str_left(sResAndSW1SW2, len(sSimcard_9300)) or sSimcard_9300 == str_right(sResAndSW1SW2, len(sSimcard_9300)):
        # 0x93 00 = Smartcard: SIM Application Toolkit Busy.
+       log_writePrintOnlyWarning("simcard_SendResponseContinuos - sSimcard_9300 found in: " + str_SpaceHexa(str(sResAndSW1SW2)))
        bExit = True
     
     while not bExit and n < 100:
@@ -2549,7 +2632,7 @@ def simcard_SendResponseContinuos(cardservice, sLogFileName, sResAndSW1SW2, sSep
                 sTempFetchResponse = ""
                 if len(sResAndSW1SW2) != 4:
                    #PROCESS TERMINAL RESPONSE ACCORDING TO STATUS COMMAND
-                   sTempFetchResponse = simcard_StatusCommandALLResponses_TerminalResponse(cardservice, sLogFileName, sResAndSW1SW2, bNetworkOKOrChangeIMEI, sMCC, sMNC)
+                   sTempFetchResponse = simcard_StatusCommandALLResponses_TerminalResponse(cardservice, sLogFileName, sResAndSW1SW2, bChangeIMEIMCCMNC, sMCC, sMNC, bNetworkOK)
                 
                    bSendResponse = True   
  
@@ -2598,9 +2681,13 @@ def simcard_SendResponseContinuos(cardservice, sLogFileName, sResAndSW1SW2, sSep
         
           n = n + 1
           
-    #print("simcard_SendResponseContinuos - sResAndSW1SW2: " + str(sResAndSW1SW2) + " - sLastAPDU: " + str(sLastAPDU))
-          
-    return sResAndSW1SW2 + sLastAPDU
+    #print("simcard_SendResponseContinuos - sResAndSW1SW2: " + str(sResAndSW1SW2) + " - " + simcard_LengthReference(sResAndSW1SW2))
+    #print("simcard_SendResponseContinuos - sLastAPDU: " + str(sLastAPDU) + " - " + simcard_LengthReference(sLastAPDU))
+
+    if sResAndSW1SW2 == sLastAPDU:
+       return sResAndSW1SW2
+    else:
+       return sResAndSW1SW2 + sLastAPDU
 
 
 # simcard_SendEnvelopeContinuosSendSMS -----------------------------------------------------------------------------------------------------------
@@ -2614,7 +2701,7 @@ def simcard_SendEnvelopeContinuosSendSMS(cardservice, sLogFileName, sTPDA, sAPDU
        
 
 # simcard_SendEnvelopeContinuosAnalizeResponse -----------------------------------------------------------------------------------------------------------
-def simcard_SendEnvelopeContinuosAnalizeResponse(sLogFileName, sSW1SW2AndLastAPDU, sCMD, sCMDQualif, sSeparaAPDUs):
+def simcard_SendEnvelopeContinuosAnalizeResponse(sLogFileName, sSW1SW2AndLastAPDU, sCMD, sCMDQualif, sSeparaAPDUs, bChangeIMEI=False, sMCC="", sMNC="", bNetworkOk=True):
     sAPDU = ""
     sMsg = ""
     
@@ -2639,7 +2726,7 @@ def simcard_SendEnvelopeContinuosAnalizeResponse(sLogFileName, sSW1SW2AndLastAPD
           if nAPDUs >= 2:
              sPreviousAPDU = tAPDUs[nAPDUs-2]
              #print("sPreviousAPDU: " + sPreviousAPDU)
-             sPreviousAPDUProcessed = simcard_StatusCommandALLResponses_TerminalResponseGetDesOnly(sPreviousAPDU, True)
+             sPreviousAPDUProcessed = simcard_StatusCommandALLResponses_TerminalResponseGetDesOnly(sPreviousAPDU, bChangeIMEI, sMCC, sMNC, bNetworkOk)
              #print("sPreviousAPDUProcessed: " + sPreviousAPDUProcessed)
              sAPDU = sPreviousAPDUProcessed
              
@@ -3103,15 +3190,22 @@ def COTA_processSMS(sSMS, sTAR=sSimcard_sDefTAR_COTA):
           sSMS = str_midToEnd(sSMS, 8)
           bSAPAUTH = True
        
+       #Data length in bytes
        nIMEILen = 8
        nLBrowserLen = 1
        nICCIDLen = 10
        nIMSILen = 9
+       nLOCILen = 9
+       nACCTechLen = 1
 
        sICCID = ""
        sIMSI = ""
-              
+       sLOCI = ""
+       sACCTECH = ""
+
+       bProcessed = False              
        if (len(sSMS)//2) == (nIMEILen + nLBrowserLen + nICCIDLen + nIMSILen):
+          bProcessed = True
           if bSAPAUTH:
               sICCID = str_left(sSMS,nICCIDLen*2)
               sIMSI = str_mid(sSMS,(nICCIDLen*2),nIMSILen*2)
@@ -3122,14 +3216,28 @@ def COTA_processSMS(sSMS, sTAR=sSimcard_sDefTAR_COTA):
               sLaunchSupported = str_mid(sSMS,nIMEILen*2,2)
               sICCID = str_mid(sSMS,(nIMEILen*2)+2,nICCIDLen*2)
               sIMSI = str_mid(sSMS,(nIMEILen*2)+2+(nICCIDLen*2),nIMSILen*2)
-       else:
+
+       if (len(sSMS)//2) == (nIMEILen + nLBrowserLen + nICCIDLen + nIMSILen + nLOCILen + nACCTechLen):
+          bProcessed = True
+          sIMEI = str_left(sSMS,nIMEILen*2)
+          sLaunchSupported = str_mid(sSMS,nIMEILen*2,2)
+          sICCID = str_mid(sSMS,(nIMEILen*2)+2,nICCIDLen*2)
+          sIMSI = str_mid(sSMS,(nIMEILen*2)+2+(nICCIDLen*2),nIMSILen*2)
+          sLOCI = str_mid(sSMS,(nIMEILen*2)+2+(nICCIDLen*2)+(nIMSILen*2),nLOCILen*2)
+          sACCTECH = str_mid(sSMS,(nIMEILen*2)+2+(nICCIDLen*2)+(nIMSILen*2)+(nLOCILen*2),nACCTechLen*2)
+
+       if not bProcessed:       
           sLaunchSupported = str_right(sSMS,2)
           sIMEI = str_left(str_right(sSMS,18),16)
        
        if sICCID != "" and sIMSI != "":
           sLog = sLog + sFieldSepara + simcard_EF_ICCID_Interpret(sICCID, True) 
           sLog = sLog + sFieldSepara + simcard_EF_IMSI_Interpret(sIMSI, True)
-       
+
+       if sLOCI != "" and sACCTECH != "":
+          sLog = sLog + sFieldSepara + loci_lociFromHexa(sLOCI, True) 
+          sLog = sLog + sFieldSepara + fPLociACCTECHDes(sACCTECH)
+
        if len(sIMEI) != 16:
           sIMEI = ""
           
@@ -3156,7 +3264,7 @@ def COTA_processSMS(sSMS, sTAR=sSimcard_sDefTAR_COTA):
           sLog = sLog + " (Interpreted: " + loci_imeiFromHexa(sIMEI) + ")"
        
        if sData!="":
-          sDataPrint = "Data or Campaign ID: 0x" + str_AddSpaceHexa(sData)   
+          sDataPrint = "Data or Campaign ID: 0x" + str_AddSpaceHexa(sData) + " - " + simcard_LengthReference(sData)  
           if sDataPrint != "":
              sLog = sLog + sFieldSepara + sDataPrint 
              
@@ -3176,8 +3284,17 @@ def simcard_CardConnectCardServiceGet():
     
     return cardservice
 
+# simcard_CardConnectChangeIMEI ---------------------------------------------------------------------------------------------------------------------------------------------------------
+def simcard_CardConnectChangeIMEI(sLogFileName, num_status_commands=0, bChangeIMEI=True, sMCC="", sMNC="", bNetworkOk=True, bSelectReader=False, sReaderToWorkWith="", nReaderRetries=2):
+    return simcard_CardConnect(sLogFileName, num_status_commands, None, ConsoleCardConnectionObserver(), bChangeIMEI, sMCC, sMNC, bNetworkOk, bSelectReader, sReaderToWorkWith, nReaderRetries)
+
+# simcard_CardConnect_SelectReader ---------------------------------------------------------------------------------------------------------------------------------------------------------
+def simcard_CardConnect_SelectReader(sLogFileName, sReaderDefault="", nReaderRetries=2, num_status_commands=0, bChangeIMEI=False, sMCC="", sMNC="", bNetworkOk=True):
+    cardservice = simcard_CardConnect(sLogFileName, num_status_commands, None, ConsoleCardConnectionObserver(), bChangeIMEI, sMCC, sMNC, bNetworkOk, True, sReaderDefault, nReaderRetries)
+    return cardservice
+
 # simcard_CardConnect ---------------------------------------------------------------------------------------------------------------------------------------------------------
-def simcard_CardConnect(sLogFileName, num_status_commands=0, int_sleep=None, observer = ConsoleCardConnectionObserver()):
+def simcard_CardConnect(sLogFileName, num_status_commands=0, int_sleep=None, observer = ConsoleCardConnectionObserver(), bChangeIMEI=True, sMCC="", sMNC="", bNetworkOk=True, bSelectReader=False, sReaderToWorkWith="", nReaderRetries=2):
     """
     Connect to the SIM card and perform a few transmits.
     :param sLogFileName: the name of the log file to write to
@@ -3188,72 +3305,122 @@ def simcard_CardConnect(sLogFileName, num_status_commands=0, int_sleep=None, obs
 
     # request any card type
     cardtype = AnyCardType()
+    sSelectedReader = ""
 
-    try:
+    attempts = 0
+
+    max_attempts = nReaderRetries + 1
+
+    print("simcard_CardConnect: sReaderToWorkWith" + sReaderToWorkWith)
     
-        # request card insertion
-        sLog = 'insert a card (SIM card if possible) within 10s\n'
-        log_write_OKInGreen(sLogFileName, sLog)
+    while attempts < max_attempts:
+
+        try:
     
-        cardrequest = CardRequest(timeout=10, cardType=cardtype)
-        cardservice = cardrequest.waitforcard()
+            # request card insertion
+            sLog = 'insert a card (SIM card if possible) within 10s. Attempt: ' + str(attempts+1) + "\n"
+            log_write_OKInGreen(sLogFileName, sLog)
     
-        # attach the console tracer
-        # observer = ConsoleCardConnectionObserver()
-        cardservice.connection.addObserver(observer)
+            if bSelectReader:
+               sSelectedReader = simcard_selectReaderToWork(sReaderToWorkWith)
+           
+            if sSelectedReader != "":
+               cardrequest = CardRequest(readers=[sSelectedReader], timeout=10, cardType=cardtype)
+            else:      
+               cardrequest = CardRequest(timeout=10, cardType=cardtype)
+            
+            cardservice = cardrequest.waitforcard()
     
-        # connect to the card and perform a few transmits
-        cardservice.connection.connect()
+            # attach the console tracer
+            # observer = ConsoleCardConnectionObserver()
+            cardservice.connection.addObserver(observer)
     
-        #READ ICCID AND IMSI
-        sLog = str_RepeatString(3, "+") + "READING ICCID" + str_RepeatString(3, "+")
-        log_write_OKInGreen(sLogFileName, sLog)
-        sICCID = simcard_EF_ICCID_GET(cardservice, sLogFileName)
-        sLog = str_RepeatString(3, "+") + "FINISHED READING ICCID: " + sICCID + " " + str_RepeatString(3, "+")
-        log_write_OKInGreen(sLogFileName, sLog)
+            # connect to the card and perform a few transmits
+            cardservice.connection.connect()
+    
+            #READ ICCID AND IMSI
+            sLog = str_RepeatString(3, "+") + "READING ICCID" + str_RepeatString(3, "+")
+            log_write_OKInGreen(sLogFileName, sLog)
+            sICCID = simcard_EF_ICCID_GET(cardservice, sLogFileName)
+            sLog = str_RepeatString(3, "+") + "FINISHED READING ICCID: " + sICCID + " " + str_RepeatString(3, "+")
+            log_write_OKInGreen(sLogFileName, sLog)
         
-        sLog = str_RepeatString(3, "+") + "READING IMSI" + str_RepeatString(3, "+")
-        log_write_OKInGreen(sLogFileName, sLog)
-        sIMSI = simcard_EF_IMSI_GET(cardservice, sLogFileName)
-        sLog = str_RepeatString(3, "+") + "FINISHED READING IMSI: " + sIMSI + " " + str_RepeatString(3, "+")
-        log_write_OKInGreen(sLogFileName, sLog)
+            sLog = str_RepeatString(3, "+") + "READING IMSI" + str_RepeatString(3, "+")
+            log_write_OKInGreen(sLogFileName, sLog)
+            sIMSI = simcard_EF_IMSI_GET(cardservice, sLogFileName)
+            sLog = str_RepeatString(3, "+") + "FINISHED READING IMSI: " + sIMSI + " " + str_RepeatString(3, "+")
+            log_write_OKInGreen(sLogFileName, sLog)
     
-        # TERMINAL PROFILE
-        sSW1SW2 = simcard_TerminalProfile(cardservice, "", sLogFileName)
-        sSW1 = simcard_SW1SW2GetSW1(sSW1SW2)
-        sSW2 = simcard_SW1SW2GetSW2(sSW1SW2)
-        sLog = "TERMINAL PROFILE. SW1: " + sSW1 + " - SW2: " + sSW2
-        log_write_OKInGreen(sLogFileName, sLog)
+            # TERMINAL PROFILE
+            sSW1SW2 = simcard_TerminalProfile(cardservice, "", sLogFileName)
+            sSW1 = simcard_SW1SW2GetSW1(sSW1SW2)
+            sSW2 = simcard_SW1SW2GetSW2(sSW1SW2)
+            sLog = "TERMINAL PROFILE. SW1: " + sSW1 + " - SW2: " + sSW2
+            log_write_OKInGreen(sLogFileName, sLog)
     
-        # TERMINAL PROFILE - RESPONSE
-        sSW1SW2 = simcard_TerminalProfileResponse(cardservice, sSW1, sSW2, sLogFileName)
-        sSW1 = simcard_SW1SW2GetSW1(sSW1SW2)
-        sSW2 = simcard_SW1SW2GetSW2(sSW1SW2)
+            # TERMINAL PROFILE - RESPONSE
+            sSW1SW2 = simcard_TerminalProfileResponse(cardservice, sSW1, sSW2, sLogFileName)
+            sSW1 = simcard_SW1SW2GetSW1(sSW1SW2)
+            sSW2 = simcard_SW1SW2GetSW2(sSW1SW2)
     
-        sLog = "TERMINAL PROFILE RESPONSE. SW1: " + sSW1 + " - SW2: " + sSW2
-        log_write_OKInGreen(sLogFileName, sLog)
+            sLog = "TERMINAL PROFILE RESPONSE. SW1: " + sSW1 + " - SW2: " + sSW2
+            log_write_OKInGreen(sLogFileName, sLog)
 
-        if num_status_commands > 0:
-            log_write_InfoInBlue(sLogFileName, f"Sending {num_status_commands} status commands to fully initialize the ME...")
-            for i in range(0, num_status_commands):
-                # Sending i of num_status_commands status commands
-                log_write_WarningInYellow(sLogFileName, f"Sending status command {i + 1} of {num_status_commands}...")
-                if int_sleep:
-                    sleep(int_sleep)
-                simcard_StatusCommandALLResponsesWithLastAPDUs_List(
-                    cardservice,
-                    sLogFileName,
-                    True,
-                    str_GetBETWEENPARAM()
-                )
+            if num_status_commands > 0:
+               log_write_InfoInBlue(sLogFileName, f"Sending {num_status_commands} status commands to fully initialize the ME...")
+               for i in range(0, num_status_commands):
+                   # Sending i of num_status_commands status commands
+                   log_write_WarningInYellow(sLogFileName, f"Sending status command {i + 1} of {num_status_commands}...")
+                   if int_sleep:
+                        sleep(int_sleep)
+                        simcard_StatusCommandALLResponsesWithLastAPDUs_List(
+                                                                              cardservice,
+                                                                              sLogFileName,
+                                                                              bChangeIMEI,
+                                                                              str_GetBETWEENPARAM(),
+                                                                              sMCC, 
+                                                                              sMNC, 
+                                                                              bNetworkOk
+                                                                           )
 
-        return cardservice
-    
-    except (CardRequestTimeoutException, CardConnectionException) as e:
-        sLog = "ERROR: " + str(e) + "\nPossible error = time-out: no card inserted during last 10s."
-        log_write_WarningInYellow(sLogFileName, sLog)
-        return False
-        #exit(0)
+            sStatus = "Selected Reader: '" + str(sSelectedReader) + "'"
+            sStatus = sStatus + "\nICCID: " + sICCID
+            sStatus = sStatus + "\nIMSI: " + sIMSI
+            log_write_OKInGreen(sLogFileName, sStatus)
+
+            return cardservice
+
+        except NoCardException:
+               sLog = "ERROR: No smart card inserted in the reader for attempt: " + str(attempts+1) + "."
+               if sSelectedReader != "":
+                  sLog = sLog + " Selected reader: " + str(sSelectedReader)
+
+               sReaderToWorkWith = ""   
+               log_write_WarningInYellow(sLogFileName, sLog)
+               #sSelectedReader = simcard_selectReaderToWork("")
+               #return False
+            
+        except (CardRequestTimeoutException, CardConnectionException) as e:
+               sLog = "ERROR: " + str(e) + "\nPossible error = time-out: no card inserted during last 10s for attempt: " + str(attempts+1) + "."
+               if sSelectedReader != "":
+                  sLog = sLog + " Selected reader: " + str(sSelectedReader)
+
+               sReaderToWorkWith = ""   
+               log_write_WarningInYellow(sLogFileName, sLog)
+               #return False
+               #exit(0)
+            
+        except Exception as e:
+               sLog = "ERROR: " + str(e) + " for attempt: " + str(attempts+1) + "."
+               if sSelectedReader != "":
+                  sLog = sLog + " Selected reader: " + str(sSelectedReader)
+               log_write_WarningInYellow(sLogFileName, sLog)
+               return False
+        
+        attempts = attempts + 1
+
+    return False     
+
 
 # simcard_status_command_get_responses ---------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -3271,9 +3438,9 @@ def simcard_status_command_get_responses(cardservice, sLogFileName, itr):
     return sw, last_apdu, res_dict
  
 # simcard_CmdInitCheckAutomatic ---------------------------------------------------------------------------------------------------------------------------------------------------------
-def simcard_InitCheckAutomaticProactiveCommand(cardservice, sLogFileName, bCardConnect, bCardDisconnect, nStatusCommandsToProcess, sCheckProactiveCommand, bERRORContinue=True):
+def simcard_InitCheckAutomaticProactiveCommand(cardservice, sLogFileName, bCardConnect, bCardDisconnect, nStatusCommandsToProcess, sCheckProactiveCommand, bERRORContinue=True, bSwitchOFFON_ChangeIMEI=True, sMCC="", sMNC="", bNetworkOk=True):
 
-    bSwitchOFFON_ChangeIMEI = True
+    #bSwitchOFFON_ChangeIMEI = True
     
     bReturn = True
     sLastAPDUs = ""
@@ -3304,7 +3471,7 @@ def simcard_InitCheckAutomaticProactiveCommand(cardservice, sLogFileName, bCardC
           log_write(sLogFileName, sLog)
                  
           #SEND STATUS COMMAND
-          tReturn = simcard_StatusCommandALLResponsesWithLastAPDUs_List(cardservice, sLogFileName, bSwitchOFFON_ChangeIMEI, sSeparaAPDUForLastAPDUs)
+          tReturn = simcard_StatusCommandALLResponsesWithLastAPDUs_List(cardservice, sLogFileName, bSwitchOFFON_ChangeIMEI, sSeparaAPDUForLastAPDUs, sMCC, sMNC, bNetworkOk)
           sResult = tReturn[0]
           sLastAPDUs = tReturn[1]
           #sLastAPDUs = str_TrimCleanSpaces(str_DataWithSeparatorInLines(sLastAPDUs, sSeparaAPDUForLastAPDUs))
@@ -3336,7 +3503,7 @@ def simcard_InitCheckAutomaticProactiveCommand(cardservice, sLogFileName, bCardC
              sLastAPDUsPrn = ""
              while h < nPat:
                    sAPDUt = str_getSubStringFromOcur(sLastAPDUs, sSepara, h)
-                   sAPDUtDes = simcard_StatusCommandALLResponses_TerminalResponseGetDesOnly(sAPDUt, bSwitchOFFON_ChangeIMEI)
+                   sAPDUtDes = simcard_StatusCommandALLResponses_TerminalResponseGetDesOnly(sAPDUt, bSwitchOFFON_ChangeIMEI, sMCC, sMNC, bNetworkOk)
                    if sAPDUt!="":
                       sLastAPDUsPrn = sLastAPDUsPrn + str_GetENTER() + sAPDUt
                       if sAPDUtDes!="" and len(str_TrimCleanSpaces(sAPDUtDes))>2: 
@@ -3526,28 +3693,60 @@ def simcard_interpret_dynamic_bytecode(bytecode, tpda=None, bool_campaign_id=Fal
         # APK_VALUE + COUNTER + IMEI + LAUNCH BROWSER SUPPORT
         # The data is expected to be 24/26 bytes long always
         data_index = index - 26 if "R5" in cota_version else index - 24
-
+        if "COTA0299" in cota_version or "COTA0506" in cota_version:
+           # APK_VALUE (1 byte) + COUNTER (2 bytes) + DATE TIME (7 bytes) + IMEI (8 bytes) + LAUNCH BROWSER SUPPORT (1 bytes)
+           # Here we substract 14 characters or 7 bytes from the index to get the start of the data because of DATE TIME
+           data_index =  data_index - 14
+           
         data = bytecode[data_index:index]
+ 
+        #log_writePrintOnlyDebug("simcard_interpret_dynamic_bytecode - cota_version: " + str(cota_version))
+        #log_writePrintOnlyDebug("simcard_interpret_dynamic_bytecode - data_index: " + str(data_index) + " - index: " + str(index))
+        #log_writePrintOnlyDebug("simcard_interpret_dynamic_bytecode - data: " + str(data))
+        #log_writePrintOnlyDebug("simcard_interpret_dynamic_bytecode - bytecode: " + str(bytecode))
+
+        datetime = ""
 
         if "COTA02" in cota_version:
             # We consider that any COTA02 is a light version - 2024/04/23
             # If it isn't, then it is a full version of the applet
-            imei = data[0:16]
-            supports_launch_browser = data[16:18]
-            apk_apdu_value = data[18:20]
-            counter = data[20:24]
+            #imei = data[0:16]
+            #supports_launch_browser = data[16:18]
+            #apk_apdu_value = data[18:20]
+            #counter = data[20:24]
+            n = 2
+            apk_apdu_value =  str_left(data, n)
+            counter = str_mid(data, n, 4)
+            n = n + 4
+            datetime = str_mid(data, n, 14)
+            n = n + 14
+            imei = str_mid(data, n, 16) 
+            n = n + 16
+            supports_launch_browser = str_mid(data, n, 2) 
 
             if "R5" in cota_version:
                 imei = data[2:18]
                 supports_launch_browser = data[18:20]
                 apk_apdu_value = data[20:22]
                 counter = data[22:26]
+                datetime = ""
         else:
             # Version 5.4, 5.1, 5.0, 4.0, 3.1 ... <keep adding when ecountering>
-            apk_apdu_value = data[0:2]
-            counter = data[2:6]
-            imei = data[6:22]
-            supports_launch_browser = data[22:24]
+            #apk_apdu_value = data[0:2]
+            #counter = data[2:6]
+            #imei = data[6:22]
+            #supports_launch_browser = data[22:24]
+            n = 2
+            apk_apdu_value =  str_left(data, n)
+            counter = str_mid(data, n, 4)
+            n = n + 4
+            if "COTA0506" in cota_version:
+               #THERE IS DATE TIME
+               datetime = str_mid(data, n, 14)
+               n = n + 14
+            imei = str_mid(data, n, 16) 
+            n = n + 16
+            supports_launch_browser = str_mid(data, n, 2) 
 
         if tpda:
             tpda = tpda.replace(" ", "")
@@ -3604,8 +3803,9 @@ def simcard_interpret_dynamic_bytecode(bytecode, tpda=None, bool_campaign_id=Fal
                         sdk_id_ascii = bytes_HexaToASCII(sdk_id)
 
         interpretation = {
-            "Counter": counter,
             "APK APDU Value": apk_apdu_value,
+            "Counter": counter,
+            f"DATE TIME - 0x07 (14d)": datetime,
             f"IMEI - 0x08 (16d)": imei,
             "Supports Launch Browser": supports_launch_browser,
             "COTA Version": cota_version
@@ -3678,7 +3878,7 @@ def simcard_interpret_apdu_structure(apdu, sLogFileName=""):
     if len(apdu) < 8:
        apdu = apdu + str_RepeatString(8-len(apdu),"0")
     
-    print("simcard_interpret_apdu_structure - apdu = " + str(apdu))
+    #print("simcard_interpret_apdu_structure - apdu = " + str(apdu))
        
     # Split the APDU command into bytes
     bytes_list = [apdu[i:i+2] for i in range(0, len(apdu), 2)]
@@ -3748,7 +3948,7 @@ def simcard_processTAR_IsInSMSSiprocalAppletReference(sSMS, bASCII=True):
 
 
 # simcardCmd_sendEnvelopeConcat -----------------------------------------------------------------------------------------------------------------------------------------------
-def simcardCmd_sendEnvelopeConcat(cardservice, sLogFileName, sCMD, sTPDAParam=sSimcard_sDefTPDA, sTAR=sSimcard_sDefTAR_COTA, bNetworkOKOrChangeIMEIOrChangeMCCMNC=True, sMCC="", sMNC="", sMSL=sSimcard_MSLDefNoSecurity, sKIC=sSimcard_MSLDefKIC, sKID=sSimcard_MSLDefKID, sCounter=sSimcard_MSLDefCounter):
+def simcardCmd_sendEnvelopeConcat(cardservice, sLogFileName, sCMD, sTPDAParam=sSimcard_sDefTPDA, sTAR=sSimcard_sDefTAR_COTA, bChangeIMEIOrChangeMCCMNC=False, sMCC="", sMNC="", sMSL=sSimcard_MSLDefNoSecurity, sKIC=sSimcard_MSLDefKIC, sKID=sSimcard_MSLDefKID, sCounter=sSimcard_MSLDefCounter, bNetworkOk=True):
 
     sCMD = str_SpacesOut(sCMD)
     sTPDAParam = str_SpacesOut(sTPDAParam)
@@ -3778,7 +3978,7 @@ def simcardCmd_sendEnvelopeConcat(cardservice, sLogFileName, sCMD, sTPDAParam=sS
     
     #print("simcardCmd_sendEnvelopeConcat - sMSL = " + sMSL)
     
-    sReturnt = simcardCmd_sendEnvelope_ResponseFirstByteCommand(cardservice, sLogFileName, "", sTPDAParam, sCMD, sTAR, bNetworkOKOrChangeIMEIOrChangeMCCMNC, sMCC, sMNC, sMSL, sKIC, sKID, sCounter)
+    sReturnt = simcardCmd_sendEnvelope_ResponseFirstByteCommand(cardservice, sLogFileName, "", sTPDAParam, sCMD, sTAR, bChangeIMEIOrChangeMCCMNC, sMCC, sMNC, sMSL, sKIC, sKID, sCounter, bNetworkOk)
     sReturn = sReturnt[0]
     #print("simcardCmd_sendEnvelopeConcat - sReturn: " + sReturn)
     
@@ -3803,7 +4003,7 @@ def simcardCmd_sendEnvelopeConcat(cardservice, sLogFileName, sCMD, sTPDAParam=sS
           sT = str_getSubStringFromOcur(sReturn, sSeparaAPDUForLastAPDUs, n) 
           if sT != "":
              sAPDU = sAPDU + str_GetENTER() + sAsteric + str(m) + ". " + sT
-             sTDes = simcard_StatusCommandALLResponses_TerminalResponseGetDesOnly(sT, True)
+             sTDes = simcard_StatusCommandALLResponses_TerminalResponseGetDesOnly(sT, bChangeIMEIOrChangeMCCMNC, sMCC, sMNC, bNetworkOk)
              if sTDes != "":
                 sAPDU = sAPDU + " - Description: " + sTDes
              sAPDU = sAPDU + str_GetENTER()
@@ -3869,8 +4069,8 @@ def simcardCmd_sendEnvelopeConcat(cardservice, sLogFileName, sCMD, sTPDAParam=sS
     return sReturn, sReturnDes
   
 # simcardCmd_sendEnvelope_ResponseFirstByteCommand ---------------------------------------------------------------------------------------------------------------------------------------------------------
-def simcardCmd_sendEnvelope_ResponseFirstByteCommand(cardservice, sLogFileName, sCmd, sTPDAParam, sAPDU, sTAR=sSimcard_sDefTAR_COTA, bNetworkOKOrChangeIMEIOrChangeMCCMNC=True, sMCC="", sMNC="", sMSL=sSimcard_MSLDefNoSecurity, sKIC=sSimcard_MSLDefKIC, sKID=sSimcard_MSLDefKID, sCounter=sSimcard_MSLDefCounter):
-    time()
+def simcardCmd_sendEnvelope_ResponseFirstByteCommand(cardservice, sLogFileName, sCmd, sTPDAParam, sAPDU, sTAR=sSimcard_sDefTAR_COTA, bChangeIMEIOrChangeMCCMNC=False, sMCC="", sMNC="", sMSL=sSimcard_MSLDefNoSecurity, sKIC=sSimcard_MSLDefKIC, sKID=sSimcard_MSLDefKID, sCounter=sSimcard_MSLDefCounter, bNetworkOk = True):
+    #time()
     sCmd = str_SpacesOut(sCmd).upper()
     sAPDU = str_SpacesOut(sAPDU).upper()
     
@@ -3881,7 +4081,7 @@ def simcardCmd_sendEnvelope_ResponseFirstByteCommand(cardservice, sLogFileName, 
     sReturn = ""
     
     sSeparaAPDUForLastAPDUs = sSimcard_SeparaAPDUForLastAPDUs
-    sResAndSW1SW2 = simcard_SendEnvelopeContinuos(cardservice, sLogFileName, sTPDAParam, sAPDU, sSeparaAPDUForLastAPDUs, sTAR, bNetworkOKOrChangeIMEIOrChangeMCCMNC, sMCC, sMNC, sMSL, sKIC, sKID, sCounter)
+    sResAndSW1SW2 = simcard_SendEnvelopeContinuos(cardservice, sLogFileName, sTPDAParam, sAPDU, sSeparaAPDUForLastAPDUs, sTAR, bChangeIMEIOrChangeMCCMNC, sMCC, sMNC, sMSL, sKIC, sKID, sCounter, bNetworkOk)
     
     #print("simcardCmd_sendEnvelope_ResponseFirstByteCommand - sResAndSW1SW2: " + str(sResAndSW1SW2))
     
@@ -3902,7 +4102,13 @@ def simcardCmd_sendEnvelope_ResponseFirstByteCommand(cardservice, sLogFileName, 
                sLog = sLog + " APDU '" + str_AddSpaceHexa(sAPDU) + "'"
             sLog = sLog + ". WRONG PARAMETER(S): Applet with TAR: 0x" + str_AddSpaceHexa(sTAR) + " does not support APDU"
             sLog = sLog + ", or TPDA is not correct: 0x" + str_AddSpaceHexa(sTPDAParam) 
-            sLog = sLog + ", or the APPLET VERSION does not support command: 0x" + str_AddSpaceHexa(sCmd) + "." 
+            sLog = sLog + ", or the APPLET VERSION does not support command: 0x"
+            sCmdTemp = str_AddSpaceHexa(sCmd)
+            if sCmdTemp != "":
+               sLog = sLog + sCmdTemp
+            else:   
+               sLog = sLog + sCmd
+            sLog = sLog + "." 
             log_write_WarningInYellow(sLogFileName, sLog)      
 
             return sResAndSW1SW2, ""
@@ -3927,6 +4133,7 @@ def simcardCmd_sendEnvelope_ResponseFirstByteCommand(cardservice, sLogFileName, 
                   tsResAndSW1SW2[n] = simcard_Clean9000(tsResAndSW1SW2[n])
                   sResAndSW1SW2 = sResAndSW1SW2 + sSeparaAPDUForLastAPDUs + tsResAndSW1SW2[n]
                   n = n + 1
+
             sResAndSW1SW2 = str_midToEnd(sResAndSW1SW2, len(sSeparaAPDUForLastAPDUs))
             #print("COTACmd_sendEnvelope_ResponseFirstByteCommand sResAndSW1SW2: " + str(sResAndSW1SW2))
             # ---------------------------------------------------------------------------------------------------
@@ -3939,7 +4146,7 @@ def simcardCmd_sendEnvelope_ResponseFirstByteCommand(cardservice, sLogFileName, 
             else:      
                n = 0
                while n < nPat:
-                     print("simcardCmd_sendEnvelope_ResponseFirstByteCommand - n = " + str(n))   
+                     #print("simcardCmd_sendEnvelope_ResponseFirstByteCommand - n = " + str(n))   
                      
                      sAPDUt = str_getSubStringFromOcur(sResAndSW1SW2, sSeparaAPDUForLastAPDUs, n)
                      #print("simcardCmd_sendEnvelope_ResponseFirstByteCommand - sAPDUt: " + sAPDUt)
@@ -3953,7 +4160,9 @@ def simcardCmd_sendEnvelope_ResponseFirstByteCommand(cardservice, sLogFileName, 
                         #print("stpud = " + str(stpud))
                         if stpud != "":
                            nSendSMS = nSendSMS + 1
-                           sSendSMS = sSendSMS + sSeparaAPDUForLastAPDUs + str(nSendSMS) + ". " + str_AddSpaceHexa(stpud) + " " + sSimcard_SendSMSDATAPatternASCII + " " + bytes_HexaToASCII(stpud)
+                           sSendSMS = sSendSMS + sSeparaAPDUForLastAPDUs + str(nSendSMS) + ". "
+                           sSendSMS = sSendSMS + str_AddSpaceHexa(stpud) + " " + simcard_LengthReference(stpud)
+                           sSendSMS = sSendSMS + " " + sSimcard_SendSMSDATAPatternASCII + " " + bytes_HexaToASCII(stpud)
                            #print("nSendSMS = " + str(nSendSMS) + " - sSendSMS = " + str(sSendSMS))
                                     
                      if sAPDUtD != "":
@@ -3969,8 +4178,8 @@ def simcardCmd_sendEnvelope_ResponseFirstByteCommand(cardservice, sLogFileName, 
                      
                      n = n + 1
             
-            #print("sD: " + sD)
-            #print("sCmd: " + sCmd)
+            #print("simcardCmd_sendEnvelope_ResponseFirstByteCommand - sD: " + sD)
+            #print("simcardCmd_sendEnvelope_ResponseFirstByteCommand - sCmd: " + sCmd)
                  
             if sD == "" and sCmd!="":
                log_write_WarningInYellow(sLogFileName, "There is no response with the command 0x" + str_AddSpaceHexa(sCmd) + " in a SMS, APDU: " + str_AddSpaceHexa(sAPDU) + ". All Responses separated by character '" + sSeparaAPDUForLastAPDUs + "': " + sResAndSW1SW2)
@@ -3994,6 +4203,7 @@ def simcardCmd_sendEnvelope_ResponseFirstByteCommand(cardservice, sLogFileName, 
                     sLog = sLog + str_GetENTER() + simcardCampaignID_Des(sCampaignID)
                  sLog = sLog + str_GetENTER() + "Responses: "
                  
+                 #print("simcardCmd_sendEnvelope_ResponseFirstByteCommand - sResAndSW1SW2T = " + str(sResAndSW1SW2))
                  sResAndSW1SW2T = sResAndSW1SW2.split(sSeparaAPDUForLastAPDUs)
                  n = 0
                  while n < len(sResAndSW1SW2T):
@@ -4001,6 +4211,11 @@ def simcardCmd_sendEnvelope_ResponseFirstByteCommand(cardservice, sLogFileName, 
                           sLog = sLog + str_GetENTER() + "- Response " + str(n) + ": " + bytes_LengthDescriptionAndData(sResAndSW1SW2T[n])
                        n = n + 1
                  
+                 sLog = sLog + str_GetENTER() + "bChangeIMEIOrChangeMCCMNC = " + str(bChangeIMEIOrChangeMCCMNC)
+                 sLog = sLog + str_GetENTER() + "sMCC = " + str(sMCC)
+                 sLog = sLog + str_GetENTER() + "sMNC = " + str(sMNC)
+                 sLog = sLog + str_GetENTER() + "bNetworkOk = " + str(bNetworkOk)
+
                  log_write_InfoInBlue(sLogFileName, sLog)
                  
             if sSendSMS != "":
@@ -4020,6 +4235,7 @@ def simcardCmd_sendEnvelope_ResponseFirstByteCommand(cardservice, sLogFileName, 
 
 # simcardCampaignID_Des ---------------------------------------------------------------------------------------------------------------------------------------------------------
 def simcardCampaignID_Des(sCampaignID):
+    #print("simcardCampaignID_Des - sCampaignID: " + str(sCampaignID))
     sCampaignID = str_SpacesOut(str(sCampaignID)).upper()
     sReturn = ""
     if sCampaignID != "":
@@ -4130,17 +4346,19 @@ def simcard_PrepareAPDUWithSecurity(sEnvelope, sAPDU, sTAR=sSimcard_sDefTAR_COTA
           #if ((len(sDataForMAC) // 2) % 8) == 0: => NOT USED ANYMORE
           bReturn, sMAC = algo_3DES_CBC_MAC_ISO9797M1(True, sKID, sDataForMAC)
           if bReturn == False:
+             #print("simcard_PrepareAPDUWithSecurity - MAC: " + str(sMAC) + " - bReturn = " + str(bReturn))
              return bReturn, sMAC  
             
           sResult = sMsgAllLen + sHeaderLength + sMSL + sTAR + sCounter + sCounterPadding + sMAC + sAPDU
 
           #print("simcard_PrepareAPDUWithSecurity - MAC = " + str(sMAC))
+          #print("simcard_PrepareAPDUWithSecurity - MAC - sResult = " + str(sResult))
           
 
        # 'MAC GENERATION + ENCRYPTION
        if simcard_fPrepare_23_048_Msg_IsMSLSPI1WithCCAndEncryption(sMSL):
 
-          #print("simcard_PrepareAPDUWithSecurity - sDataForMAC = " + str(sDataForMAC))
+          #print("simcard_PrepareAPDUWithSecurity - sDataForMAC Inside Encryption = " + str(sDataForMAC))
           
           sDataForMACWithPadding, sPadding = simcard_fPrepare_23_048_Msg_DataWithPaddingForMAC(sDataForMAC)
 
@@ -4262,6 +4480,15 @@ def simcard_PrepareAPDUWithSecurity(sEnvelope, sAPDU, sTAR=sSimcard_sDefTAR_COTA
     sEnvelope = str_SpacesOut(sEnvelope)
 
     #print("simcard_PrepareAPDUWithSecurity - sEnvelope = " + str(sEnvelope))
+
+    #VALIDATE THAT MAC IS IN THE RESULT:
+    #print("*** simcard_PrepareAPDUWithSecurity - sMSL = " + str(sMSL) + " - sMAC: " + str(sMAC))
+    if simcard_fPrepare_23_048_Msg_IsMSLSPI1WithCC(sMSL):
+       #print("*** simcard_PrepareAPDUWithSecurity - sMSL = " + str(sMSL) + " - sMAC: " + str(sMAC))
+       if not simcard_fPrepare_23_048_Msg_IsMSLSPI1WithCCAndEncryption(sMSL):
+          if not sMAC in sEnvelope:
+             log_writePrintOnlyError("It is MSL: " + str(sMSL) + " with MAC: " + str(sMAC) + ", but it is not in Envelope to be sent: " + str(sEnvelope))
+             bReturn = False
     
     return bReturn, sEnvelope
 
@@ -4598,6 +4825,7 @@ def simcard_ErrorListSet():
 
     simcard_ErrorListAppend("6B00", "Smartcard: Incorrect P1 or P2 parameter.")
 
+    simcard_ErrorListAppend("6CXX", "Smartcard: Bad length value in Le (length expected), 'XX' is the correct exact Le. To be sent again with the right Le.")
     simcard_ErrorListAppend("6D00", "Smartcard: Invalid Instruction/Class.")
 
     simcard_ErrorListAppend("6E00", "Smartcard: CLASS byte es not correct.")
@@ -4605,7 +4833,8 @@ def simcard_ErrorListSet():
     simcard_ErrorListAppend("6F00", "Smartcard: Memory problem.")
 
     simcard_ErrorListAppend("9000", "Smartcard: Eveything OK or no response.")
-    
+    simcard_ErrorListAppend("91XX", "Smartcard: Eveything OK, 'XX' more bytes available for FETCH RESPONSE.")
+
     simcard_ErrorListAppend("9202", "Smartcard: Memory failure (after a Write_Block with verification).")
     simcard_ErrorListAppend("9210", "Smartcard: Not enough memory.")
     simcard_ErrorListAppend("9220", "Smartcard: File identifier already exists in the directory.")
@@ -4640,7 +4869,7 @@ def simcard_ErrorListSet():
     return len(sSimcard_ErrorList)   
 
 # simcard_ErrorListGet ---------------------------------------------------------------------------------------------------------------------------------------------------------
-def simcard_ErrorListGetDes(sBytes):
+def simcard_ErrorListGetDes(sBytes, bAddBytesToDes=False):
 
     global sSimcard_ErrorList
 
@@ -4664,6 +4893,9 @@ def simcard_ErrorListGetDes(sBytes):
              sItemBytes = str_getSubStringFromOcur(sItem, sSimcard_ErrorListSepara, 0)
              sItemBytesCheck = sItemBytes
              sItemDes = str_getSubStringFromOcur(sItem, sSimcard_ErrorListSepara, 1)
+
+             if bAddBytesToDes:
+                sItemDes = sBytes + " => " + sItemDes
 
              #print("simcard_ErrorListGetDes - n=" + str(n) + " - sItemBytes = " + str(sItemBytes) + " - sItemDes=" + sItemDes)
              
@@ -5162,7 +5394,7 @@ def simcard_AppletPackageGetAID_ByPathFileProc(sIJCCAPFilePathAndName, sDesOptio
     return sAID, sMsg   
 
 # simcard_StatusCommandsGetLastCommandProcess -----------------------------------------------------------------------------------------------------------
-def simcard_StatusCommandsGetLastCommandProcess(cardservice, sLogFileName, sSTATUSCOMMAND_MAX="100", sSeparaAPDU=sSimcard_ErrorListSepara):
+def simcard_StatusCommandsGetLastCommandProcess(cardservice, sLogFileName, sSTATUSCOMMAND_MAX="100", sSeparaAPDU=sSimcard_ErrorListSepara, bChangeIMEI=False, sMCC="", sMNC="", bNetworkOK=True):
 
     if sSTATUSCOMMAND_MAX == "":
        sSTATUSCOMMAND_MAX = 100
@@ -5188,7 +5420,7 @@ def simcard_StatusCommandsGetLastCommandProcess(cardservice, sLogFileName, sSTAT
        log_write(sLogFileName, sLog)
                  
        #SEND STATUS COMMAND
-       tReturn = simcard_StatusCommandALLResponsesWithLastAPDUs_List(cardservice, sLogFileName, True, sSeparaAPDU)
+       tReturn = simcard_StatusCommandALLResponsesWithLastAPDUs_List(cardservice, sLogFileName, bChangeIMEI, sSeparaAPDU, sMCC, sMNC, bNetworkOK)
        
        sResult = tReturn[0]
        if sResult == "":
@@ -5751,7 +5983,8 @@ def simcard_AppletSendAPDUsList(cardservice, sLogFileName, lstAPDUs, sTPDA=sSimc
           sMsg = sMsg + " - TAR: 0x" + str_AddSpaceHexa(sTAR)
           sMsg = sMsg + " - MSL: 0x" + str_AddSpaceHexa(sMSL)
           sMsg = sMsg + " - Counter: 0x" + str_AddSpaceHexa(sCounter)
-          log_writePrintOnlyWarning(sMsg)
+          #log_writePrintOnlyWarning(sMsg)
+          log_write_WarningInYellow(sLogFileName, sMsg)
 
           #ADDING A DELAY PER BLOCK
           if bDelayAPDU:
@@ -6285,13 +6518,23 @@ def simcard_APDU_Get3GPP23040_Process(sEnvelope, bGetBytecodeBefore=False, bAddP
     sReturn = ""    
     sFoundUDH = ""
     
+    #print("simcard_APDU_Get3GPP23040_Process - sEnvelope - bGetBytecodeBefore = " + str(bGetBytecodeBefore) + " - bAddPatternInReturn: " + str(bAddPatternInReturn))
+    #print("simcard_APDU_Get3GPP23040_Process - sEnvelope: " + str(sEnvelope))
+
     #sSimcard_3GPP23040_UDH = "027000"
     if sSimcard_3GPP23040_UDH in sEnvelope:
        sFoundUDH = sSimcard_3GPP23040_UDH
+       #print("*** simcard_APDU_Get3GPP23040_Process - sSimcard_3GPP23040_UDH in sEnvelope - sFoundUDH: " + str(sFoundUDH))
     
     #sSimcard_SMSAnswerForSPI2Request_Pattern = "027100"
     if sSimcard_SMSAnswerForSPI2Request_Pattern in sEnvelope:   
-       sFoundUDH = sSimcard_SMSAnswerForSPI2Request_Pattern
+       if sFoundUDH == "":  
+          sFoundUDH = sSimcard_SMSAnswerForSPI2Request_Pattern
+       else:   
+          if not bytes_IsHexaValid(sEnvelope):
+             sFoundUDH = sSimcard_SMSAnswerForSPI2Request_Pattern
+
+       #print("*** simcard_APDU_Get3GPP23040_Process - sSimcard_SMSAnswerForSPI2Request_Pattern in sEnvelope - sFoundUDH: " + str(sFoundUDH))
 
     if sFoundUDH == "" and sSimcard_3GPP23040_UDH_SMPPConcat_First in sEnvelope:
        #sFoundUDH = sSimcard_3GPP23040_UDH_SMPPConcat_First
@@ -7136,5 +7379,99 @@ def simcard_TerminalResponseCmdIsSendSMS(sRes):
     
     return False   
 
+# simcard_LengthReference ---------------------------------------------------------------------------------------------------------------------------------------------------------
+def simcard_LengthReference(sHexa):
+    sHexa = str_SpacesOut(sHexa)
+    sReturn = "length: " + str(len(sHexa)//2) + " bytes (0x" + bytes_NroToHexa(len(sHexa)//2) +") (characters: " + str(len(sHexa)) +  ")"
+    return sReturn
+
+# simcard_getReaders ---------------------------------------------------------------------------------------------------------------------------------------------------------
+def simcard_getReaders():
+    # Get a list of all available smart card readers
+    available_readers = readers()
+
+    # Print the list of readers
+    print("Available Smart Card Readers: " + str(len(available_readers)))
+    n = 0
+    while n < len(available_readers):
+       available_readers[n] = str(available_readers[n])
+       print("Reader " +  str(n) + ": " + available_readers[n])
+       n = n + 1
+
+    # You can access a specific reader from the list, for example, the first one:
+    #if available_readers:
+    #   first_reader = available_readers[0]
+    #   print(f"\nUsing the first reader: {first_reader}")
+    #else:
+    #   print("\nNo smart card readers found.") 
+
+    return available_readers
+
+# simcard_selectReaderToWork ---------------------------------------------------------------------------------------------------------------------------------------------------------
+def simcard_selectReaderToWork(sSelectReaderToWork=""):
+    
+    lstReaders = simcard_getReaders()
+
+    if sSelectReaderToWork != "":
+       print("Selected reader for connection: " + sSelectReaderToWork)
+
+    if len(lstReaders) <= 0:
+       sLog = "ERROR: There are no Readers connected! Total readers = " + str(len(lstReaders))
+       log_writePrintOnlyError(sLog)
+       return ""
+
+    sSelectedReader = ""       
+    if len(lstReaders) == 1:
+        #There is only 1 reader
+        sSelectedReader = lstReaders[0]
+    else:
+        if sSelectReaderToWork!="":
+           n = 0
+           while n < len(lstReaders) and sSelectedReader=="":
+                 sReader = str(lstReaders[n])
+                 sReader = sReader.lower()
+                 if sReader == sSelectReaderToWork.lower():
+                    sSelectedReader = lstReaders[n]
+                 n = n + 1
+
+        if sSelectedReader == "":
+           sInput = "Select Reader to work with ('0' for reader 0 - DEFAULT, '1' for reader 1, etc.): "
+           n = 0
+           while n < len(lstReaders):
+                 sinput = sInput + "\nReader [" + str(n) + "] " + str(lstReaders[n])
+                 n = n + 1
+           sOption = input(sInput) or "0"  
+        
+           sOption = str_SpacesOut(sOption)
+           sOption = sOption.upper()
+        
+           sLog = "ERROR: Selected option is not a valid one."
+           sLog = sLog + " It must be from '0' (zero) to '" + str(len(lstReaders)-1) + "'"
+           sLog = sLog + ". Selected option: " + str(sOption)
+
+           if valid_nro_IsCharValidNro(sOption):
+              nOption = int(sOption)
+              if nOption >= 0 and nOption < len(lstReaders):
+                 sSelectedReader = lstReaders[nOption]
+              else:
+                 log_writePrintOnlyError(sLog)
+           else:
+              log_writePrintOnlyError(sLog)
+
+    if sSelectedReader == "" and len(lstReaders) >= 1:
+       sSelectedReader = lstReaders[0]
+
+    # GLOBAL VARIABLE TO SAVE LAST READER
+    global sSimcard_ReaderSelected
+    sSimcard_ReaderSelected = sSelectedReader
+
+    log_writePrintOnlyOK("Selected reader to work with: " + str(sSimcard_ReaderSelected))
+
+    return sSelectedReader
+
+# simcard_getSelectedReader ---------------------------------------------------------------------------------------------------------------------------------------------------------
+def simcard_getSelectedReader():
+    global sSimcard_ReaderSelected
+    return str(sSimcard_ReaderSelected)
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------
 

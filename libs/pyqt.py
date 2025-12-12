@@ -158,13 +158,6 @@ def pyqt_OpenFileDlg(parent, sTitle, sPath, sFilters="All Files (*)", bDirOnly=F
     #print("pyqt_OpenFileDlg - sPath = " + str(sPath))
 
     option = 0
-    if bDirOnly:
-       #option = QFileDialog.Option.ShowDirsOnly
-       option = QFileDialog.Options()
-       option |= QFileDialog.DontUseNativeDialog
-       option |= QFileDialog.ShowDirsOnly  # This will now be effective
-
-    filename = []
 
     if bSave:
        if option == 0:
@@ -186,6 +179,10 @@ def pyqt_OpenFileDlg(parent, sTitle, sPath, sFilters="All Files (*)", bDirOnly=F
                   )
     else:
        if bDirOnly:
+          #option = QFileDialog.Option.ShowDirsOnly
+          option = QFileDialog.Options()
+          option |= QFileDialog.DontUseNativeDialog
+          option |= QFileDialog.ShowDirsOnly  # This will now be effective
 
           if bMoreFiles:
               

@@ -207,6 +207,13 @@ class CopyFilesHomeScreen:
         else:
             print(sErrorNotExist + "QPushButton pbSourceRemove")   
 
+        # BUTTON SOURCE SORT
+        self.btn_source_sort = self.window.findChild(QPushButton, "pbSourceSort") 
+        if self.btn_source_sort: # Check if the object exists
+           self.btn_source_sort.clicked.connect(self.CmdSource_sort)
+        else:
+            print(sErrorNotExist + "QPushButton pbSourceSort")   
+
         # GROUP BOX SOURCE 
         self.gbox_source = self.window.findChild(QGroupBox, "groupBoxSource") 
         if self.gbox_source: # Check if the object exists
@@ -225,12 +232,19 @@ class CopyFilesHomeScreen:
         else:
             print(sErrorNotExist + "QPushButton pbDestinationGet")   
 
-        # BUTTON SOURCE REMOVE
+        # BUTTON DESTINATION REMOVE
         self.btn_destination_del = self.window.findChild(QPushButton, "pbDestinationRemove") 
         if self.btn_destination_del: # Check if the object exists
            self.btn_destination_del.clicked.connect(self.CmdDestination_del)
         else:
             print(sErrorNotExist + "QPushButton pbDestinationRemove")   
+
+        # BUTTON DESTINATION SORT
+        self.btn_destination_sort = self.window.findChild(QPushButton, "pbDestinationSort") 
+        if self.btn_destination_sort: # Check if the object exists
+           self.btn_destination_sort.clicked.connect(self.CmdDestination_sort)
+        else:
+            print(sErrorNotExist + "QPushButton pbDestinationSort")   
 
         # GROUP BOX SOURCE 
         self.gbox_destination = self.window.findChild(QGroupBox, "groupBoxDestination") 
@@ -477,7 +491,17 @@ class CopyFilesHomeScreen:
         return
 
     #---------------------------------------------------------------------------------------------------------
-    def Cmd_del(self, bSource=True):
+    def CmdSource_sort(self):
+        self.Cmd_sort(True)
+        return
+
+    #---------------------------------------------------------------------------------------------------------
+    def CmdDestination_sort(self):
+        self.Cmd_sort(False)
+        return
+
+    #---------------------------------------------------------------------------------------------------------
+    def Cmd_del(self, bSource=True, bShowQuestion=True):
 
         nRow = self.nRowCurrentSource
         sTVDes = self.sTVDesSource
@@ -491,14 +515,16 @@ class CopyFilesHomeScreen:
         #print("Cmd_del - nRow = " + str(nRow))
 
         if nRow >= 0 and sData != "":
-            sMsg = "Are you sure you need to delete '" + sTVDes + "' row: " + str(nRow) + " ?"
-            sMsg += "\nData: " + sData
 
-            sResponse, bResponse = pyqt_MsgBoxYesNo(self.window, "Delete Row for " + sTVDes, sMsg)
-            #print("Cmd_del - sResponse = " + str(sResponse) + " - bResponse = " + str(bResponse))
+            if bShowQuestion:
+               sMsg = "Are you sure you need to delete '" + sTVDes + "' row: " + str(nRow) + " ?"
+               sMsg += "\nData: " + sData
 
-            if not bResponse:
-                return bResponse
+               sResponse, bResponse = pyqt_MsgBoxYesNo(self.window, "Delete Row for " + sTVDes, sMsg)
+               #print("Cmd_del - sResponse = " + str(sResponse) + " - bResponse = " + str(bResponse))
+
+               if not bResponse:
+                  return bResponse
             
             if bSource:
                 bResult = self.modelSource.delRowByRow(nRow)
@@ -516,6 +542,78 @@ class CopyFilesHomeScreen:
 
         return bResult    
 
+    #---------------------------------------------------------------------------------------------------------
+    def Cmd_sort(self, bSource=True):
+        
+        lstSource = self.modelSource.getALLDataByCol(self.nColPath)
+        lstDestination = self.modelDestination.getALLDataByCol(self.nColPath)
+
+        if bSource:
+
+            sHeader = "Sort Source"
+            sMsgStart = "Source - Rows for sorting: " + str(len(lstSource)) + ". "  
+
+            if len(lstSource) <= 1:
+                pyqt_MsgBox_Warning(sHeader, sMsgStart + "It must be more than 1 for sorting data")
+                return 
+
+            #REMOVE ITEMS
+            n = 0
+            while n < len(lstSource):
+                self.Cmd_del(bSource, False)
+                n = n + 1
+
+            #SORT
+            #print("Before sort: " + str(lstSource))
+            lstSourceBefore = lstSource.copy()
+            lstSource.sort()
+            #print("After sort: " + str(lstSource))
+
+            #ADD ITEMS
+            n = 0 
+            while n < len(lstSource):
+                self.grid_AddRow(lstSource[n], bSource)    
+                n = n + 1
+
+            if lstSource == lstSourceBefore:
+                pyqt_MsgBox_Warning(sHeader, sMsgStart + "They are already sorted")
+            else:
+                pyqt_MsgBox_Info(sHeader, sMsgStart + "Sorted successfully !")
+
+        else:
+
+            sHeader = "Sort Destination"
+            sMsgStart = "Destination - Rows for sorting: " + str(len(lstDestination)) + ". "  
+
+            if len(lstDestination) <= 1:
+                pyqt_MsgBox_Warning(sHeader, sMsgStart + "It must be more than 1 for sorting data")
+                return 
+
+            #REMOVE ITEMS
+            n = 0
+            while n < len(lstDestination):
+                self.Cmd_del(bSource, False)
+                n = n + 1
+
+            #SORT
+            lstDestinationBefore = lstDestination.copy()
+            lstDestination.sort()
+
+            #ADD ITEMS
+            n = 0 
+            while n < len(lstDestination):
+                self.grid_AddRow(lstDestination[n], bSource)    
+                n = n + 1
+
+            if lstDestination == lstDestinationBefore:
+                pyqt_MsgBox_Warning(sHeader, sMsgStart + "They are already sorted")
+            else:
+                pyqt_MsgBox_Info(sHeader, sMsgStart + "Sorted successfully !")
+
+
+        self.tvGrid_set_totals(bSource)
+        
+        return
     #---------------------------------------------------------------------------------------------------------
     def CmdProcess(self):
 
@@ -539,7 +637,7 @@ class CopyFilesHomeScreen:
 
         if not bResult or sProcessStoppedWord in sMsg:   
            log_writeWordsInColorYellow(sMsg)
-           pyqt_MsgBox_Warning("Process", sMsg)
+           #pyqt_MsgBox_Warning("Process", sMsg)
         else:   
            log_writePrintOnlyOK(sMsg)
 

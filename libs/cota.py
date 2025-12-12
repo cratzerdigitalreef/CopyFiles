@@ -51,7 +51,8 @@ cmd_dic = {"F0" : "Display Text",
            "D5" : "Switch off applet (D5)",
            "D6" : "Call SMPP push from SDK (D6)",
            "D8" : "Change DEFAULT Text of DisplayText",
-           "D9" : "Change DEFAULT URL Of DisplayText"
+           "D9" : "Change DEFAULT URL Of DisplayText",
+           "DC" : "Get Date Time from SDKs/APKs"
            }
 
 # --------------------------------------------------------------------------------
@@ -86,7 +87,8 @@ countries_dic = [
 
 # --------------------------------------------------------------------------------
 # COTA - SAP POPUP VALUES
-sCOTA = "COTA"
+sCOTA_COTA = "COTA"
+sCOTA_AUTH = "AUTH"
 sCOTA_PopUpOK = "31"
 sCOTA_PopUpNOK = "30"
 sCOTA_PopUpOK_des = "OK"
@@ -587,7 +589,7 @@ def COTAProfile(sLogFileName,oCardservice, sTPDA = "", sCota_ver = ""):
          
       case 'COTA0299':
          listFeatSupported = ['F0', 'F1', 'F2', 'F4', 'F5', 'F8', 'F9', 'FA', 'FB', 'FC', 'FD',
-                              'F1F0', 'F2F0', 'UCS2', 'PopUpRetries',"AutoPopUpbyIMEI","CampaignID","F6","D4","D6", "D7", "D8", "D9"]
+                              'F1F0', 'F2F0', 'UCS2', 'PopUpRetries',"AutoPopUpbyIMEI","CampaignID","F6","D4","D6", "D7", "D8", "D9", "DC"]
          COTAgetFeatSupported(listFeatSupported, sCota_ver, dic_feat)
          return dic_feat
          
@@ -675,7 +677,7 @@ def COTAProfile(sLogFileName,oCardservice, sTPDA = "", sCota_ver = ""):
          listFeatSupported = ["F0", "F1", "F2", "F4", "F5", "F8", "F9", "FA", "FB", "FC", "FD", "FE", "E2",
                                 "F1F0", "F2F0", "UCS2", "PopUpRetries", "AutoPopUpbyIMEI", "CampaignID", "F6",
                                 "MultiSHA1", "F0Priority",
-                                "D4", "D5", "D6", "D7", "FULL", "F7", "D8", "D9"]
+                                "D4", "D5", "D6", "D7", "FULL", "F7", "D8", "D9", "DC"]
          COTAgetFeatSupported(listFeatSupported, sCota_ver, dic_feat)
          return dic_feat
       case _:
@@ -964,7 +966,7 @@ def COTACmdAnalyzer(lCommand='',sText=''):
 # COTA_GetVersionNumber ------------------------------------------------------------------------------------------------------
 def COTA_GetVersionNumber(sCOTAVer):
     sReturn = ""
-    sCOTA = "COTA"
+    sCOTA = sCOTA_COTA
     if str_instrBool(sCOTAVer, sCOTA):
        sReturn = str_getSubStringFromOcur(sCOTAVer,sCOTA,1)
        if len(sReturn) >= 4:
@@ -1218,7 +1220,7 @@ def SAPCmdF7_Interpret(sData, sTPDA=""):
           sReturn = sReturn + str_GetENTER() + "Command " + str(nCmd) + " - date-time: 0x" + str_AddSpaceHexa(sDateTime) + " - Interpreted: " + fPLociGetDateTimeFromSIM(sDateTime)
           sReturn = sReturn + str_GetENTER() + "Command " + str(nCmd) + " - data: 0x" + str_AddSpaceHexa(sSMS) + " - ASCII: " + bytes_HexaToASCII(sSMS)
           
-          sCOTA = bytes_StrToHexa("COTA")
+          sCOTA = bytes_StrToHexa(sCOTA_COTA)
           if str_instrBool(sSMS, sCOTA):
              #IMEI SENT REFERENCE
              sTemp = str_getSubStringFromOcur(sSMS, sCOTA, 0)
@@ -1360,14 +1362,14 @@ def cota_SAP_CampaignResponse_Interpret(sHex):
     sCOTAVer = ""
     sPopUpResult = ""
 
-    if str_instrBool(sAscii.upper(), sCOTA):
+    if str_instrBool(sAscii.upper(), sCOTA_COTA):
         # GET COTA VERSION
-        sCOTAVer = str_getSubStringFromOcur(sAscii.upper(), sCOTA, 1)
+        sCOTAVer = str_getSubStringFromOcur(sAscii.upper(), sCOTA_COTA, 1)
 
         # GET DATA BEFORE COTA VERSION
         # print("sHex: " + sHex)
-        # print("bytes_StrToHexa(sCOTA): " + bytes_StrToHexa(sCOTA))
-        sIMEIHex = str_getSubStringFromOcur(sHex, bytes_StrToHexa(sCOTA).upper(), 0)
+        # print("bytes_StrToHexa(sCOTA): " + bytes_StrToHexa(sCOTA_COTA))
+        sIMEIHex = str_getSubStringFromOcur(sHex, bytes_StrToHexa(sCOTA_COTA).upper(), 0)
         # print("sIMEIHex: " + sIMEIHex)
 
         if len(sIMEIHex) >= 18:
@@ -1422,3 +1424,100 @@ def cota_SAP_CampaignResponse_Interpret(sHex):
         sReturn = str_left(sReturn, len(sReturn) - len(sSepara))
 
     return sReturn
+
+# COTA_GetAppletVersion ------------------------------------------------------------------------------------------------------
+def COTA_GetAppletVersion(sHexa):
+    sReturn = ""
+
+    sHexa = str_SpacesOut(sHexa)
+    sHexa = sHexa.upper()
+
+    sHexaASCII = bytes_HexaToASCII(sHexa)
+
+    sApplet = ""
+    if str_instrBool(sHexaASCII, sCOTA_COTA):
+       sApplet = sCOTA_COTA
+    else:
+       if str_instrBool(sHexaASCII, sCOTA_AUTH):
+          sApplet = sCOTA_AUTH
+
+    if sApplet != "":
+       sReturn = str_getSubStringFromOcur(sHexaASCII, sApplet, 1)
+       if len(sReturn) >= 4:
+          sReturn = sApplet + sReturn
+
+    return sReturn
+
+# COTA_processCmd_FC_DC ------------------------------------------------------------------------------------------------------
+def COTA_processCmd_FC_DC(sHexa):
+    
+    sResponse = ""
+
+    sDC = "DC"
+    sFC = "FC"
+
+    sHexa = str_SpacesOut(sHexa)
+    sHexa = sHexa.upper()
+
+    if sHexa != "" and sHexa!="9000":
+
+       sHexa = simcard_Clean9000(sHexa)
+
+       #DATE TIME IS ALWAYS 7 BYTES
+       nDateTimeLen = 7 * 2
+
+       n = 0
+       nA = 2
+       sCmd = str_mid(sHexa, n, nA) 
+
+       sResponse = sResponse + "Command: " + sCmd
+       n = n + nA
+
+       bOnlyDateTimeInformed = False
+       if sCmd == sDC or sCmd == sFC:
+          sResto = str_midToEnd(sHexa, n)
+          #print("sResto: " + sResto + " - " + simcard_LengthReference(sResto))
+          if len(sResto) % nDateTimeLen == 0:
+             #THERE IS ONLY INFORMED DATE TIMEs
+             bOnlyDateTimeInformed = True
+
+       nA = nDateTimeLen
+       sVal = str_mid(sHexa, n, nA)
+       sResponse = sResponse + str_GetENTER() + fPLociGetDateTimeFromSIM(sVal, True, "Default")
+       n = n + nA
+
+       sResto = str_midToEnd(sHexa, n)
+       #print("sResto: " + sResto + " - " + simcard_LengthReference(sResto))
+
+       if len(sResto) > 0:
+          
+          #Get Time Zone for SDK/APKs ID   
+          m = 0
+          n = 0
+          while n < len(sResto):
+                sReference = "SDK/APK ID reference: " + str(m+1)
+                m = m + 1
+
+                nA = nDateTimeLen
+                sVal = str_mid(sResto, n, nA)
+                n = n + nA
+                sResponse = sResponse + str_GetENTER() + fPLociGetDateTimeFromSIM(sVal, True, sReference)
+
+                if not bOnlyDateTimeInformed:
+                   nA = 2
+                   sSDKIDLen = str_mid(sResto, n, nA)
+                   nSDKIDLen = bytes_HexaToNro(sSDKIDLen)
+                   n = n + nA
+                   sResponse = sResponse + str_GetENTER() + sReference + " - SDK ID/APK Length: 0x" + sSDKIDLen + " (decimal: " + str(nSDKIDLen) + ")"
+               
+                   if sSDKIDLen != "00":
+                      #THERE IS A SDK ID REFERENCES
+                      nA = int(nSDKIDLen) * 2
+                      sSDKID = str_mid(sResto, n, nA)
+                      #print("nA = " + str(nA) + " - sSDKID: " + sSDKID)
+                      n = n + nA
+                      sResponse = sResponse + str_GetENTER() + sReference + " - SDK ID/APK: 0x" + str_SpaceHexa(sSDKID) + " (ASCII: " + bytes_HexaToASCII(sSDKID) + ")"
+
+    return sResponse
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------------------------

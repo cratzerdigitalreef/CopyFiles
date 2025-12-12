@@ -36,6 +36,9 @@ bProcessGblRunning = False
 nProcessLogNro= 0
 sProcessFlagEnded = "ENDED:"
 sProcessStoppedWord = "stopped"
+nProcessRefresh=100
+nProcessLineZeros = 5
+sPrintAsterics = str_RepeatString(nProcessLineZeros, "*") + " "
 
 
 class Worker(QThread):
@@ -246,6 +249,7 @@ class processWindow(QMainWindow, QThread):
         sMsg = "Task " + sTask + " ... at " + process_GetDateTimeNow()
         if self.sFinishResult != "":
             sMsg = sMsg + "\n\n" + self.sFinishResult
+
         if bProcessGblStop:    
             log_writeWordsInColorYellow(sMsg)
         else:    
@@ -323,7 +327,14 @@ def process_CopyFiles_sub(logFile, mainWindow, procWindows, lstSource, lstDestin
        if len(lstDestination) <= 0:
           bProcess = False
           sError = "There is nothing to process for 'DESTINATION'."
-           
+
+    #THIS IS BECAUSE  
+    # if you copy a list using a simple assignment operator (=), appending to the first list will affect the second list because both variables point to the same object in memory. 
+    # In Python, the assignment operator (=) does not create a new list; it merely creates a new reference (or name) for the existing list object. 
+    #lstSourceAtInit = lstSource
+    lstSourceAtInit = lstSource.copy()
+    lstDestinationAtInit = lstDestination.copy()
+
     if not bProcess:   
        sWarning = sWarning + sError
        return False, sWarning
@@ -349,7 +360,7 @@ def process_CopyFiles_sub(logFile, mainWindow, procWindows, lstSource, lstDestin
           sProcessing = "Processing source: " + process_CalculateNofTotal(n, nSource) + " - " + str(lstSource[n])
 
           log_writeWordsInColorBlue(sProcessing)
-          
+
           process_EmitMsgProcessing(procWindows, sProcessing)
 
           process_GblRecord_SumValue()
@@ -361,6 +372,7 @@ def process_CopyFiles_sub(logFile, mainWindow, procWindows, lstSource, lstDestin
               m = 0
               sLastPath = ""
               while m < len(lstFilesTemp) and not bProcessGblStop:
+
                     if lstFilesTemp[m] not in lstFiles:
 
                        #ADDED FOR FILES TO BE PROCESSED
@@ -376,19 +388,33 @@ def process_CopyFiles_sub(logFile, mainWindow, procWindows, lstSource, lstDestin
                        #sPath, sPathSubdir, sSlash = file_GetPath_From_Next(lstFilesTemp[m], lstSource[n])
                        sPathSubdir = file_getSubDirFromPath(lstFilesTemp[m], lstSource[n]) 
                        #ADDED FOR SOURCE PATH FOR FILES TO BE PREOCESSED
-                       sProcessing = "File found " + str(m) + ": " + str(lstFilesTemp[m]) + " - Directory for source " + str(n) + ": " + str(lstSource[n])
+                       sProcessing = "Files found " + str_AddThousandToNumber(str(m)) + ":"
+                       sProcessing = sProcessing + "\n" + str(lstFilesTemp[m])
+                       sProcessing = sProcessing + " - Directory for source [" + str(n) + "]: " + str(lstSource[n])
                        if sPathSubdir != "":
                           sProcessing = sProcessing + " - sPathSubdir: " + str(sPathSubdir)
-                       log_writeWordsInColorBlue(sProcessing)
+
+                       log_writeWordsInColorBlue("\n" + sPrintAsterics + sProcessing)
                        lstFilesPathSubdir.append(sPathSubdir) 
 
                        process_GblMessage_Set(sProcessing)
 
                        #SIGNALs to PROCESS WINDOW
+          
+                    else:
+                       sProcessingT = sProcessing
+                       sProcessing = sProcessing + "\nItem [" + str(m) + "]: " + lstFilesTemp[m] + " already exists under source list 'lstFiles'"
+                       log_writePrintOnlyDebug(sProcessing)     
+                       sProcessing = sProcessingT
+
+                    if (m % nProcessRefresh) == 0 and sProcessing != "":
+                       #SHOW REFRESH 
                        process_EmitMsgProcessing(procWindows, sProcessing)
 
                     #pyqt_windowRefresh(mainWindow)
                     m = m + 1
+          else:
+              log_writePrintOnlyDebug("There are NO files or directories under item [" + str(n) + "]: " + lstSource[n])     
     
           pyqt_windowRefresh(mainWindow)
           n = n + 1 
@@ -468,16 +494,19 @@ def process_CopyFiles_sub(logFile, mainWindow, procWindows, lstSource, lstDestin
           m = 0
           while m < len(lstDestination) and not bProcessGblStop:
 
-              sProcessing = "Processing item from Data Frame: " + process_CalculateNofTotal(n, rows) + "\n\nSource File:\n" + sPathFileFrom
-              sProcessing = sProcessing + " - Path Subdir: " + sPathFileSubdir + "\n\nData from Sourth File:\n" + sPrint
-              sProcessing = sProcessing + "\n\nDestination: " +  lstDestination[m]
+              sProcessing = "Processing item from Data Frame: " + process_CalculateNofTotal(n, rows)
+              sProcessing = sProcessing + str_GetENTER() + str_GetENTER() + "Source File:" + str_GetENTER() + sPathFileFrom
+              sProcessing = sProcessing + " - Path Subdir: " + sPathFileSubdir
+              sProcessing = sProcessing + str_GetENTER() + str_GetENTER() + "Data from Sourth File:" + sPrint
+              sProcessing = sProcessing + str_GetENTER() + str_GetENTER() + "Destination: " +  lstDestination[m]
               print(sProcessing)
 
               process_GblMessage_Set(sProcessing)
               process_GblRecord_SumValue()
 
-              #SIGNALs to PROCESS WINDOW
-              process_EmitMsgProcessing(procWindows, sProcessing)
+              if (n % nProcessRefresh) == 0:
+                 #SIGNALs to PROCESS WINDOW
+                 process_EmitMsgProcessing(procWindows, sProcessing)
 
               sPathFileTo = lstDestination[m]
               #print("\nCopying File for Destination " + process_CalculateNofTotal(m, len(lstDestination)) + ": " + sPathFileFrom + " - to: " + sPathFileTo + " - Subdir: " + str(sPathFileSubdir))
@@ -539,7 +568,20 @@ def process_CopyFiles_sub(logFile, mainWindow, procWindows, lstSource, lstDestin
     sProcessing = sProcessing + "\nElapsed: " + delta
     sProcessing = sProcessing + "\n\nTotal files processed: " + str_AddThousandToNumber(str(rows))
 
+    #DETAILS FOR SOURCE AND DESTINATION
+    sProcessing = sProcessing + "\n\nTotal Path Source at Init: " + str_AddThousandToNumber(str(len(lstSourceAtInit)))
+    n = 0
+    while n < len(lstSourceAtInit):
+          sProcessing = sProcessing + "\nPath Source at Init [" + str(n+1) + "]: " + str(lstSourceAtInit[n])
+          n = n + 1
+    sProcessing = sProcessing + "\n\nTotal Path Destination at Init: " + str_AddThousandToNumber(str(len(lstDestinationAtInit)))
+    n = 0
+    while n < len(lstDestinationAtInit):
+          sProcessing = sProcessing + "\nPath Destination at Init [" + str(n+1) + "]: " + str(lstDestinationAtInit[n])
+          n = n + 1
+
     #ADDING TOTALs
+    sProcessing = sProcessing + "\n" 
     sProcessing = sProcessing + process_TotalsPrepare("Total files copied", rows, nfile_dic_status_copied)
     sProcessing = sProcessing + process_TotalsPrepare("Total files equal", rows, nfile_dic_status_equal) 
     if nfile_dic_status_error > 0:
@@ -564,7 +606,7 @@ def process_CopyFiles_sub(logFile, mainWindow, procWindows, lstSource, lstDestin
     else:
         log_writePrintOnlyInfo(sProcessing)     
 
-    return True, sProcessGblMsg
+    return True, sProcessing
 
 # process_TotalsPrepare ----------------------------------------------------------------------------------------------------------
 def process_TotalsPrepare(sDes, nTotal, nValue):
@@ -733,10 +775,13 @@ def process_GblMessage_Set(sText="", bAppend=False, bSetTime=True):
     
     if bSetTime and sProcessGblMsg != "":
        nProcessLogNro = nProcessLogNro + 1
-       sProcessLogNro = str_formatNro(nProcessLogNro, 5)
+       sProcessLogNro = str_formatNro(nProcessLogNro, nProcessLineZeros)
 
        today_prn = process_GetDateTimeNow()
-       sProcessGblMsg =  sProcessLogNro + ". " + today_prn + ": " + sProcessGblMsg
+       sProcessGblMsg =  ""
+       if bAppend:
+          sProcessGblMsg = sProcessGblMsg + sProcessLogNro + ". "
+       sProcessGblMsg = sProcessGblMsg + today_prn + ": \n\n" + sProcessGblMsg
 
     return sProcessGblMsg
 

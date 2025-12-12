@@ -133,6 +133,19 @@ def ctk_utils_ObjEnableDisable(obj, bEnable=True):
        obj.configure(state=ctk_utils_Def_disabled)
 
 #---------------------------------------------------------------------------------------------------------
+# ctk_utils_SetFocusNext => Go to next focus
+#---------------------------------------------------------------------------------------------------------
+def ctk_utils_SetFocusNext(event):
+    #print("NEXT")
+    event.widget.tk_focusNext().focus()
+
+#---------------------------------------------------------------------------------------------------------
+# ctk_utils_SetFocusObj => Go to object focus
+#---------------------------------------------------------------------------------------------------------
+def ctk_utils_SetFocusObj(obj):
+    obj.focus_set()
+
+#---------------------------------------------------------------------------------------------------------
 # ctk_utils_WindowsEnable => Enable Window
 #---------------------------------------------------------------------------------------------------------
 def ctk_utils_WindowsEnable(windw):
@@ -818,5 +831,23 @@ def ctk_double_click_des(sText):
     file_OpenNotePadInWindows(sText)
     return
 
+#---------------------------------------------------------------------------------------------------------
+def ctk_center_window(window):
+    # make sure window is updated
+    window.update()
+    # get the screen resolution
+    scr_width, scr_height = window.winfo_screenwidth(), window.winfo_screenheight()
+    # get the window resolution
+    border_width = window.winfo_rootx() - window.winfo_x()
+    title_height = window.winfo_rooty() - window.winfo_y()
+    win_width = window.winfo_width() + border_width + border_width
+    win_height = window.winfo_height() + title_height + border_width
+    # calculate the position
+    x = (scr_width - win_width) // 2
+    y = (scr_height - win_height) // 2
+    # place the window at the calculated position
+    window.geometry("+%d+%d" % (x, y))
+
+    return
 #---------------------------------------------------------------------------------------------------------
 
