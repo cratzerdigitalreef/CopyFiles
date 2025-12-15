@@ -40,6 +40,8 @@ nProcessRefresh=100
 nProcessLineZeros = 5
 sPrintAsterics = str_RepeatString(nProcessLineZeros, "*") + " "
 
+bProcessingDEBUG = True
+
 
 class Worker(QThread):
     """
@@ -346,6 +348,12 @@ def process_CopyFiles_sub(logFile, mainWindow, procWindows, lstSource, lstDestin
 
     pyqt_windowRefresh(mainWindow)
 
+    if logFile != "":
+        sMsg = "Process Started at: " + str(process_GetDateTimeNow())
+        sMsg = sMsg + "\nTotal Source Directories: " + str(len(lstSource))
+        sMsg = sMsg + "\nTotal Destination Directories: " + str(len(lstDestination))
+        log_write(logFile, sMsg)
+
     #GETTING ALL PATHs AND FILEs    
     lstFiles = []
     lstFilesPathSubdir = []
@@ -388,13 +396,17 @@ def process_CopyFiles_sub(logFile, mainWindow, procWindows, lstSource, lstDestin
                        #sPath, sPathSubdir, sSlash = file_GetPath_From_Next(lstFilesTemp[m], lstSource[n])
                        sPathSubdir = file_getSubDirFromPath(lstFilesTemp[m], lstSource[n]) 
                        #ADDED FOR SOURCE PATH FOR FILES TO BE PREOCESSED
-                       sProcessing = "Files found " + str_AddThousandToNumber(str(m)) + ":"
+                       sProcessing = "Files found [" + str_AddThousandToNumber(str(m)) + "]:"
                        sProcessing = sProcessing + "\n" + str(lstFilesTemp[m])
                        sProcessing = sProcessing + " - Directory for source [" + str(n) + "]: " + str(lstSource[n])
-                       if sPathSubdir != "":
-                          sProcessing = sProcessing + " - sPathSubdir: " + str(sPathSubdir)
+                       #if sPathSubdir != "":
+                       sProcessing = sProcessing + " - sPathSubdir: " + str(sPathSubdir)
 
                        log_writeWordsInColorBlue("\n" + sPrintAsterics + sProcessing)
+
+                       if bProcessingDEBUG:
+                          log_write_Normal(logFile, sProcessing)     
+
                        lstFilesPathSubdir.append(sPathSubdir) 
 
                        process_GblMessage_Set(sProcessing)
@@ -405,6 +417,10 @@ def process_CopyFiles_sub(logFile, mainWindow, procWindows, lstSource, lstDestin
                        sProcessingT = sProcessing
                        sProcessing = sProcessing + "\nItem [" + str(m) + "]: " + lstFilesTemp[m] + " already exists under source list 'lstFiles'"
                        log_writePrintOnlyDebug(sProcessing)     
+
+                       if bProcessingDEBUG:
+                          log_write_Normal(logFile, sProcessing)     
+
                        sProcessing = sProcessingT
 
                     if (m % nProcessRefresh) == 0 and sProcessing != "":
@@ -414,7 +430,12 @@ def process_CopyFiles_sub(logFile, mainWindow, procWindows, lstSource, lstDestin
                     #pyqt_windowRefresh(mainWindow)
                     m = m + 1
           else:
-              log_writePrintOnlyDebug("There are NO files or directories under item [" + str(n) + "]: " + lstSource[n])     
+              sProcessingT = sProcessing
+              sProcessingT = sProcessingT + "\n" + "There are NO files or directories under item [" + str(n) + "]: " + lstSource[n]
+              log_writePrintOnlyDebug(sProcessingT)     
+
+              if bProcessingDEBUG:
+                 log_write_Normal(logFile, sProcessingT)     
     
           pyqt_windowRefresh(mainWindow)
           n = n + 1 
@@ -480,13 +501,16 @@ def process_CopyFiles_sub(logFile, mainWindow, procWindows, lstSource, lstDestin
           #LAST FIELD IS THE PATH FROM WHERE IT IS ANALIZED
           sPathFileFrom = str(file_dic_pandasFileRecord_get_path_file(row1))
           sPathFileSubdir = str(file_dic_pandasFileRecord_get_path_subdir(row1))
+          sPathFileFromParent = str(file_dic_pandasFileRecord_get_file_parent(row1))
 
-          #print("\nFile " + str(n) + ": " + sPathFileFrom + " - Path Subdir: " + sPathFileSubdir)
+          sMsg = "\nFile " + str(n) + ": " + sPathFileFrom + " - Path Subdir: " + sPathFileSubdir + " - Parent: " + sPathFileFromParent
           sPrint, sFileSize, sFileDateCreation, sFileDateModif, sFieDateAccess = process_CopyFiles_DirFileStatus(sPathFileFrom, logFile)
-          #sPrint = "\n" + str(n) + " File: " + sPrint
-          #log_write_Normal(logFile, sPrint)
+          sPrint = "\n" + str(n) + " File: " + sPrint
 
-          #SIGNAL TO PROCESS WIINDOW FOR PROGRESS BAR
+          if bProcessingDEBUG:
+             log_write_Normal(logFile, sMsg + "\n" + sPrint)
+
+          #SIGNAL TO PROCESS WINDOW FOR PROGRESS BAR
           process_EmitMsgProcessingProgressBar(procWindows, n+1)
 
           #--------------------------------------------------------------------------------------------------------------------------------
@@ -497,6 +521,7 @@ def process_CopyFiles_sub(logFile, mainWindow, procWindows, lstSource, lstDestin
               sProcessing = "Processing item from Data Frame: " + process_CalculateNofTotal(n, rows)
               sProcessing = sProcessing + str_GetENTER() + str_GetENTER() + "Source File:" + str_GetENTER() + sPathFileFrom
               sProcessing = sProcessing + " - Path Subdir: " + sPathFileSubdir
+              sProcessing = sProcessing + " - Parent: " + sPathFileFromParent
               sProcessing = sProcessing + str_GetENTER() + str_GetENTER() + "Data from Sourth File:" + sPrint
               sProcessing = sProcessing + str_GetENTER() + str_GetENTER() + "Destination: " +  lstDestination[m]
               print(sProcessing)
@@ -509,7 +534,9 @@ def process_CopyFiles_sub(logFile, mainWindow, procWindows, lstSource, lstDestin
                  process_EmitMsgProcessing(procWindows, sProcessing)
 
               sPathFileTo = lstDestination[m]
-              #print("\nCopying File for Destination " + process_CalculateNofTotal(m, len(lstDestination)) + ": " + sPathFileFrom + " - to: " + sPathFileTo + " - Subdir: " + str(sPathFileSubdir))
+              sMsg = "\nCopying File for Destination " + process_CalculateNofTotal(m, len(lstDestination)) + ": " + sPathFileFrom + " - to: " + sPathFileTo + " - Subdir: " + str(sPathFileSubdir)
+              if bProcessingDEBUG:
+                  log_write_Normal(logFile, sMsg)
               
               bError, sError = process_CopyFiles_CopyFromTo(dict_df_file, n, sPathFileFrom, sPathFileTo, sPathFileSubdir, logFile)
               sFileStatus = str(file_dic_pandasFileRecord_get_status(dict_df_file, n))
@@ -663,9 +690,19 @@ def process_CopyFiles_CopyFromTo(df, nRecord, sFilePath, sPathTo, sPathSubdir, l
     sPath, sFileName, sExt, sParent = file_PathAndFile_GetSeparated(sFilePath)
 
     sPathTo = file_addSlashToPathIfNeeded(sPathTo)
-    #print("process_CopyFiles_CopyFromTo - sPathTo=" + str(sPathTo)) 
+    print("process_CopyFiles_CopyFromTo - sPathTo=" + str(sPathTo)) 
     if sPathSubdir != "":
+        #ADD SUBDIR FOR DESTINATION
         sPathTo = sPathTo + sPathSubdir
+    else:
+        if sParent not in sPathTo:
+            #EXAMPLE
+            #source: D:\Temp\vbp\7Bits\7Bits.exe
+            #source path: "7Bits"
+            #destination: g:\Temp
+            #final destination desired: g:\temp\7Bits\7Bits.exe
+            sPathTo = sPathTo + sParent
+
     print("process_CopyFiles_CopyFromTo - sPathTo=" + str(sPathTo) + " - sPathSubdir: " + str(sPathSubdir)) 
     sPathTo = file_addSlashToPathIfNeeded(sPathTo)
 

@@ -36,9 +36,6 @@ n = 0
 file_dic_path_file = "file_dic_path_file"
 file_dic_path_file_nro = n
 n = n + 1
-file_dic_path_file_parent = "file_dic_path_file_parent"
-file_dic_path_file_parent_nro = n
-n = n + 1
 file_dic_size = "file_dic_file_size"
 file_dic_size_nro = n
 n = n + 1
@@ -56,6 +53,9 @@ file_dic_directory_type_nro = n
 n = n + 1
 file_dic_path = "file_dic_path"
 file_dic_path_nro = n
+n = n + 1
+file_dic_fileparent = "file_dic_file_parent"
+file_dic_fileparent_nro = n
 n = n + 1
 file_dic_filename = "file_dic_filename"
 file_dic_filename_nro = n
@@ -681,7 +681,7 @@ def file_pandasFileRecord_CreateDicWithFileLstAddingStats(lstFiles, lstFilesFrom
 
                sPath, sFileName, sExt, sParent = file_PathAndFile_GetSeparated(file_record[file_dic_path_file])
                file_record[file_dic_path] = str(sPath)
-               file_record[file_dic_path_file_parent] = str(sParent)
+               file_record[file_dic_fileparent] = str(sParent)
                file_record[file_dic_filename] = str(sFileName)
                file_record[file_dic_fileext] = str(sExt)
 
@@ -714,13 +714,17 @@ def file_pandasFileRecord_CreateDicWithFileLstAddingStats(lstFiles, lstFilesFrom
 # file_pandasFileRecord_get
 #---------------------------------------------------------------------------------------------------------
 def file_dic_pandasFileRecord_get(df_row, nItem):
-    #print("file_pandasFilefile_pandasFileRecord_getRecord_get - df_row = " + str(df_row) + " - nItem = " + str(nItem))
+    #print("nItem [ " + str(nItem) + ": file_pandasFilefile_pandasFileRecord_getRecord_get - df_row = " + str(df_row) + " - nItem = " + str(nItem))
     # For a row, the first item is the index
     if nItem >= 0 and nItem < len(df_row):
-        #print("file_pandasFilefile_pandasFileRecord_getRecord_get - df_row[nItem] = " + str(df_row[nItem]) + " - nItem = " + str(nItem))
+        #print("file_pandasFilefile_pandasFileRecord_getRecord_get - nItem [ " + str(nItem) + "]: df_row[nItem] = " + str(df_row[nItem]) + " - nItem = " + str(nItem))
         #It starts with 1 for nItem because of index is zero reference df_row[0]
+        #print("file_pandasFilefile_pandasFileRecord_getRecord_get - nItem [ " + str(nItem) + "]: df_row[0]: " + str(df_row[0]))
         nItem = nItem + 1
-        return df_row[nItem]
+        #print("file_pandasFilefile_pandasFileRecord_getRecord_get - df_row[nItem+1] = " + str(df_row[nItem+1]) +  " - df_row[nItem-1] = " + str(df_row[nItem-1]))
+        sReturn = df_row[nItem]
+        #print("file_pandasFilefile_pandasFileRecord_getRecord_get - sReturn: " + str(sReturn))
+        return sReturn
     else:
         return ""
 
@@ -740,7 +744,8 @@ def file_dic_pandasFileRecord_getByDF(df, nRowIndex, nColumn):
     #print("file_pandasFileRecord_set - nRows = " + str(nRows) + " - nCols = " + str(nCols) + " - nRowIndex = " + str(nRowIndex) + " - nColumn = " + str(nColumn) + " sValue = " + str(sValue))
     if nColumn >= 0 and nColumn <= nCols and nRowIndex >= 0 and nRowIndex <= nRows:
         #print("df before: " + str(df.iloc[nRowIndex, nColumn]))
-        return df.iloc[nRowIndex, nColumn]
+        sReturn = df.iloc[nRowIndex, nColumn]
+        return sReturn
         #print("df after: " + str(df.iloc[nRowIndex, nColumn]))
     return ""
 
@@ -790,6 +795,12 @@ def file_dic_pandasFileRecord_get_fileext(df_row):
     return file_dic_pandasFileRecord_get(df_row, file_dic_fileext_nro)
 
 #---------------------------------------------------------------------------------------------------------
+# file_dic_pandasFileRecord_get_path_file_parent
+#---------------------------------------------------------------------------------------------------------
+def file_dic_pandasFileRecord_get_file_parent(df_row):
+    return file_dic_pandasFileRecord_get(df_row, file_dic_fileparent_nro)
+
+#---------------------------------------------------------------------------------------------------------
 # file_dic_pandasFileRecord_get_status
 #---------------------------------------------------------------------------------------------------------
 def file_dic_pandasFileRecord_get_status(df, nRow):
@@ -800,6 +811,12 @@ def file_dic_pandasFileRecord_get_status(df, nRow):
 #---------------------------------------------------------------------------------------------------------
 def file_dic_pandasFileRecord_set_status(df, nRow, sValue):
     return file_dic_pandasFileRecord_set(df, nRow, file_dic_status_nro, sValue)
+
+#---------------------------------------------------------------------------------------------------------
+# file_dic_pandasFileRecord_set_file_dic_path_subdir
+#---------------------------------------------------------------------------------------------------------
+def file_dic_pandasFileRecord_set_file_dic_path_subdir(df, nRow, sValue):
+    return file_dic_pandasFileRecord_set(df, nRow, file_dic_path_subdir_nro, sValue)
 
 #---------------------------------------------------------------------------------------------------------
 # file_pandasFileRecord_set_path_to
@@ -1079,6 +1096,7 @@ def file_getSubDirFromPath(sPathFile, sPattern, bRemoveFileName=True):
     #print("file_getSubDirFromPath - sPathFile: " + str(sPathFile) + " - sPattern: " + str(sPattern))
     if sPattern in sPathFile:
        sReturn = str_midToEnd(sPathFile, len(sPattern))
+       #print("file_getSubDirFromPath - sReturn: " + str(sReturn))
 
        if bRemoveFileName and sReturn != "":
            sReturnT = file_PathAndFile_GetFileName(sReturn)
