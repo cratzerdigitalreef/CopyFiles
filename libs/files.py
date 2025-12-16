@@ -31,7 +31,9 @@ import subprocess
 import argparse
 
 #-------------------------------------------------------------------------
-#FOR FILE DICTIONARY
+# FOR FILE DICTIONARY
+# ORDER AND REFERENCES ARE ACCORDING METHOD: file_pandasFileRecord_CreateDicWithFileLstAddingStats - Line 677
+
 n = 0
 file_dic_path_file = "file_dic_path_file"
 file_dic_path_file_nro = n

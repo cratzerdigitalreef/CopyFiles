@@ -40,7 +40,9 @@ nProcessRefresh=100
 nProcessLineZeros = 5
 sPrintAsterics = str_RepeatString(nProcessLineZeros, "*") + " "
 
-bProcessingDEBUG = True
+#THIS VARIABLE IS FOR SAVING PROCESSING DATA IN LOG FILE
+#bProcessingDEBUG = True
+bProcessingDEBUG = False
 
 
 class Worker(QThread):
@@ -689,21 +691,10 @@ def process_CopyFiles_CopyFromTo(df, nRecord, sFilePath, sPathTo, sPathSubdir, l
 
     sPath, sFileName, sExt, sParent = file_PathAndFile_GetSeparated(sFilePath)
 
-    sPathTo = file_addSlashToPathIfNeeded(sPathTo)
-    print("process_CopyFiles_CopyFromTo - sPathTo=" + str(sPathTo)) 
-    if sPathSubdir != "":
-        #ADD SUBDIR FOR DESTINATION
-        sPathTo = sPathTo + sPathSubdir
-    else:
-        if sParent not in sPathTo:
-            #EXAMPLE
-            #source: D:\Temp\vbp\7Bits\7Bits.exe
-            #source path: "7Bits"
-            #destination: g:\Temp
-            #final destination desired: g:\temp\7Bits\7Bits.exe
-            sPathTo = sPathTo + sParent
+    sPathTo = process_CopyFiles_CopyFromTo_PreparePathTo(sPathTo, sFilePath, sPathSubdir)
 
     print("process_CopyFiles_CopyFromTo - sPathTo=" + str(sPathTo) + " - sPathSubdir: " + str(sPathSubdir)) 
+
     sPathTo = file_addSlashToPathIfNeeded(sPathTo)
 
     print("process_CopyFiles_CopyFromTo - sPathTo=" + str(sPathTo)) 
@@ -775,6 +766,58 @@ def process_CopyFiles_CopyFromTo(df, nRecord, sFilePath, sPathTo, sPathSubdir, l
 
     return bReturn, sError
    
+# process_CopyFiles_CopyFromTo_PreparePathTo ----------------------------------------------------------------------------------------------------------
+def process_CopyFiles_CopyFromTo_PreparePathTo(sPathTo, sFilePath, sPathSubdir):
+
+    #print("process_CopyFiles_CopyFromTo_PreparePathTo - sPathTo: " + str(sPathTo) + " - sFilePath: " + str(sFilePath) + " - sPathSubdir: " + str(sPathSubdir))
+
+    sPathToParent = file_PathAndFile_GetParent(sPathTo)
+    sFilePathParent = file_PathAndFile_GetParent(sFilePath)
+
+    #print("process_CopyFiles_CopyFromTo_PreparePathTo - sPathToParent: " + str(sPathToParent) + " - sFilePathParent: " + str(sFilePathParent))
+
+    #EXAMPLE 1
+    #sFilePath: D:\Temp\vbp\7Bits\7Bits.exe
+    #sFilePathParent: "7Bits"
+    #sPathTo: g:\Temp
+    #sPathToParent: Temp
+    #Final destination path desired: g:\temp\7Bits for 7Bits.exe
+
+    #EXAMPLE 2
+    #sFilePath: D:\Temp\vbp\7Bits\7Bits.exe
+    #sFilePathParent: "7Bits"
+    #sPathTo: g:\Temp\7Bits
+    #sPathToParent: 7Bits
+    #Final destination path desired: g:\temp\7Bits for 7Bits.exe
+
+    if sPathSubdir != "":
+        #EXAMPLE 3
+        #sFilePath: D:\Temp\vbp\DLLs\ADO\Cls\clsADO.cls
+        #sFilePathParent: "Cls"
+        #sPathTo: g:\Temp
+        #sPathToParent: Temp
+        #sPathSubdir: \ADO\Cls\
+        #Final destination path desired: g:\temp\DLLs\ADO\Cls for clsADO.cls
+        lstTemp = sFilePath.split(sPathSubdir)
+        sTemp = lstTemp[0]
+        #sTemp = D:\Temp\vbp\DLLs\
+        #sFilePathParent = file_PathAndFile_GetParent(sTemp)
+        sFilePathParent = file_PathAndFile_GetFileName(sTemp)
+
+        #print("process_CopyFiles_CopyFromTo_PreparePathTo - sTemp: " + str(sTemp) + " - sFilePathParent: " + str(sFilePathParent))
+        #sTemp = DLLs
+
+    if sFilePathParent not in sPathToParent:
+       sPathTo = sPathTo + sFilePathParent
+
+    if sPathSubdir != "":
+        sPathTo = sPathTo + sPathSubdir   
+
+    sPathTo = file_addSlashToPathIfNeeded(sPathTo)
+    #print("process_CopyFiles_CopyFromTo_PreparePathTo - sPathTo: " + str(sPathTo))
+
+    return sPathTo    
+
 # process_GblRecord_Clean ----------------------------------------------------------------------------------------------------------
 def process_GblRecord_Clean():
     # GLOBAL VARIABLE

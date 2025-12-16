@@ -517,7 +517,7 @@ class CopyFilesHomeScreen:
         if nRow >= 0 and sData != "":
 
             if bShowQuestion:
-               sMsg = "Are you sure you need to delete '" + sTVDes + "' row: " + str(nRow) + " ?"
+               sMsg = "Are you sure you need to delete '" + sTVDes + "' row: " + str(nRow+1) + " ?"
                sMsg += "\nData: " + sData
 
                sResponse, bResponse = pyqt_MsgBoxYesNo(self.window, "Delete Row for " + sTVDes, sMsg)
