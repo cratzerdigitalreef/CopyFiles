@@ -40,6 +40,8 @@ nProcessRefresh=100
 nProcessLineZeros = 5
 sPrintAsterics = str_RepeatString(nProcessLineZeros, "*") + " "
 
+sSlashDefault = file_slashdouble
+
 #THIS VARIABLE IS FOR SAVING PROCESSING DATA IN LOG FILE
 #bProcessingDEBUG = True
 bProcessingDEBUG = False
@@ -434,7 +436,8 @@ def process_CopyFiles_sub(logFile, mainWindow, procWindows, lstSource, lstDestin
           else:
               sProcessingT = sProcessing
               sProcessingT = sProcessingT + "\n" + "There are NO files or directories under item [" + str(n) + "]: " + lstSource[n]
-              log_writePrintOnlyDebug(sProcessingT)     
+              if (n % nProcessRefresh) == 0:
+                 log_writePrintOnlyDebug(sProcessingT)     
 
               if bProcessingDEBUG:
                  log_write_Normal(logFile, sProcessingT)     
@@ -505,7 +508,7 @@ def process_CopyFiles_sub(logFile, mainWindow, procWindows, lstSource, lstDestin
           sPathFileSubdir = str(file_dic_pandasFileRecord_get_path_subdir(row1))
           sPathFileFromParent = str(file_dic_pandasFileRecord_get_file_parent(row1))
 
-          sMsg = "\nFile " + str(n) + ": " + sPathFileFrom + " - Path Subdir: " + sPathFileSubdir + " - Parent: " + sPathFileFromParent
+          sMsg = "\nFile [" + str(n) + "]: " + sPathFileFrom + " - Path Subdir: " + sPathFileSubdir + " - Parent: " + sPathFileFromParent
           sPrint, sFileSize, sFileDateCreation, sFileDateModif, sFieDateAccess = process_CopyFiles_DirFileStatus(sPathFileFrom, logFile)
           sPrint = "\n" + str(n) + " File: " + sPrint
 
@@ -525,7 +528,11 @@ def process_CopyFiles_sub(logFile, mainWindow, procWindows, lstSource, lstDestin
               sProcessing = sProcessing + " - Path Subdir: " + sPathFileSubdir
               sProcessing = sProcessing + " - Parent: " + sPathFileFromParent
               sProcessing = sProcessing + str_GetENTER() + str_GetENTER() + "Data from Sourth File:" + sPrint
-              sProcessing = sProcessing + str_GetENTER() + str_GetENTER() + "Destination: " +  lstDestination[m]
+
+              sProcessing = sProcessing + str_GetENTER() + str_GetENTER() + "Destination without processing: " +  lstDestination[m]
+              sPathFileTo = process_CopyFiles_CopyFromTo_PreparePathTo(lstDestination[m], sPathFileFrom, sPathFileSubdir, sSlash)
+              sProcessing = sProcessing + str_GetENTER() + "Destination after processing: " +  sPathFileTo
+
               print(sProcessing)
 
               process_GblMessage_Set(sProcessing)
@@ -535,12 +542,14 @@ def process_CopyFiles_sub(logFile, mainWindow, procWindows, lstSource, lstDestin
                  #SIGNALs to PROCESS WINDOW
                  process_EmitMsgProcessing(procWindows, sProcessing)
 
-              sPathFileTo = lstDestination[m]
               sMsg = "\nCopying File for Destination " + process_CalculateNofTotal(m, len(lstDestination)) + ": " + sPathFileFrom + " - to: " + sPathFileTo + " - Subdir: " + str(sPathFileSubdir)
               if bProcessingDEBUG:
                   log_write_Normal(logFile, sMsg)
               
-              bError, sError = process_CopyFiles_CopyFromTo(dict_df_file, n, sPathFileFrom, sPathFileTo, sPathFileSubdir, logFile)
+              #if n > 50:
+              #   process_GbStop_Set(True)
+
+              bError, sError = process_CopyFiles_CopyFromTo(dict_df_file, n, sPathFileFrom, sPathFileTo, logFile)
               sFileStatus = str(file_dic_pandasFileRecord_get_status(dict_df_file, n))
 
               #print("Status: " + str(sFileStatus))
@@ -674,7 +683,7 @@ def process_CopyFiles_DirFileStatus(sFile, logFile=""):
     return sPrint, sFileSize, sFileDateCreation, sFileDateModif, sFieDateAccess
    
 # process_CopyFiles_CopyFromTo ----------------------------------------------------------------------------------------------------------
-def process_CopyFiles_CopyFromTo(df, nRecord, sFilePath, sPathTo, sPathSubdir, logFile=""):
+def process_CopyFiles_CopyFromTo(df, nRecord, sFilePath, sPathTo, logFile=""):
 
     bReturn = True
     sError = ""
@@ -691,13 +700,9 @@ def process_CopyFiles_CopyFromTo(df, nRecord, sFilePath, sPathTo, sPathSubdir, l
 
     sPath, sFileName, sExt, sParent = file_PathAndFile_GetSeparated(sFilePath)
 
-    sPathTo = process_CopyFiles_CopyFromTo_PreparePathTo(sPathTo, sFilePath, sPathSubdir)
-
-    print("process_CopyFiles_CopyFromTo - sPathTo=" + str(sPathTo) + " - sPathSubdir: " + str(sPathSubdir)) 
-
     sPathTo = file_addSlashToPathIfNeeded(sPathTo)
 
-    print("process_CopyFiles_CopyFromTo - sPathTo=" + str(sPathTo)) 
+    #print("process_CopyFiles_CopyFromTo - sPathTo=" + str(sPathTo)) 
 
     sToPathFile = file_fNormalPathForWindowsLinux(sPathTo + sFileName)
     file_dic_pandasFileRecord_set_path_to(df, nRecord, sToPathFile)
@@ -767,9 +772,11 @@ def process_CopyFiles_CopyFromTo(df, nRecord, sFilePath, sPathTo, sPathSubdir, l
     return bReturn, sError
    
 # process_CopyFiles_CopyFromTo_PreparePathTo ----------------------------------------------------------------------------------------------------------
-def process_CopyFiles_CopyFromTo_PreparePathTo(sPathTo, sFilePath, sPathSubdir):
+def process_CopyFiles_CopyFromTo_PreparePathTo(sPathTo, sFilePath, sPathFileSubdir, sSlash=sSlashDefault):
 
-    #print("process_CopyFiles_CopyFromTo_PreparePathTo - sPathTo: " + str(sPathTo) + " - sFilePath: " + str(sFilePath) + " - sPathSubdir: " + str(sPathSubdir))
+    #bExit = False
+
+    #print("process_CopyFiles_CopyFromTo_PreparePathTo - sPathTo: " + str(sPathTo) + " - sFilePath: " + str(sFilePath) + " - sPathFileSubdir: " + str(sPathFileSubdir))
 
     sPathToParent = file_PathAndFile_GetParent(sPathTo)
     sFilePathParent = file_PathAndFile_GetParent(sFilePath)
@@ -790,7 +797,7 @@ def process_CopyFiles_CopyFromTo_PreparePathTo(sPathTo, sFilePath, sPathSubdir):
     #sPathToParent: 7Bits
     #Final destination path desired: g:\temp\7Bits for 7Bits.exe
 
-    if sPathSubdir != "":
+    if sPathFileSubdir != "":
         #EXAMPLE 3
         #sFilePath: D:\Temp\vbp\DLLs\ADO\Cls\clsADO.cls
         #sFilePathParent: "Cls"
@@ -798,25 +805,59 @@ def process_CopyFiles_CopyFromTo_PreparePathTo(sPathTo, sFilePath, sPathSubdir):
         #sPathToParent: Temp
         #sPathSubdir: \ADO\Cls\
         #Final destination path desired: g:\temp\DLLs\ADO\Cls for clsADO.cls
-        lstTemp = sFilePath.split(sPathSubdir)
-        sTemp = lstTemp[0]
+
+        lstTemp = sFilePath.split(sPathFileSubdir)
+        #print("process_CopyFiles_CopyFromTo_PreparePathTo - lstTemp: " + str(lstTemp))
+        
+        sTemp = ""
+        if len(lstTemp) > 2:
+
+            #EXAMPLE 4
+            #sFilePath:  D:\Temp\vbp\AgendaC\vbp\DLLs
+            #sFilePathParent: "Cls"
+            #sPathTo: G:/Temp
+            #sPathToParent: Temp
+            #sPathSubdir: \vbp\
+            #Final destination path desired: G:\Temp\AgendaC\vbp\
+
+            n = 0
+    
+            # len(lstTemp)-1 => -1 because the last item is not needed to be preocessed
+            while n < (len(lstTemp)-1):
+                sTemp = sTemp + lstTemp[n]
+    
+                # len(lstTemp)-2 => -2 because the separator is needed but not at the last item
+                if n < (len(lstTemp)-2):
+                   sTemp = sTemp + sPathFileSubdir 
+                n = n + 1
+
+            #bExit = True    
+
+        else:    
+           sTemp = lstTemp[0]
         #sTemp = D:\Temp\vbp\DLLs\
         #sFilePathParent = file_PathAndFile_GetParent(sTemp)
         sFilePathParent = file_PathAndFile_GetFileName(sTemp)
 
         #print("process_CopyFiles_CopyFromTo_PreparePathTo - sTemp: " + str(sTemp) + " - sFilePathParent: " + str(sFilePathParent))
-        #sTemp = DLLs
 
-    if sFilePathParent not in sPathToParent:
-       sPathTo = sPathTo + sFilePathParent
+    if (sFilePathParent not in sPathToParent) and (sFilePathParent not in sPathTo):
+       sPathTo = sPathTo + sSlash + sFilePathParent
+       #print("process_CopyFiles_CopyFromTo_PreparePathTo - sPathTo: " + str(sPathTo) + " - sFilePathParent: " + str(sFilePathParent) + " - sPathToParent: " + str(sPathToParent))
 
-    if sPathSubdir != "":
-        sPathTo = sPathTo + sPathSubdir   
+    if sPathFileSubdir != "":
+        sPathTo =  sPathTo + sSlash + sPathFileSubdir
+        #print("process_CopyFiles_CopyFromTo_PreparePathTo - sPathTo: " + str(sPathTo) + " - sPathFileSubdir: " + str(sPathFileSubdir))
 
+    #print("process_CopyFiles_CopyFromTo_PreparePathTo - sPathTo: " + str(sPathTo))
+    sPathTo = file_fNormalPathForWindowsLinux(sPathTo)
     sPathTo = file_addSlashToPathIfNeeded(sPathTo)
     #print("process_CopyFiles_CopyFromTo_PreparePathTo - sPathTo: " + str(sPathTo))
 
-    return sPathTo    
+    #if bExit:
+    #    exit(0)
+
+    return sPathTo
 
 # process_GblRecord_Clean ----------------------------------------------------------------------------------------------------------
 def process_GblRecord_Clean():

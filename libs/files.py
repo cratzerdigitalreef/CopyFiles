@@ -323,6 +323,41 @@ def file_fFileIsExe():
 def file_fNormalPathForWindowsLinux(sPath):
     return os.path.normpath(sPath)     
 
+#---------------------------------------------------------------------------------------------------------
+# file_joinPaths => 
+# Add slash if it is needed, depening on OS 
+#---------------------------------------------------------------------------------------------------------
+def file_joinPaths(sPath1, sPath2):
+    if sPath1 == "":
+        return sPath2
+    
+    if sPath2 == "":
+        return sPath1
+    
+    return os.path.join(sPath1, sPath2)
+
+#---------------------------------------------------------------------------------------------------------
+# file_joinPathList => 
+# Add slash if it is needed, depening on OS for a LIST of Paths
+#---------------------------------------------------------------------------------------------------------
+def file_joinPathList(lstPaths):
+    sReturn = ""
+
+    if len(lstPaths) == 1:
+        return lstPaths[0]
+
+    if len(lstPaths) < 1:
+        return sReturn
+    
+    if len(lstPaths) % 2 != 0:
+        lstPaths.append(sReturn)
+     
+    n = 0
+    while n < len(lstPaths):
+          sReturn = sReturn + file_joinPaths(lstPaths[n], lstPaths[n+1])
+          n = n + 2
+
+    return sReturn
 
 #---------------------------------------------------------------------------------------------------------
 # file_FileExists
@@ -428,6 +463,23 @@ def file_getFileSlash(sPathAndFile):
     return file_slash
 
 #---------------------------------------------------------------------------------------------------------
+# file_checkSlashDuplicated => check whethere there is slash "////" or "\\" so that 1 is removed.
+#---------------------------------------------------------------------------------------------------------
+def file_checkSlashDuplicated(sPath):
+
+    sSlash = file_getFileSlash(sPath)
+
+    sDoubleSlash = sSlash + sSlash
+
+    #print("file_checkSlashDuplicated - sPath: " + str(sPath) + " - Slash: " + str(sSlash) + " - Double Slash: " + str(sDoubleSlash))
+
+    if sDoubleSlash in sPath:
+        sPath = str_Replace(sPath, sDoubleSlash, sSlash)
+
+    #print("file_checkSlashDuplicated - sPath: " + str(sPath))
+    return sPath
+
+#---------------------------------------------------------------------------------------------------------
 # file_addSlashToPathIfNeeded => add slash "//" or "\" at the end of path if there is not
 #---------------------------------------------------------------------------------------------------------
 def file_addSlashToPathIfNeeded(sPath):
@@ -436,6 +488,9 @@ def file_addSlashToPathIfNeeded(sPath):
 
     if str_right(sPath, len(sSlash)) != sSlash:
        sPath = sPath + sSlash
+
+    #CLEAN DUPLICATED SLASH IF IT IS EEDED
+    sPath = file_checkSlashDuplicated(sPath)
 
     return sPath             
 

@@ -158,7 +158,8 @@ def pyqt_OpenFileDlg(parent, sTitle, sPath, sFilters="All Files (*)", bDirOnly=F
     #print("pyqt_OpenFileDlg - sPath = " + str(sPath))
 
     option = 0
-
+    filename = []
+    
     if bSave:
        if option == 0:
           filename = QFileDialog.getSaveFileName(

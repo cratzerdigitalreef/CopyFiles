@@ -702,7 +702,7 @@ class CopyFilesHomeScreen:
            sTitle = "Destination"
            sPath = self.sPathDestination
 
-        print("openFilesDlg - Default Path = " + str(sPath))
+        print("openFilesDlg - Default Path = " + str(sPath) + " for " + sTitle)
         #lstFiles = pyqt_OpenFileDlgMoreFiles(self.window, app_name_des + " - " + sTitle, sPath, "")
         lstFiles = pyqt_OpenFileDlgDirOnly(self.window, app_name_des + " - " + sTitle, sPath, "", True)
 
