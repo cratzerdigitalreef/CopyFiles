@@ -620,11 +620,29 @@ class CopyFilesHomeScreen:
         lstSource = self.modelSource.getALLDataByCol(self.nColPath)
         lstDestination = self.modelDestination.getALLDataByCol(self.nColPath)
 
+        #NOT NEEDED, FIXED PERMISSION PROBLEMS WITH CHMOD COMMAND inside files.py
+        bAdmin, sErrorAdmin = files_IsUserAdmin_OnlyWindows()
+
+        bAdmin = True
+        if not bAdmin:   
+           #NOT USED PER NOW
+           sMsg = "Username '" + files_getUserName() + "' must be Administrator for executing this program, because permissions for deleting files and directories."
+           if sErrorAdmin != "":
+               sMsg = sMsg + "\n\n" + sErrorAdmin
+           sMsg = sMsg + "\n\nIf you'd rather continue, press [YES]"
+
+           sResponse, bResponse = pyqt_MsgBoxYesNo(self.window, "WARNING", sMsg)
+
+           if not bResponse:
+              pyqt_MsgBox_Warning("WARNING", "Process cancelled!")
+              return bResponse
+
         #DISABLE MAIN SCREEN
         self.processEnableDisable(False)
         #START PROCESSING
         process_CopyFiles(self.log_file, self.window, self.window_process, lstSource, lstDestination)
-        return
+
+        return True
 
     #---------------------------------------------------------------------------------------------------------
     #@pyqtSlot(bool, str)

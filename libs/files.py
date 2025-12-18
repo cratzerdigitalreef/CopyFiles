@@ -2,6 +2,9 @@
 
 import os
 import sys
+import stat
+import ctypes
+import getpass
 
 import shutil
 
@@ -489,7 +492,7 @@ def file_addSlashToPathIfNeeded(sPath):
     if str_right(sPath, len(sSlash)) != sSlash:
        sPath = sPath + sSlash
 
-    #CLEAN DUPLICATED SLASH IF IT IS EEDED
+    #CLEAN DUPLICATED SLASH IF IT IS NEEDED
     sPath = file_checkSlashDuplicated(sPath)
 
     return sPath             
@@ -1009,6 +1012,10 @@ def file_rmDir(sPathSource):
         if not file_Is_a_Directory(sPathSource):
             return False, sProcess + "File is not a directory. Source: '" + sPathSource + "'"
 
+        # Change the file permission to allow writing (removes read-only flag)
+        os.chmod(sPathSource, stat.S_IWRITE)
+
+        # Now attempt to remove the file
         os.rmdir(sPathSource)
 
         return True, ""
@@ -1069,6 +1076,11 @@ def file_delete(sPathFileSource):
             return False, sProcess + file_dic_status_warning_dir + ": It is a directory. It must be removed as a directory with rmdir, not delete command. Path: '" + sPathFileSource + "'"
         
         if os.path.exists(sPathFileSource):
+           
+           # Change the file permission to allow writing (removes read-only flag)
+           os.chmod(sPathFileSource, stat.S_IWRITE)
+
+           # Now attempt to remove the file
            os.remove(sPathFileSource)
 
         return True, ""
@@ -1173,4 +1185,68 @@ def file_getSubDirFromPath(sPathFile, sPattern, bRemoveFileName=True):
         sReturn = ""
 
     return sReturn
+
+#---------------------------------------------------------------------------------------------------------
+# files_IsUserAdmin_OnlyWindows
+# Verifies whether the final user is Administrator
+# Returns:
+#        True => Is Administrator
+#        False => Not Administrator or not in Windows.
+#---------------------------------------------------------------------------------------------------------
+def files_IsUserAdmin_OnlyWindows():
+
+    bAdmin = False
+    try:
+
+        if file_IsOSWindows():
+           
+           #Return Values
+           # Non-zero integer (e.g., 1): The current user context has administrative privileges (is an admin).
+           # Zero (0): The current user context does not have administrative privileges. 
+           bAdmin = ctypes.windll.shell32.IsUserAnAdmin()
+           
+           #print("files_IsUserAdmin_OnlyWindows - bAdmin: " + str(bAdmin))
+
+        return bAdmin != 0, ""
+    
+    except Exception as e:
+       sError = file_Error_handlerWithDes(e, "", "User '" + files_getUserName() + "' is NOT Administrator. This works only in Windows.")
+       return False, sError
+
+#---------------------------------------------------------------------------------------------------------
+# files_getUserName
+# Get user name in all platforms
+# Returns: Username
+#---------------------------------------------------------------------------------------------------------
+def files_getUserName():
+    username = getpass.getuser()
+    return username
+
+#---------------------------------------------------------------------------------------------------------
+# check_admin_group_membership
+# Check whether username is member of administrators
+# Returns: True is member, False is not member
+#---------------------------------------------------------------------------------------------------------
+#python -m pip install pywin32
+import win32net
+import platform
+import getpass
+def check_admin_group_membership():
+    hostname = platform.uname()[1]
+    username = getpass.getuser()
+    is_admin = False
+
+    # Iterate through the local groups the user belongs to
+    for group_info in win32net.NetUserGetLocalGroups(hostname, username):
+        if group_info[0].lower() == 'administrators':
+            is_admin = True
+            break
+            
+    if is_admin:
+        print(f"User '{username}' is a member of the Administrators group.")
+    else:
+        print(f"User '{username}' is a Standard user (not in Administrators group).")
+
+    return is_admin    
+
 #------------------------------------------------------------------------------------

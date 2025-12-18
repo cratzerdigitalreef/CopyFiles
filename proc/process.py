@@ -211,7 +211,7 @@ class processWindow(QMainWindow, QThread):
         Receives progress updates from the worker thread and updates the progress bar.
         """
         #self.progress_bar.setValue(value)
-        sMsg = sProcessGblMsg
+        #sMsg = sProcessGblMsg
 
         #print("Before setText - update_progress : sMsg = " + str(sMsg))    
         self.txt.setText(sMsg)
@@ -352,11 +352,13 @@ def process_CopyFiles_sub(logFile, mainWindow, procWindows, lstSource, lstDestin
 
     pyqt_windowRefresh(mainWindow)
 
+    sMsg = "Process Started at: " + str(process_GetDateTimeNow())
+    sMsg = sMsg + "\nTotal Source Directories: " + str(len(lstSource))
+    sMsg = sMsg + "\nTotal Destination Directories: " + str(len(lstDestination))
     if logFile != "":
-        sMsg = "Process Started at: " + str(process_GetDateTimeNow())
-        sMsg = sMsg + "\nTotal Source Directories: " + str(len(lstSource))
-        sMsg = sMsg + "\nTotal Destination Directories: " + str(len(lstDestination))
         log_write(logFile, sMsg)
+
+    process_EmitMsgProcessing(procWindows, sMsg)
 
     #GETTING ALL PATHs AND FILEs    
     lstFiles = []
@@ -371,9 +373,8 @@ def process_CopyFiles_sub(logFile, mainWindow, procWindows, lstSource, lstDestin
           lstSource[n]= file_fNormalPathForWindowsLinux(lstSource[n])
           sProcessing = "Processing source: " + process_CalculateNofTotal(n, nSource) + " - " + str(lstSource[n])
 
-          log_writeWordsInColorBlue(sProcessing)
-
-          process_EmitMsgProcessing(procWindows, sProcessing)
+          process_PrintColor(n, sProcessing)
+          process_RefreshShowTextInDialog(procWindows, n, sProcessing)
 
           process_GblRecord_SumValue()
           process_GblMessage_Set(sProcessing)
@@ -408,8 +409,8 @@ def process_CopyFiles_sub(logFile, mainWindow, procWindows, lstSource, lstDestin
 
                        log_writeWordsInColorBlue("\n" + sPrintAsterics + sProcessing)
 
-                       if bProcessingDEBUG:
-                          log_write_Normal(logFile, sProcessing)     
+                       #DEBUGGING
+                       process_DEBUG(logFile, sProcessing)
 
                        lstFilesPathSubdir.append(sPathSubdir) 
 
@@ -420,24 +421,21 @@ def process_CopyFiles_sub(logFile, mainWindow, procWindows, lstSource, lstDestin
                     else:
                        sProcessingT = sProcessing
                        sProcessing = sProcessing + "\nItem [" + str(m) + "]: " + lstFilesTemp[m] + " already exists under source list 'lstFiles'"
-                       log_writePrintOnlyDebug(sProcessing)     
+                       process_PrintDebug(m, sProcessing)
 
-                       if bProcessingDEBUG:
-                          log_write_Normal(logFile, sProcessing)     
+                       #DEBUGGING
+                       process_DEBUG(logFile, sProcessing)
 
                        sProcessing = sProcessingT
 
-                    if (m % nProcessRefresh) == 0 and sProcessing != "":
-                       #SHOW REFRESH 
-                       process_EmitMsgProcessing(procWindows, sProcessing)
+                    process_RefreshShowTextInDialog(procWindows, m, sProcessing)
 
                     #pyqt_windowRefresh(mainWindow)
                     m = m + 1
           else:
               sProcessingT = sProcessing
               sProcessingT = sProcessingT + "\n" + "There are NO files or directories under item [" + str(n) + "]: " + lstSource[n]
-              if (n % nProcessRefresh) == 0:
-                 log_writePrintOnlyDebug(sProcessingT)     
+              process_PrintDebug(n, sProcessingT)
 
               if bProcessingDEBUG:
                  log_write_Normal(logFile, sProcessingT)     
@@ -446,7 +444,7 @@ def process_CopyFiles_sub(logFile, mainWindow, procWindows, lstSource, lstDestin
           n = n + 1 
     #------------------------------------------------------------------------------------------------------------------
 
-    log_write_OKInGreen(logFile, "Total Files records before Pandas = " + str(len(lstFiles)) + " from: " + str(len(lstFilesPathSubdir)))
+    log_write_OKInGreen(logFile, "Total Files records before Pandas = " + str_AddThousandToNumber(str(len(lstFiles))) + " from: " + str_AddThousandToNumber(str(len(lstFilesPathSubdir))))
 
     process_GblRecord_Clean()
     process_GblMessage_Clean()
@@ -512,8 +510,8 @@ def process_CopyFiles_sub(logFile, mainWindow, procWindows, lstSource, lstDestin
           sPrint, sFileSize, sFileDateCreation, sFileDateModif, sFieDateAccess = process_CopyFiles_DirFileStatus(sPathFileFrom, logFile)
           sPrint = "\n" + str(n) + " File: " + sPrint
 
-          if bProcessingDEBUG:
-             log_write_Normal(logFile, sMsg + "\n" + sPrint)
+          #DEBUGGING
+          process_DEBUG(logFile, sMsg + "\n" + sPrint)
 
           #SIGNAL TO PROCESS WINDOW FOR PROGRESS BAR
           process_EmitMsgProcessingProgressBar(procWindows, n+1)
@@ -533,24 +531,26 @@ def process_CopyFiles_sub(logFile, mainWindow, procWindows, lstSource, lstDestin
               sPathFileTo = process_CopyFiles_CopyFromTo_PreparePathTo(lstDestination[m], sPathFileFrom, sPathFileSubdir, sSlash)
               sProcessing = sProcessing + str_GetENTER() + "Destination after processing: " +  sPathFileTo
 
-              print(sProcessing)
-
-              process_GblMessage_Set(sProcessing)
-              process_GblRecord_SumValue()
-
-              if (n % nProcessRefresh) == 0:
-                 #SIGNALs to PROCESS WINDOW
-                 process_EmitMsgProcessing(procWindows, sProcessing)
-
-              sMsg = "\nCopying File for Destination " + process_CalculateNofTotal(m, len(lstDestination)) + ": " + sPathFileFrom + " - to: " + sPathFileTo + " - Subdir: " + str(sPathFileSubdir)
-              if bProcessingDEBUG:
-                  log_write_Normal(logFile, sMsg)
-              
               #if n > 50:
               #   process_GbStop_Set(True)
 
               bError, sError = process_CopyFiles_CopyFromTo(dict_df_file, n, sPathFileFrom, sPathFileTo, logFile)
               sFileStatus = str(file_dic_pandasFileRecord_get_status(dict_df_file, n))
+
+              sProcessing = sProcessing + str_GetENTER() + "Status: " +  sFileStatus
+              if sError != "":
+                 sProcessing = sProcessing + str_GetENTER() + "Error: " +  sError
+                  
+              process_PrintColor(n, sProcessing)
+
+              process_GblMessage_Set(sProcessing)
+              process_GblRecord_SumValue()
+
+              process_RefreshShowTextInDialog(procWindows, n, sProcessing)
+
+              sMsg = "\nCopying File for Destination " + process_CalculateNofTotal(m, len(lstDestination)) + ": " + sPathFileFrom + " - to: " + sPathFileTo + " - Subdir: " + str(sPathFileSubdir)
+              #DEBUGGING
+              process_DEBUG(logFile, sMsg)
 
               #print("Status: " + str(sFileStatus))
               #-------------------------------------------------------------------------------------------------------------------------
@@ -628,10 +628,15 @@ def process_CopyFiles_sub(logFile, mainWindow, procWindows, lstSource, lstDestin
        sProcessing = sProcessing + process_TotalsPrepare("Total files with WARNINGs", rows, nfile_dic_status_warning)
     if nfile_dic_status_warning_dir > 0:
        sProcessing = sProcessing + process_TotalsPrepare("Total files with WARININGs because DIRECTORY", rows, nfile_dic_status_warning_dir)
+
+    sProcessingWarningErrors = ""
     if len(sfile_dic_status_warning) > 0:
-       sProcessing = sProcessing + "\nWARNINGs: " + str(sfile_dic_status_warning)
+       sProcessingWarningErrors = sProcessingWarningErrors + "\nWARNINGs: " + str(sfile_dic_status_warning)
     if len(sfile_dic_status_error) > 0:
-       sProcessing = sProcessing + "\nERRORs: " + str(sfile_dic_status_error)
+       sProcessingWarningErrors = sProcessingWarningErrors + "\nERRORs: " + str(sfile_dic_status_error)
+
+    if sProcessingWarningErrors != "" and logFile != "":
+        sProcessing = sProcessing + "\nGOTO LOG File '" + logFile + "' for WARNING/ERROR details."
 
     sProcessing = sProcessing + "\n\nOutput File:\n" + sDFFile
 
@@ -639,10 +644,11 @@ def process_CopyFiles_sub(logFile, mainWindow, procWindows, lstSource, lstDestin
        sProcessing = sProcessing + "\nLog File:\n" + logFile
 
     process_GblMessage_Set(sProcessing)
+
     if logFile != "":
-         log_write_InfoInBlue(logFile, sProcessing)
+         log_write_InfoInBlue(logFile, sProcessing + sProcessingWarningErrors)
     else:
-        log_writePrintOnlyInfo(sProcessing)     
+        log_writePrintOnlyInfo(sProcessing + sProcessingWarningErrors)     
 
     return True, sProcessing
 
@@ -899,9 +905,10 @@ def process_GblMessage_Set(sText="", bAppend=False, bSetTime=True):
        sProcessLogNro = str_formatNro(nProcessLogNro, nProcessLineZeros)
 
        today_prn = process_GetDateTimeNow()
-       sProcessGblMsg =  ""
        if bAppend:
           sProcessGblMsg = sProcessGblMsg + sProcessLogNro + ". "
+       else:   
+          sProcessGblMsg =  ""
        sProcessGblMsg = sProcessGblMsg + today_prn + ": \n\n" + sProcessGblMsg
 
     return sProcessGblMsg
@@ -1003,6 +1010,30 @@ def process_EmitMsgProcessingProgressBar(procWindow, nValue):
 # --------------------------------------------------------------------------------------------------------------------------------------------------------
 def process_Time(nSleepSeconds=1):
     time.sleep(nSleepSeconds)  # Pause for 1 second
-    
+
+# --------------------------------------------------------------------------------------------------------------------------------------------------------
+def process_PrintDebug(nAvance, sMsg):
+    if (nAvance % nProcessRefresh) == 0 and sMsg != "":
+        log_writePrintOnlyDebug(sMsg)     
+
+# --------------------------------------------------------------------------------------------------------------------------------------------------------
+def process_PrintColor(nAvance, sMsg, bBlue=True):
+    if (nAvance % nProcessRefresh) == 0 and sMsg != "":
+        if bBlue:
+           log_writeWordsInColorBlue(sMsg)
+        else:
+           process_PrintDebug(m, sMsg)     
+
+# --------------------------------------------------------------------------------------------------------------------------------------------------------
+def process_RefreshShowTextInDialog(procWindows, nAvance, sMsg):
+    if (nAvance % nProcessRefresh) == 0 and sMsg != "":
+       #SHOW REFRESH 
+       process_EmitMsgProcessing(procWindows, sMsg)
+
+# --------------------------------------------------------------------------------------------------------------------------------------------------------
+def process_DEBUG(logFile, sMsg):
+    if bProcessingDEBUG:
+       log_write_Normal(logFile, sMsg)
+
 # --------------------------------------------------------------------------------------------------------------------------------------------------------
        
