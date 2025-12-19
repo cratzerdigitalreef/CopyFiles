@@ -878,6 +878,10 @@ def str_FloatToString(Nro, Decimals):
 
 # str_GetPorcentageToString ----------------------------------------------------------------------------------------------------------------------
 def str_GetPorcentageToString(NroBaseFrom100, Nro, Decimals=2):
+
+    if NroBaseFrom100 == 0:
+        return "0"
+    
     nNro100 = Nro * 100
     #print(nNro100)
     nReturn = float(nNro100 / NroBaseFrom100)
@@ -1323,5 +1327,16 @@ def str_DoubleWithEPlusToString(sVal):
        sReturn = sValNoEPlusInit + sValNoEPlusInitThen  
        
     return sReturn
+
+# str_CalculateNofTotal ----------------------------------------------------------------------------------------------------------
+def str_CalculateNofTotal(nItem, nTotal):
+    
+    #BECAUSE IT STARTS WITH 0 (zero)
+    nItem = nItem + 1
+
+    sPorcentage = str_GetPorcentageToString(nTotal, nItem, 2)
+    sTotal = str_AddThousandToNumber(str(nItem)) + " of total " + str_AddThousandToNumber(str(nTotal)) + " - processing = % " + sPorcentage
+    
+    return sTotal
 
 #------------------------------------------------------------------------------------

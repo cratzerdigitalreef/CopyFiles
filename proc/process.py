@@ -386,7 +386,8 @@ def process_CopyFiles_sub(logFile, mainWindow, procWindows, lstSource, lstDestin
               sLastPath = ""
               while m < len(lstFilesTemp) and not bProcessGblStop:
 
-                    if lstFilesTemp[m] not in lstFiles:
+                    # Managed duplicates later with PANDAS: drop_duplicates
+                    #if lstFilesTemp[m] not in lstFiles:
 
                        #ADDED FOR FILES TO BE PROCESSED
                        lstFilesTemp[m] = file_fNormalPathForWindowsLinux(lstFilesTemp[m])
@@ -401,13 +402,14 @@ def process_CopyFiles_sub(logFile, mainWindow, procWindows, lstSource, lstDestin
                        #sPath, sPathSubdir, sSlash = file_GetPath_From_Next(lstFilesTemp[m], lstSource[n])
                        sPathSubdir = file_getSubDirFromPath(lstFilesTemp[m], lstSource[n]) 
                        #ADDED FOR SOURCE PATH FOR FILES TO BE PREOCESSED
-                       sProcessing = "Files found [" + str_AddThousandToNumber(str(m)) + "]:"
+                       sProcessing = "Getting files - Iteration: " + process_CalculateNofTotal(n, nSource)
+                       sProcessing = sProcessing + " - Files found [" + str_AddThousandToNumber(str(m+1)) + "]:"
                        sProcessing = sProcessing + "\n" + str(lstFilesTemp[m])
-                       sProcessing = sProcessing + " - Directory for source [" + str(n) + "]: " + str(lstSource[n])
-                       #if sPathSubdir != "":
-                       sProcessing = sProcessing + " - sPathSubdir: " + str(sPathSubdir)
+                       sProcessing = sProcessing + " - Directory for source [" + str(str_AddThousandToNumber(n)) + "]: " + str(lstSource[n])
+                       if sPathSubdir != "":
+                          sProcessing = sProcessing + " - sPathSubdir: " + str(sPathSubdir)
 
-                       log_writeWordsInColorBlue("\n" + sPrintAsterics + sProcessing)
+                       process_PrintColor(m, "\n" + sPrintAsterics + sProcessing)
 
                        #DEBUGGING
                        process_DEBUG(logFile, sProcessing)
@@ -418,20 +420,21 @@ def process_CopyFiles_sub(logFile, mainWindow, procWindows, lstSource, lstDestin
 
                        #SIGNALs to PROCESS WINDOW
           
-                    else:
-                       sProcessingT = sProcessing
-                       sProcessing = sProcessing + "\nItem [" + str(m) + "]: " + lstFilesTemp[m] + " already exists under source list 'lstFiles'"
-                       process_PrintDebug(m, sProcessing)
+                    # TRYNING TO BE FASTER ADDING DUPLICATES AND REMOVING THEM LATER WITH PANDAS
+                    #else:
+                    #   sProcessingT = sProcessing
+                    #   sProcessing = sProcessing + "\nItem [" + str(m) + "]: " + lstFilesTemp[m] + " already exists under source list 'lstFiles'"
+                    #   process_PrintDebug(m, sProcessing)
 
-                       #DEBUGGING
-                       process_DEBUG(logFile, sProcessing)
+                    #   #DEBUGGING
+                    #   process_DEBUG(logFile, sProcessing)
 
-                       sProcessing = sProcessingT
+                    #   sProcessing = sProcessingT
 
-                    process_RefreshShowTextInDialog(procWindows, m, sProcessing)
+                       process_RefreshShowTextInDialog(procWindows, m, sProcessing)
 
                     #pyqt_windowRefresh(mainWindow)
-                    m = m + 1
+                       m = m + 1
           else:
               sProcessingT = sProcessing
               sProcessingT = sProcessingT + "\n" + "There are NO files or directories under item [" + str(n) + "]: " + lstSource[n]
@@ -446,32 +449,9 @@ def process_CopyFiles_sub(logFile, mainWindow, procWindows, lstSource, lstDestin
 
     log_write_OKInGreen(logFile, "Total Files records before Pandas = " + str_AddThousandToNumber(str(len(lstFiles))) + " from: " + str_AddThousandToNumber(str(len(lstFilesPathSubdir))))
 
-    process_GblRecord_Clean()
-    process_GblMessage_Clean()
-    sProcessing = "Preparing Pandas Data Frame with founded files..."
-    process_GblMessage_Set(sProcessing)
-
-    #------------------------------------------------------------------------------------------------------------------
-    #PREPARING A PANDAS DICT WITH THE PREVIOUS LIST
-    dict_df_file = file_pandasFileRecord_CreateDicWithFileLstAddingStats(lstFiles, lstFilesPathSubdir)
-
-    #GENERATE A CSV FILE WITH PANDAS DF
-    today = datetime.now()
-    today_prn = today.strftime("%Y-%m-%d")
-    sDFFile = "CopyFiles" + "_" + today_prn + "csv"
-    if logFile != "":
-         sDFFile = logFile + "_DF.csv"
-    dict_df_file.to_csv(sDFFile, index=True)
-    #------------------------------------------------------------------------------------------------------------------
-
-    #START PROCESS
-    dict_df_file_cols = dict_df_file.columns.tolist()
-    rows, cols = dict_df_file.shape 
-    log_write_Normal(logFile, "Pandas Columns header = " + str(dict_df_file_cols) + " Total Columns=" + str(cols))
-    log_write_Normal(logFile, "Total records with Pandas = " + str(rows))
-
-    #SET PROGRESS BAR RANGE
-    procWindows.progress_bar.setRange(0, rows)
+    sDFFile = ""
+    rows = 0
+    cols = 0
 
     #TOTALs
     nfile_dic_status_copied = 0
@@ -482,14 +462,43 @@ def process_CopyFiles_sub(logFile, mainWindow, procWindows, lstSource, lstDestin
     sfile_dic_status_warning = ""
     sfile_dic_status_error = ""
 
-    nCols = 0
-    n = 0
-    sSlash = ""
-    
-    #------------------------------------------------------------------------------------------------------------------
-    # READING PANDAS DATA FRAME
+    if not bProcessGblStop:
+       
+       process_GblRecord_Clean()
+       process_GblMessage_Clean()
+       sProcessing = "Preparing Pandas Data Frame with founded files..."
+       process_GblMessage_Set(sProcessing)
 
-    for row1 in dict_df_file.itertuples():
+       #------------------------------------------------------------------------------------------------------------------
+       #PREPARING A PANDAS DICT WITH THE PREVIOUS LIST
+       dict_df_file = file_pandasFileRecord_CreateDicWithFileLstAddingStats(lstFiles, lstFilesPathSubdir)
+
+       #GENERATE A CSV FILE WITH PANDAS DF
+       today = datetime.now()
+       today_prn = today.strftime("%Y-%m-%d")
+       sDFFile = "CopyFiles" + "_" + today_prn + "csv"
+       if logFile != "":
+          sDFFile = logFile + "_DF.csv"
+       dict_df_file.to_csv(sDFFile, index=True)
+       #------------------------------------------------------------------------------------------------------------------
+
+       #START PROCESS
+       dict_df_file_cols = dict_df_file.columns.tolist()
+       rows, cols = dict_df_file.shape 
+       log_write_Normal(logFile, "Pandas Columns header = " + str(dict_df_file_cols) + " Total Columns=" + str(cols))
+       log_write_Normal(logFile, "Total records with Pandas = " + str(rows))
+
+       #SET PROGRESS BAR RANGE
+       procWindows.progress_bar.setRange(0, rows)
+
+       nCols = 0
+       n = 0
+       sSlash = ""
+    
+       #------------------------------------------------------------------------------------------------------------------
+       # READING PANDAS DATA FRAME
+
+       for row1 in dict_df_file.itertuples():
 
           #pyqt_windowRefresh(mainWindow)
 
@@ -589,7 +598,8 @@ def process_CopyFiles_sub(logFile, mainWindow, procWindows, lstSource, lstDestin
     #------------------------------------------------------------------------------------------------------------------
 
     #UPDATE CSV FILE
-    dict_df_file.to_csv(sDFFile, index=True)
+    if sDFFile != "":
+       dict_df_file.to_csv(sDFFile, index=True)
 
     process_GbRunning_False()
     process_GbDateTimeStartedFinished_Set(False)
@@ -984,15 +994,7 @@ def process_GetDateTimeNow():
 
 # process_CalculateNofTotal ----------------------------------------------------------------------------------------------------------
 def process_CalculateNofTotal(nItem, nTotal):
-    
-    #BECAUSE IT STARTS WITH 0 (zero)
-    nItem = nItem + 1
-
-    sPorcentage = str_GetPorcentageToString(nTotal, nItem, 2)
-    sTotal = str_AddThousandToNumber(str(nItem)) + " of total " + str_AddThousandToNumber(str(nTotal)) + " - processing = % " + sPorcentage
-    
-    return sTotal
-
+    return str_CalculateNofTotal(nItem, nTotal)
 
 # --------------------------------------------------------------------------------------------------------------------------------------------------------
 def process_EmitMsgProcessing(procWindow, sMsg):      
@@ -1022,7 +1024,7 @@ def process_PrintColor(nAvance, sMsg, bBlue=True):
         if bBlue:
            log_writeWordsInColorBlue(sMsg)
         else:
-           process_PrintDebug(m, sMsg)     
+           process_PrintDebug(nAvance, sMsg)     
 
 # --------------------------------------------------------------------------------------------------------------------------------------------------------
 def process_RefreshShowTextInDialog(procWindows, nAvance, sMsg):

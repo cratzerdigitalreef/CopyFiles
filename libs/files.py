@@ -26,6 +26,7 @@ from validanro import *
 
 file_slashdouble = "\\" 
 file_slash = "/" 
+file_nRefresh = 100
 
 import pandas as pd
 
@@ -722,6 +723,9 @@ def file_pandasFileRecord_CreateDicWithFileLstAddingStats(lstFiles, lstFilesFrom
     n = 0
     while n < len(lstFiles):
 
+         if (n % file_nRefresh) == 0:
+             log_writeWordsInColorMagenta("Preparing data for Pandas Data Frame: " + str_CalculateNofTotal(n, len(lstFiles)))
+
          #print("file_createPandaDicWithFileLstAddingStats = file " + str(n) + " : " + str(lstFiles[n]))
 
          if file_FileExists(lstFiles[n]):
@@ -759,7 +763,18 @@ def file_pandasFileRecord_CreateDicWithFileLstAddingStats(lstFiles, lstFilesFrom
 
          n = n + 1
     
+    log_writePrintOnlyWarning("Creating Pandas Data Frame with files list. Total items: " + str(len(files)))
     dfFiles = pd.DataFrame(files)
+    #DROP DUPLICATES
+    #https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.drop_duplicates.html
+    # inplace=True => Remove duplicates in the original DataFrame
+    # subset=[file_dic_path_file] => Keep the first occurrence of rows with duplicate 'Name' and 'City'
+    # keep='last' => Keep the last occurrence of entirely duplicate rows - if subset is defined, this should not be defined.
+    nItemsBefore = len(dfFiles)
+    log_writePrintOnlyWarning("Removing Pandas Data Frame duplicates. Total items BEFORE: " + str(len(dfFiles)))
+    dfFiles.drop_duplicates(subset=[file_dic_path_file],inplace=True)
+    nItemsAfter = len(dfFiles)
+    log_writePrintOnlyWarning("Removing Pandas Data Frame duplicates. Total items AFTER: " + str(len(dfFiles)) + " - Removed: " + str(nItemsAfter - nItemsBefore))
 
     if bSort:
        if bSortByName and len(files) > 0:
