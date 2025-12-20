@@ -26,7 +26,7 @@ from validanro import *
 
 file_slashdouble = "\\" 
 file_slash = "/" 
-file_nRefresh = 100
+file_nRefresh = 1000
 
 import pandas as pd
 
@@ -716,7 +716,7 @@ def file_getFileState(sPathAndFile, sLogFile=""):
 #---------------------------------------------------------------------------------------------------------
 # file_createPandaDicWithFileLstAddingStats
 #---------------------------------------------------------------------------------------------------------
-def file_pandasFileRecord_CreateDicWithFileLstAddingStats(lstFiles, lstFilesFrom, bSort=False, bSortByName=True):
+def file_pandasFileRecord_CreateDicWithFileLstAddingStats(dfInput, lstFiles, lstFilesFrom, bSort=False, bSortByName=True):
     
     files = []
 
@@ -782,7 +782,10 @@ def file_pandasFileRecord_CreateDicWithFileLstAddingStats(lstFiles, lstFilesFrom
        else:
           dfFiles = file_PandasDicSorted(dfFiles, file_dic_size)
             
-        
+    #BECAUSE OF MEMORY PROBLEMS, IT MUST BE MANAGED BY RANGES        
+    if len(dfInput) > 0:        
+       dfFiles = pd.concat([dfInput, dfFiles], ignore_index=True)
+
     return dfFiles
 
 #---------------------------------------------------------------------------------------------------------

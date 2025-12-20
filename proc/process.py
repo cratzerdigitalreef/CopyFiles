@@ -363,8 +363,14 @@ def process_CopyFiles_sub(logFile, mainWindow, procWindows, lstSource, lstDestin
     #GETTING ALL PATHs AND FILEs    
     lstFiles = []
     lstFilesPathSubdir = []
+
+    #PANDAS DATA FRAME FOR MANAGING FILES DATA
+    dict_df_file = pd.DataFrame()
+
     n = 0
     nSource = len(lstSource)
+    sSourceOld = ""
+    sSourceLast = ""
 
     #------------------------------------------------------------------------------------------------------------------
     #PREPARING DICTONARY GETTING ALL FILES AND DIRECTORIES FROM SOURCE LIST
@@ -372,6 +378,8 @@ def process_CopyFiles_sub(logFile, mainWindow, procWindows, lstSource, lstDestin
 
           lstSource[n]= file_fNormalPathForWindowsLinux(lstSource[n])
           sProcessing = "Processing source: " + process_CalculateNofTotal(n, nSource) + " - " + str(lstSource[n])
+          if len(dict_df_file) > 0:
+             sProcessing = sProcessing + " - Pandas Data Frame Length: " + str_AddThousandToNumber(str(len(dict_df_file)))
 
           process_PrintColor(n, sProcessing)
           process_RefreshShowTextInDialog(procWindows, n, sProcessing)
@@ -443,8 +451,29 @@ def process_CopyFiles_sub(logFile, mainWindow, procWindows, lstSource, lstDestin
               if bProcessingDEBUG:
                  log_write_Normal(logFile, sProcessingT)     
     
+          #------------------------------------------------------------------------------------------------------------------
+          #PREPARING A PANDAS DICT WITH THE PREVIOUS LIST
+          #DONE NOW BECAUSE MEMORY PROBLEMS WITH LARGE DATA
+          if (n & file_nRefresh) == 0:
+             dict_df_file = file_pandasFileRecord_CreateDicWithFileLstAddingStats(dict_df_file, lstFiles, lstFilesPathSubdir)
+             sSourceLast = lstSource[n-1]
+             lstSource = []
+             lstSource.append(sSourceLast)
+             nSource = len(lstSource)
+             log_writeWordsInColorYellow("Flush data to Pandas Data Frame. Iteraction: " + str(n) + " - last data: " + sSourceLast + " - Source Length: " + str(nSource))
+             n = 0
+
+             if sSourceOld == sSourceLast and sSourceLast != "":
+                 #STOP PROCESS
+                 n = nSource
+             else:
+                 sSourceOld = sSourceLast    
+          else:
+             n = n + 1 
+   
           pyqt_windowRefresh(mainWindow)
-          n = n + 1 
+
+
     #------------------------------------------------------------------------------------------------------------------
 
     log_write_OKInGreen(logFile, "Total Files records before Pandas = " + str_AddThousandToNumber(str(len(lstFiles))) + " from: " + str_AddThousandToNumber(str(len(lstFilesPathSubdir))))
@@ -463,7 +492,10 @@ def process_CopyFiles_sub(logFile, mainWindow, procWindows, lstSource, lstDestin
     sfile_dic_status_error = ""
 
     if not bProcessGblStop:
-       
+
+       #ADD THE LAST REMANENT
+       dict_df_file = file_pandasFileRecord_CreateDicWithFileLstAddingStats(dict_df_file, lstFiles, lstFilesPathSubdir)
+
        process_GblRecord_Clean()
        process_GblMessage_Clean()
        sProcessing = "Preparing Pandas Data Frame with founded files..."
@@ -471,7 +503,8 @@ def process_CopyFiles_sub(logFile, mainWindow, procWindows, lstSource, lstDestin
 
        #------------------------------------------------------------------------------------------------------------------
        #PREPARING A PANDAS DICT WITH THE PREVIOUS LIST
-       dict_df_file = file_pandasFileRecord_CreateDicWithFileLstAddingStats(lstFiles, lstFilesPathSubdir)
+       #DONE BEFORE BECAUSE MEMORY PROBLEMS WITH LARGE DATA
+       #dict_df_file = file_pandasFileRecord_CreateDicWithFileLstAddingStats(lstFiles, lstFilesPathSubdir)
 
        #GENERATE A CSV FILE WITH PANDAS DF
        today = datetime.now()
