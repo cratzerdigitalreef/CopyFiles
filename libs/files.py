@@ -765,6 +765,11 @@ def file_pandasFileRecord_CreateDicWithFileLstAddingStats(dfInput, lstFiles, lst
     
     log_writePrintOnlyWarning("Creating Pandas Data Frame with files list. Total items: " + str(len(files)))
     dfFiles = pd.DataFrame(files)
+
+    #BECAUSE OF MEMORY PROBLEMS, IT MUST BE MANAGED BY RANGES        
+    if len(dfInput) > 0:        
+       dfFiles = pd.concat([dfInput, dfFiles], ignore_index=True)
+
     #DROP DUPLICATES
     #https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.drop_duplicates.html
     # inplace=True => Remove duplicates in the original DataFrame
@@ -772,7 +777,8 @@ def file_pandasFileRecord_CreateDicWithFileLstAddingStats(dfInput, lstFiles, lst
     # keep='last' => Keep the last occurrence of entirely duplicate rows - if subset is defined, this should not be defined.
     nItemsBefore = len(dfFiles)
     log_writePrintOnlyWarning("Removing Pandas Data Frame duplicates. Total items BEFORE: " + str(len(dfFiles)))
-    dfFiles.drop_duplicates(subset=[file_dic_path_file],inplace=True)
+    #dfFiles = dfFiles.drop_duplicates(subset=[file_dic_path_file],inplace=False)
+    dfFiles.drop_duplicates(subset=[file_dic_path_file], keep="first", inplace=True)
     nItemsAfter = len(dfFiles)
     log_writePrintOnlyWarning("Removing Pandas Data Frame duplicates. Total items AFTER: " + str(len(dfFiles)) + " - Removed: " + str(nItemsAfter - nItemsBefore))
 
@@ -781,10 +787,6 @@ def file_pandasFileRecord_CreateDicWithFileLstAddingStats(dfInput, lstFiles, lst
           dfFiles = file_PandasDicSorted(dfFiles, file_dic_path_file, True)
        else:
           dfFiles = file_PandasDicSorted(dfFiles, file_dic_size)
-            
-    #BECAUSE OF MEMORY PROBLEMS, IT MUST BE MANAGED BY RANGES        
-    if len(dfInput) > 0:        
-       dfFiles = pd.concat([dfInput, dfFiles], ignore_index=True)
 
     return dfFiles
 
