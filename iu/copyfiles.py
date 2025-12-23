@@ -559,17 +559,18 @@ class CopyFilesHomeScreen:
                 pyqt_MsgBox_Warning(sHeader, sMsgStart + "It must be more than 1 for sorting data")
                 return 
 
-            #REMOVE ITEMS
-            n = 0
-            while n < len(lstSource):
-                self.Cmd_del(bSource, False)
-                n = n + 1
-
             #SORT
             #print("Before sort: " + str(lstSource))
             lstSourceBefore = lstSource.copy()
             lstSource.sort()
             #print("After sort: " + str(lstSource))
+
+            #REMOVE ITEMS
+            n = len(lstSource) - 1
+            while n >= 0:
+                self.nRowCurrentSource = n
+                self.Cmd_del(bSource, False)
+                n = n - 1
 
             #ADD ITEMS
             n = 0 
@@ -591,15 +592,16 @@ class CopyFilesHomeScreen:
                 pyqt_MsgBox_Warning(sHeader, sMsgStart + "It must be more than 1 for sorting data")
                 return 
 
-            #REMOVE ITEMS
-            n = 0
-            while n < len(lstDestination):
-                self.Cmd_del(bSource, False)
-                n = n + 1
-
             #SORT
             lstDestinationBefore = lstDestination.copy()
             lstDestination.sort()
+
+            #REMOVE ITEMS
+            n = len(lstDestination) - 1
+            while n >= 0:
+                self.nRowCurrentDestination = n
+                self.Cmd_del(bSource, False)
+                n = n - 1
 
             #ADD ITEMS
             n = 0 

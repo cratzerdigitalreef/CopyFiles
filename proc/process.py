@@ -475,16 +475,16 @@ def process_CopyFiles_sub(logFile, mainWindow, procWindows, lstSource, lstDestin
                      j = j + 1
 
              lstSource.append(sSourceLast)
-             #print("REFRESH - sSourceLast: " + str(sSourceLast) + " - lstSourceAtInit[len(lstSourceAtInit)-1]: " + lstSourceAtInit[len(lstSourceAtInit)-1])
+             print("REFRESH - sSourceLast: " + str(sSourceLast) + " - lstSourceAtInit[len(lstSourceAtInit)-1]: " + lstSourceAtInit[len(lstSourceAtInit)-1])
 
              nSource = len(lstSource)
 
-             #print("REFRESH - lstSource length: " + str(len(lstSource)) + "\n" + str(lstSource))
+             print("REFRESH - lstSource length: " + str(len(lstSource)) + "\n" + str(lstSource))
 
              log_writeWordsInColorYellow("Flush data to Pandas Data Frame. Iteraction: " + str(n) + " - last data: " + sSourceLast + " - Source Length: " + str(nSource))
              n = 0
 
-             if (sSourceOld == sSourceLast and sSourceLast != "") or (sSourceLast == lstSourceAtInit[len(lstSourceAtInit)-1]):
+             if (sSourceOld == sSourceLast and sSourceLast != "" and len(lstSource) <= 1) or (sSourceLast == lstSourceAtInit[len(lstSourceAtInit)-1]):
                  #STOP PROCESS
                  n = nSource
              else:
