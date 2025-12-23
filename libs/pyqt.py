@@ -127,6 +127,19 @@ def pyqt_ButtonGetText(obj):
     return txt   
 
 #---------------------------------------------------------------------------------------------------------
+def pyqt_Show(obj):
+    pyqt_Visible(obj, True)
+
+#---------------------------------------------------------------------------------------------------------
+def pyqt_Hide(obj):
+    pyqt_Visible(obj, False)
+
+#---------------------------------------------------------------------------------------------------------
+def pyqt_Visible(obj, bVisible=True):
+    if obj:   
+       obj.setVisible(bVisible)
+
+#---------------------------------------------------------------------------------------------------------
 def pyqt_OpenFileDlgForSave(parent, sTitle, sPath, sFilters="All Files (*)", bDirOnly=False):
     return pyqt_OpenFileDlg(parent, sTitle, sPath, sFilters, bDirOnly, True, False)
 

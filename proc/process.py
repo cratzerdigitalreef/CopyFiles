@@ -372,9 +372,16 @@ def process_CopyFiles_sub(logFile, mainWindow, procWindows, lstSource, lstDestin
     sSourceOld = ""
     sSourceLast = ""
 
+    nStartAddingFromInit = 0
+
     #------------------------------------------------------------------------------------------------------------------
     #PREPARING DICTONARY GETTING ALL FILES AND DIRECTORIES FROM SOURCE LIST
     while n < nSource and not bProcessGblStop:
+
+          #FOR CHECKING WHETHER TO ADD SOURCES FROM INIT
+          if nStartAddingFromInit < len(lstSourceAtInit):
+             if lstSource[n] == lstSourceAtInit[nStartAddingFromInit]:
+                nStartAddingFromInit = nStartAddingFromInit + 1
 
           lstSource[n]= file_fNormalPathForWindowsLinux(lstSource[n])
           sProcessing = "Processing source: " + process_CalculateNofTotal(n, nSource) + " - " + str(lstSource[n])
@@ -458,12 +465,26 @@ def process_CopyFiles_sub(logFile, mainWindow, procWindows, lstSource, lstDestin
              dict_df_file = file_pandasFileRecord_CreateDicWithFileLstAddingStats(dict_df_file, lstFiles, lstFilesPathSubdir)
              sSourceLast = lstSource[n-1]
              lstSource = []
+
+             if len(lstSourceAtInit) > 1:
+                 #IT IS NEEDED TO BE ADDED THE OTHER SOURCES
+                 j = nStartAddingFromInit
+                 while j < len(lstSourceAtInit):
+                     if lstSourceAtInit[j] not in str(lstSource):
+                        lstSource.append(lstSourceAtInit[j])
+                     j = j + 1
+
              lstSource.append(sSourceLast)
+             #print("REFRESH - sSourceLast: " + str(sSourceLast) + " - lstSourceAtInit[len(lstSourceAtInit)-1]: " + lstSourceAtInit[len(lstSourceAtInit)-1])
+
              nSource = len(lstSource)
+
+             #print("REFRESH - lstSource length: " + str(len(lstSource)) + "\n" + str(lstSource))
+
              log_writeWordsInColorYellow("Flush data to Pandas Data Frame. Iteraction: " + str(n) + " - last data: " + sSourceLast + " - Source Length: " + str(nSource))
              n = 0
 
-             if sSourceOld == sSourceLast and sSourceLast != "":
+             if (sSourceOld == sSourceLast and sSourceLast != "") or (sSourceLast == lstSourceAtInit[len(lstSourceAtInit)-1]):
                  #STOP PROCESS
                  n = nSource
              else:
@@ -493,6 +514,7 @@ def process_CopyFiles_sub(logFile, mainWindow, procWindows, lstSource, lstDestin
 
     if not bProcessGblStop:
 
+       #print("LAST - lstFiles length: " + str(len(lstFiles)) + "\n" + str(lstFiles))
        #ADD THE LAST REMANENT
        dict_df_file = file_pandasFileRecord_CreateDicWithFileLstAddingStats(dict_df_file, lstFiles, lstFilesPathSubdir)
 
@@ -847,6 +869,7 @@ def process_CopyFiles_CopyFromTo_PreparePathTo(sPathTo, sFilePath, sPathFileSubd
     #Final destination path desired: g:\temp\7Bits for 7Bits.exe
 
     if sPathFileSubdir != "":
+
         #EXAMPLE 3
         #sFilePath: D:\Temp\vbp\DLLs\ADO\Cls\clsADO.cls
         #sFilePathParent: "Cls"
@@ -855,35 +878,16 @@ def process_CopyFiles_CopyFromTo_PreparePathTo(sPathTo, sFilePath, sPathFileSubd
         #sPathSubdir: \ADO\Cls\
         #Final destination path desired: g:\temp\DLLs\ADO\Cls for clsADO.cls
 
-        lstTemp = sFilePath.split(sPathFileSubdir)
-        #print("process_CopyFiles_CopyFromTo_PreparePathTo - lstTemp: " + str(lstTemp))
-        
-        sTemp = ""
-        if len(lstTemp) > 2:
+        #EXAMPLE 4 
+        #sFilePath:  D:\Temp\vbp\AgendaC\vbp\DLLs
+        #sFilePathParent: "vbp"
+        #sPathTo: g:\Temp
+        #sPathToParent: Temp
+        #sPathSubdir: \vbp\AgendaC\
+        #Final destination path desired: g:\temp\vbp\AgendaC\ for DLLs path
 
-            #EXAMPLE 4
-            #sFilePath:  D:\Temp\vbp\AgendaC\vbp\DLLs
-            #sFilePathParent: "Cls"
-            #sPathTo: G:/Temp
-            #sPathToParent: Temp
-            #sPathSubdir: \vbp\
-            #Final destination path desired: G:\Temp\AgendaC\vbp\
+        sTemp = files_getPathFromLastOcurrencePattern(sFilePath, sPathFileSubdir)
 
-            n = 0
-    
-            # len(lstTemp)-1 => -1 because the last item is not needed to be preocessed
-            while n < (len(lstTemp)-1):
-                sTemp = sTemp + lstTemp[n]
-    
-                # len(lstTemp)-2 => -2 because the separator is needed but not at the last item
-                if n < (len(lstTemp)-2):
-                   sTemp = sTemp + sPathFileSubdir 
-                n = n + 1
-
-            #bExit = True    
-
-        else:    
-           sTemp = lstTemp[0]
         #sTemp = D:\Temp\vbp\DLLs\
         #sFilePathParent = file_PathAndFile_GetParent(sTemp)
         sFilePathParent = file_PathAndFile_GetFileName(sTemp)

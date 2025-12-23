@@ -243,6 +243,8 @@ class CopyFilesHomeScreen:
         self.btn_destination_sort = self.window.findChild(QPushButton, "pbDestinationSort") 
         if self.btn_destination_sort: # Check if the object exists
            self.btn_destination_sort.clicked.connect(self.CmdDestination_sort)
+           # AS THE DESTINATION IS ALWAYS 1, NOT NEEDED SORT
+           pyqt_Hide(self.btn_destination_sort)
         else:
             print(sErrorNotExist + "QPushButton pbDestinationSort")   
 
@@ -636,6 +638,10 @@ class CopyFilesHomeScreen:
            if not bResponse:
               pyqt_MsgBox_Warning("WARNING", "Process cancelled!")
               return bResponse
+
+        if len(lstDestination) > 1:
+              pyqt_MsgBox_Warning("WARNING", "The maximum items for destination is 1 (one).")
+              return False
 
         #DISABLE MAIN SCREEN
         self.processEnableDisable(False)

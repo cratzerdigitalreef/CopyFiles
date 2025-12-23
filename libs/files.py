@@ -1118,7 +1118,7 @@ def file_delete(sPathFileSource):
 #---------------------------------------------------------------------------------------------------------
 def file_compare(sPathFileSource, sPathFileDestination, bValidateDateCreation=False):
 
-    sProcess = "Compating Files: "
+    sProcess = "Comparing Files: "
     sError = sProcess + "Source = '" + sPathFileSource + "', Destination = '" + sPathFileDestination + "'. ERROR: "
 
     try:
@@ -1171,11 +1171,17 @@ def file_compare(sPathFileSource, sPathFileDestination, bValidateDateCreation=Fa
 #         sPathFile: D:/Temp/vbp/GSMApp/Digitel-Ricardo/Backup/DIG00071.inp
 #         sPattern: D:/Temp/vbp/GSMApp
 #         bRemoveFileName = True        
+#         3)
+#         sPathFile: G:\\Carlos\\Valid\\RegionalTechnicalManager\\OperatingSystems\\Samsung\\Base0043_0100\\Valid
+#         sPattern: G:\\Carlos
+#         bRemoveFileName = True        
 # Returns:
 #         1)
 #         Temp\DatabaseRead\
 #         2)
 #         /Digitel-Ricardo/Backup/
+#         3)
+#         \Valid\DegionalTechnicalManager\OperatingSystems\Samsung\Base0043_0100\
 #---------------------------------------------------------------------------------------------------------
 def file_getSubDirFromPath(sPathFile, sPattern, bRemoveFileName=True):
     sReturn = ""
@@ -1190,7 +1196,8 @@ def file_getSubDirFromPath(sPathFile, sPattern, bRemoveFileName=True):
        if bRemoveFileName and sReturn != "":
            sReturnT = file_PathAndFile_GetFileName(sReturn)
            if sReturnT != "":
-               sReturn = str_getSubStringFromOcur(sReturn, sReturnT, 0)
+               #sReturn = str_getSubStringFromOcur(sReturn, sReturnT, 0)
+               sReturn = files_getPathFromLastOcurrencePattern(sReturn, sReturnT)
 
     #print("file_getSubDirFromPath - sReturn: " + str(sReturn))
 
@@ -1199,6 +1206,8 @@ def file_getSubDirFromPath(sPathFile, sPattern, bRemoveFileName=True):
     #sPattern = str("D:/Temp/vbp/GSMApp")
     #sTemp = file_getSubDirFromPath(sFile, sPattern)
     #print("sFile: " + str(sFile) + " - sPattern: " + str(sPattern) + " - sResult: " + str(sTemp))
+    #sPathSubdir = file_getSubDirFromPath("G:\\Carlos\\Valid\\RegionalTechnicalManager\\OperatingSystems\\Samsung\\Base0043_0100\\Valid", "G:\\Carlos")
+    #print("sPathSubdir: " + str(sPathSubdir))
     #exit(0)
 
     if sReturn == sSlash:
@@ -1268,5 +1277,74 @@ def check_admin_group_membership():
         print(f"User '{username}' is a Standard user (not in Administrators group).")
 
     return is_admin    
+
+
+#---------------------------------------------------------------------------------------------------------
+# files_getPathFromLastOcurrencePattern
+# sPath: path to process. 
+#        Example: G:\Carlos\Valid\RegionalTechnicalManager\OperatingSystems\Samsung\Base0043_0100\Valid
+# sPattern: Reference to get previous path. 
+#        Example: Valid
+# Returns: Path without Pattern, but taking into account last ocurrence for pattern, not first one when it is duplicated inside path.
+#        G:\Carlos\Valid\RegionalTechnicalManager\OperatingSystems\Samsung\Base0043_0100
+#---------------------------------------------------------------------------------------------------------
+def files_getPathFromLastOcurrencePattern(sPath, sPattern):
+
+    sSlash = file_getFileSlash(sPath)
+
+    if sPath == "" or sPattern == "":
+        return sPath
+
+    sPatternSlash = sPattern
+    if str_left(sPattern, len(sSlash)) != sSlash:
+        #THIS IS BECAUSE THE CASE 
+        #Path: G:\Carlos\DigitalReef\GitHub\.metadata\.plugins\org.eclipse.core.resources\.history\f
+        #Pattern: f
+        #It must be analized "\f" and not only "f" to avoid getting "G:\Carlos\DigitalRee"
+        if (sSlash + sPattern) in sPath:
+           sPatternSlash = sSlash + sPattern
+    if str_right(sPattern, len(sSlash)) != sSlash:
+        #THIS IS BECAUSE THE CASE 
+        #Path: G:\Carlos\Valid\RegionalTechnicalManager\OperatingSystems\ST\ST32F-M.pdf
+        #Pattern: ST
+        #It must be analized "\ST\" and not only "\ST"
+        if (sPattern + sSlash) in sPath:
+           sPatternSlash = sPatternSlash + sSlash
+
+    lstTemp = sPath.split(sPatternSlash)
+    #print("files_getPathFromLastOcurrencePattern - lstTemp: " + str(lstTemp))
+        
+    sReturn = ""
+    if len(lstTemp) > 2:
+
+       #EXAMPLE 
+       #sPath:  D:\Temp\vbp\AgendaC\vbp\DLLs
+       #sPattern: "vbp"
+       #sReturn: G:\Temp\AgendaC\vbp\
+
+       n = 0
+    
+       # len(lstTemp)-1 => -1 because the last item is not needed to be preocessed
+       while n < (len(lstTemp)-1):
+             sReturn = sReturn + lstTemp[n]
+    
+             # len(lstTemp)-2 => -2 because the separator is needed but not at the last item
+             if n < (len(lstTemp)-2):
+                sReturn = sReturn + sPattern 
+             n = n + 1
+
+            #bExit = True    
+
+    else:    
+        #EXAMPLE
+        #sPath: D:\Temp\vbp\DLLs\ADO\Cls\clsADO.cls
+        #sPattern: "Cls"
+        #sReturn: D:\Temp\vbp\DLLs\ADO\
+
+        sReturn = lstTemp[0]
+
+    #print("files_getPathFromLastOcurrencePattern - sReturn: " + str(sReturn))
+
+    return sReturn
 
 #------------------------------------------------------------------------------------
