@@ -27,6 +27,7 @@ from validanro import *
 file_slashdouble = "\\" 
 file_slash = "/" 
 file_nRefresh = 1000
+file_sSeparaFileTo = ";"
 
 import pandas as pd
 
@@ -778,7 +779,9 @@ def file_pandasFileRecord_CreateDicWithFileLstAddingStats(dfInput, lstFiles, lst
     nItemsBefore = len(dfFiles)
     log_writePrintOnlyWarning("Removing Pandas Data Frame duplicates. Total items BEFORE: " + str(len(dfFiles)))
     #dfFiles = dfFiles.drop_duplicates(subset=[file_dic_path_file],inplace=False)
+    #dfFiles.drop_duplicates(subset=[file_dic_path_file, file_dic_path_to], keep="first", inplace=True)
     dfFiles.drop_duplicates(subset=[file_dic_path_file], keep="first", inplace=True)
+
     nItemsAfter = len(dfFiles)
     log_writePrintOnlyWarning("Removing Pandas Data Frame duplicates. Total items AFTER: " + str(len(dfFiles)) + " - Removed: " + str(nItemsAfter - nItemsBefore))
 
@@ -863,6 +866,12 @@ def file_dic_pandasFileRecord_get_path_to(df_row):
     return file_dic_pandasFileRecord_get(df_row, file_dic_path_to_nro)
 
 #---------------------------------------------------------------------------------------------------------
+# file_dic_pandasFileRecord_get_path_toByRowNro
+#---------------------------------------------------------------------------------------------------------
+def file_dic_pandasFileRecord_get_path_toByRowNro(df, nRow):
+    return file_dic_pandasFileRecord_getByDF(df, nRow, file_dic_path_to_nro)
+
+#---------------------------------------------------------------------------------------------------------
 # file_pandasFileRecord_get_path_from
 #---------------------------------------------------------------------------------------------------------
 def file_dic_pandasFileRecord_get_path_subdir(df_row):
@@ -884,6 +893,12 @@ def file_dic_pandasFileRecord_get_file_parent(df_row):
 # file_dic_pandasFileRecord_get_status
 #---------------------------------------------------------------------------------------------------------
 def file_dic_pandasFileRecord_get_status(df, nRow):
+    return file_dic_pandasFileRecord_getByDF(df, nRow, file_dic_status_nro)
+
+#---------------------------------------------------------------------------------------------------------
+# file_dic_pandasFileRecord_get_statusByRowNro
+#---------------------------------------------------------------------------------------------------------
+def file_dic_pandasFileRecord_get_statusByRowNro(df, nRow):
     return file_dic_pandasFileRecord_getByDF(df, nRow, file_dic_status_nro)
 
 #---------------------------------------------------------------------------------------------------------

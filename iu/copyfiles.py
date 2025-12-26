@@ -244,7 +244,7 @@ class CopyFilesHomeScreen:
         if self.btn_destination_sort: # Check if the object exists
            self.btn_destination_sort.clicked.connect(self.CmdDestination_sort)
            # AS THE DESTINATION IS ALWAYS 1, NOT NEEDED SORT
-           pyqt_Hide(self.btn_destination_sort)
+           #pyqt_Hide(self.btn_destination_sort)
         else:
             print(sErrorNotExist + "QPushButton pbDestinationSort")   
 
@@ -629,7 +629,7 @@ class CopyFilesHomeScreen:
 
         bAdmin = True
         if not bAdmin:   
-           #NOT USED PER NOW
+           #NOT USED PER NOW BECAUSE, ALTHOUTH THE USER HAS ADMIN RIGHTS, IT IS NOT RIGHT RETRIEVED THEM
            sMsg = "Username '" + files_getUserName() + "' must be Administrator for executing this program, because permissions for deleting files and directories."
            if sErrorAdmin != "":
                sMsg = sMsg + "\n\n" + sErrorAdmin
@@ -641,9 +641,10 @@ class CopyFilesHomeScreen:
               pyqt_MsgBox_Warning("WARNING", "Process cancelled!")
               return bResponse
 
-        if len(lstDestination) > 1:
-              pyqt_MsgBox_Warning("WARNING", "The maximum items for destination is 1 (one).")
-              return False
+        # PER NOW IT IS ALLOWED TO HAVE MORE THAN 1 DESTINATION
+        #if len(lstDestination) > 1:
+        #      pyqt_MsgBox_Warning("WARNING", "The maximum items for destination is 1 (one).")
+        #      return False
 
         #DISABLE MAIN SCREEN
         self.processEnableDisable(False)

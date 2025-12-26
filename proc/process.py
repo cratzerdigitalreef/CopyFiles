@@ -475,16 +475,16 @@ def process_CopyFiles_sub(logFile, mainWindow, procWindows, lstSource, lstDestin
                      j = j + 1
 
              lstSource.append(sSourceLast)
-             print("REFRESH - sSourceLast: " + str(sSourceLast) + " - lstSourceAtInit[len(lstSourceAtInit)-1]: " + lstSourceAtInit[len(lstSourceAtInit)-1])
+             #print("REFRESH - sSourceLast: " + str(sSourceLast) + " - lstSourceAtInit[len(lstSourceAtInit)-1]: " + lstSourceAtInit[len(lstSourceAtInit)-1] + " - sSourceOld=" + str(sSourceOld))
 
              nSource = len(lstSource)
 
-             print("REFRESH - lstSource length: " + str(len(lstSource)) + "\n" + str(lstSource))
+             #print("REFRESH - lstSource length: " + str(len(lstSource)) + "\n" + str(lstSource))
 
              log_writeWordsInColorYellow("Flush data to Pandas Data Frame. Iteraction: " + str(n) + " - last data: " + sSourceLast + " - Source Length: " + str(nSource))
              n = 0
 
-             if (sSourceOld == sSourceLast and sSourceLast != "" and len(lstSource) <= 1) or (sSourceLast == lstSourceAtInit[len(lstSourceAtInit)-1]):
+             if (sSourceOld == sSourceLast and sSourceLast != "" and len(lstSource) <= 1) or (sSourceLast == lstSourceAtInit[len(lstSourceAtInit)-1] and sSourceOld!=""):
                  #STOP PROCESS
                  n = nSource
              else:
@@ -685,7 +685,12 @@ def process_CopyFiles_sub(logFile, mainWindow, procWindows, lstSource, lstDestin
 
     #ADDING TOTALs
     sProcessing = sProcessing + "\n" 
-    sProcessing = sProcessing + process_TotalsPrepare("Total files copied", rows, nfile_dic_status_copied)
+
+    sWarningDestinationPath = ""
+    if len(lstDestinationAtInit) > 1:
+        sWarningDestinationPath = ". It should be taken into account that there are more than 1 (one) destination path, and the comparison may not be the real one."
+
+    sProcessing = sProcessing + process_TotalsPrepare("Total files copied" + sWarningDestinationPath, rows, nfile_dic_status_copied)
     sProcessing = sProcessing + process_TotalsPrepare("Total files equal", rows, nfile_dic_status_equal) 
     if nfile_dic_status_error > 0:
        sProcessing = sProcessing + process_TotalsPrepare("Total files with problems/errors", rows, nfile_dic_status_error)
@@ -776,7 +781,15 @@ def process_CopyFiles_CopyFromTo(df, nRecord, sFilePath, sPathTo, logFile=""):
     #print("process_CopyFiles_CopyFromTo - sPathTo=" + str(sPathTo)) 
 
     sToPathFile = file_fNormalPathForWindowsLinux(sPathTo + sFileName)
-    file_dic_pandasFileRecord_set_path_to(df, nRecord, sToPathFile)
+
+    sToPathFileTemp = file_dic_pandasFileRecord_get_path_toByRowNro(df, nRecord)
+    if sToPathFileTemp != "":
+        sToPathFileTemp = sToPathFileTemp + file_sSeparaFileTo + sToPathFile
+        #MORE THAN ONE DESTINATION
+        file_dic_pandasFileRecord_set_path_to(df, nRecord, sToPathFileTemp)
+    else:    
+        #ONE DESTINATION
+        file_dic_pandasFileRecord_set_path_to(df, nRecord, sToPathFile)
      
     #print("process_CopyFiles_CopyFromTo - sToPathFile=" + str(sToPathFile)) 
     bToCopy = False
@@ -835,7 +848,18 @@ def process_CopyFiles_CopyFromTo(df, nRecord, sFilePath, sPathTo, logFile=""):
               log_write_OKInGreen(logFile, sPrint)
            sStatus = file_dic_status_copied      
 
-    file_dic_pandasFileRecord_set_status(df, nRecord, sStatus)
+    if sToPathFileTemp != "":
+        sStatusTemp = file_dic_pandasFileRecord_get_statusByRowNro(df, nRecord)
+        if sStatusTemp != "":
+           sStatusTemp = sStatusTemp + file_sSeparaFileTo + sStatus
+        else:
+           sStatusTemp = sStatus  
+        #MORE THAN ONE DESTINATION - DIFFERENT STATUS
+        file_dic_pandasFileRecord_set_status(df, nRecord, sStatusTemp)
+    else:    
+        #ONE DESTINATION - ONE STATUS
+        file_dic_pandasFileRecord_set_status(df, nRecord, sStatus)
+
     sPrint = "From: '" + sFilePath + "' - To: '" + sToPathFile + "' - Status = " + sStatus 
     if logFile != "":
        log_write_Normal(logFile, sPrint)
