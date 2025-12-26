@@ -871,7 +871,7 @@ def process_CopyFiles_CopyFromTo_PreparePathTo(sPathTo, sFilePath, sPathFileSubd
 
     #bExit = False
 
-    #print("process_CopyFiles_CopyFromTo_PreparePathTo - sPathTo: " + str(sPathTo) + " - sFilePath: " + str(sFilePath) + " - sPathFileSubdir: " + str(sPathFileSubdir))
+    print("process_CopyFiles_CopyFromTo_PreparePathTo - sPathTo: " + str(sPathTo) + " - sFilePath: " + str(sFilePath) + " - sPathFileSubdir: " + str(sPathFileSubdir))
 
     sPathToParent = file_PathAndFile_GetParent(sPathTo)
     sFilePathParent = file_PathAndFile_GetParent(sFilePath)
@@ -916,20 +916,20 @@ def process_CopyFiles_CopyFromTo_PreparePathTo(sPathTo, sFilePath, sPathFileSubd
         #sFilePathParent = file_PathAndFile_GetParent(sTemp)
         sFilePathParent = file_PathAndFile_GetFileName(sTemp)
 
-        #print("process_CopyFiles_CopyFromTo_PreparePathTo - sTemp: " + str(sTemp) + " - sFilePathParent: " + str(sFilePathParent))
+        print("process_CopyFiles_CopyFromTo_PreparePathTo - 1 - sTemp: " + str(sTemp) + " - sFilePathParent: " + str(sFilePathParent))
 
     if (sFilePathParent not in sPathToParent) and (sFilePathParent not in sPathTo):
        sPathTo = sPathTo + sSlash + sFilePathParent
-       #print("process_CopyFiles_CopyFromTo_PreparePathTo - sPathTo: " + str(sPathTo) + " - sFilePathParent: " + str(sFilePathParent) + " - sPathToParent: " + str(sPathToParent))
+       print("process_CopyFiles_CopyFromTo_PreparePathTo - 2 - sPathTo: " + str(sPathTo) + " - sFilePathParent: " + str(sFilePathParent) + " - sPathToParent: " + str(sPathToParent))
 
     if sPathFileSubdir != "":
         sPathTo =  sPathTo + sSlash + sPathFileSubdir
-        #print("process_CopyFiles_CopyFromTo_PreparePathTo - sPathTo: " + str(sPathTo) + " - sPathFileSubdir: " + str(sPathFileSubdir))
+        print("process_CopyFiles_CopyFromTo_PreparePathTo - 3 - sPathTo: " + str(sPathTo) + " - sPathFileSubdir: " + str(sPathFileSubdir))
 
-    #print("process_CopyFiles_CopyFromTo_PreparePathTo - sPathTo: " + str(sPathTo))
+    print("process_CopyFiles_CopyFromTo_PreparePathTo - sPathTo: " + str(sPathTo))
     sPathTo = file_fNormalPathForWindowsLinux(sPathTo)
     sPathTo = file_addSlashToPathIfNeeded(sPathTo)
-    #print("process_CopyFiles_CopyFromTo_PreparePathTo - sPathTo: " + str(sPathTo))
+    print("process_CopyFiles_CopyFromTo_PreparePathTo - sPathTo: " + str(sPathTo))
 
     #if bExit:
     #    exit(0)

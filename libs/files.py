@@ -1206,7 +1206,7 @@ def file_getSubDirFromPath(sPathFile, sPattern, bRemoveFileName=True):
     #print("file_getSubDirFromPath - sPathFile: " + str(sPathFile) + " - sPattern: " + str(sPattern))
     if sPattern in sPathFile:
        sReturn = str_midToEnd(sPathFile, len(sPattern))
-       #print("file_getSubDirFromPath - sReturn: " + str(sReturn))
+       #print("file_getSubDirFromPath - str_midToEnd - sPathFile: " + str(sPathFile) + " - sReturn: " + str(sReturn))
 
        if bRemoveFileName and sReturn != "":
            sReturnT = file_PathAndFile_GetFileName(sReturn)
@@ -1214,7 +1214,7 @@ def file_getSubDirFromPath(sPathFile, sPattern, bRemoveFileName=True):
                #sReturn = str_getSubStringFromOcur(sReturn, sReturnT, 0)
                sReturn = files_getPathFromLastOcurrencePattern(sReturn, sReturnT)
 
-    #print("file_getSubDirFromPath - sReturn: " + str(sReturn))
+    #print("file_getSubDirFromPath - sPathFile: " + str(sPathFile) + " - sReturn: " + str(sReturn))
 
     #FOR TESTING
     #sFile = str("D:/Temp/vbp/GSMApp/Digitel-Ricardo/Backup/DIG00071.inp")
@@ -1327,7 +1327,7 @@ def files_getPathFromLastOcurrencePattern(sPath, sPattern):
            sPatternSlash = sPatternSlash + sSlash
 
     lstTemp = sPath.split(sPatternSlash)
-    #print("files_getPathFromLastOcurrencePattern - lstTemp: " + str(lstTemp))
+    print("files_getPathFromLastOcurrencePattern - 1 - sPath: " + str(sPath) + " - lstTemp: " + str(lstTemp))
         
     sReturn = ""
     if len(lstTemp) > 2:
@@ -1355,10 +1355,15 @@ def files_getPathFromLastOcurrencePattern(sPath, sPattern):
         #sPath: D:\Temp\vbp\DLLs\ADO\Cls\clsADO.cls
         #sPattern: "Cls"
         #sReturn: D:\Temp\vbp\DLLs\ADO\
+        
+        if len(lstTemp) > 0:
+           if lstTemp[0] != "":
+              sReturn = lstTemp[0]
 
-        sReturn = lstTemp[0]
+           if sReturn == "" and len(lstTemp) > 1:   
+              sReturn = lstTemp[1]
 
-    #print("files_getPathFromLastOcurrencePattern - sReturn: " + str(sReturn))
+    print("files_getPathFromLastOcurrencePattern - sReturn: " + str(sReturn))
 
     return sReturn
 

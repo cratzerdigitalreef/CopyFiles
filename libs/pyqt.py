@@ -274,7 +274,7 @@ def pyqt_OpenFileDlg(parent, sTitle, sPath, sFilters="All Files (*)", bDirOnly=F
        #print("filename = " + str(filename))
        
        tReturn = filename[0]
-       #print("tReturn length = " + str(len(tReturn)) + " - " + str(tReturn))
+       #print("Before bDirOnly - tReturn length = " + str(len(tReturn)) + " - " + str(tReturn))
 
        if bDirOnly:
           #n = 0
@@ -285,8 +285,15 @@ def pyqt_OpenFileDlg(parent, sTitle, sPath, sFilters="All Files (*)", bDirOnly=F
           #      if not str(tDirs[n]) in str(tReturn):
           #          tReturn.append(tDirs[n])
           #      n = n + 1
-          #print("tReturn len = " + str(len(tReturn)) + " => " + str(tReturn))
           tReturn = filename
+
+          #BECAUSE OF BUG WITH PYQT LIBRARY, RETURNING:
+          #['D:/Temp', 'D:/Temp/vbp']
+          if len(tReturn) == 2:
+              if str(tReturn[0]) in str(tReturn[1]):
+                  tReturn[0] = tReturn[1]
+                  del tReturn[1]
+          #print("tReturn len = " + str(len(tReturn)) + " => " + str(tReturn))
         
     return tReturn
     
