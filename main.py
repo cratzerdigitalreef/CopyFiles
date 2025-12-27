@@ -75,7 +75,9 @@ if __name__ == "__main__":
     n = n + 1
     print("\n*** " + str(n) + " - sPathToResult: " + str(sPathToResult) + " - sPath: " + str(sPath) + " - sPathInit: " + str(sPathInit) + " - sPathTo: " + str(sPathTo) + "\n\n")
 
-   
+    sPath = "G:\\Temp\\D\\:\\Temp\\vbp\\NET\\FilesCopy"
+    sPathToResult = files_PathClean2Puntos(sPath)
+    print("\n*** " + str(n) + " - sPathToResult: " + str(sPathToResult) + " - sPath: " + str(sPath) + "\n\n")
     exit(0)    
 
     current = os.path.dirname(os.path.realpath(__file__)) 

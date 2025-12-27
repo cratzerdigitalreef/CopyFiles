@@ -598,6 +598,9 @@ def process_CopyFiles_sub(logFile, mainWindow, procWindows, lstSource, lstDestin
               #if n > 50:
               #   process_GbStop_Set(True)
 
+              #SET DESTINATION END WITHOUT PATH
+              file_dic_pandasFileRecord_set_path_end(dict_df_file, n, lstDestination[m])
+
               bError, sError = process_CopyFiles_CopyFromTo(dict_df_file, n, sPathFileFrom, sPathFileTo, logFile)
               sFileStatus = str(file_dic_pandasFileRecord_get_status(dict_df_file, n))
 

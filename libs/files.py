@@ -77,6 +77,9 @@ n = n + 1
 file_dic_path_to = "file_dic_path_to"
 file_dic_path_to_nro = n
 n = n + 1
+file_dic_path_end = "file_dic_path_end"
+file_dic_path_end_nro = n
+n = n + 1
 file_dic_status = "file_dic_status"
 file_dic_status_nro = n
 n = n + 1
@@ -759,6 +762,7 @@ def file_pandasFileRecord_CreateDicWithFileLstAddingStats(dfInput, lstFiles, lst
 
                #USED FOR COPY FILES SO THAT IT IS SAVED THE DESTINATION PATH WHEN IT IS COPIED
                file_record[file_dic_path_to] = ""
+               file_record[file_dic_path_end] = ""
                file_record[file_dic_status] = ""
 
                files.append(file_record)
@@ -921,6 +925,12 @@ def file_dic_pandasFileRecord_set_path_to(df, nRow, sValue):
     return file_dic_pandasFileRecord_set(df, nRow, file_dic_path_to_nro, sValue)
 
 #---------------------------------------------------------------------------------------------------------
+# file_pandasFileRecord_set_path_end
+#---------------------------------------------------------------------------------------------------------
+def file_dic_pandasFileRecord_set_path_end(df, nRow, sValue):
+    return file_dic_pandasFileRecord_set(df, nRow, file_dic_path_end_nro, sValue)
+
+#---------------------------------------------------------------------------------------------------------
 # file_dicSortedBySize
 #---------------------------------------------------------------------------------------------------------
 def file_PandasDicSorted(df, sSortField, bSortMaxToMin=True):
@@ -1029,6 +1039,7 @@ def file_mkDir(sPathSource):
         return True, ""
     
     except Exception as e:
+       #[WINERROR 123] THE FILENAME, DIRECTORY NAME, OR VOLUME LABEL SYNTAX IS INCORRECT: 'G:\\TEMP\\D\\:'"
        sError = file_Error_handlerWithDes(e, "", sProcess + "Trying to create a directory. Path: '" + sPathSource + "'")
        return False, sError
 
@@ -1204,7 +1215,10 @@ def file_getSubDirFromPath(sPathFile, sPattern, bRemoveFileName=True):
 
     sSlash = file_getFileSlash(sPathFile)
 
-    #print("file_getSubDirFromPath INIT - sPathFile: " + str(sPathFile) + " - sPattern: " + str(sPattern))
+    if sPattern == sSlash:
+        return sReturn
+
+    print("file_getSubDirFromPath INIT - sPathFile: " + str(sPathFile) + " - sPattern: " + str(sPattern))
     if sPattern in sPathFile:
        sReturn = str_midToEnd(sPathFile, len(sPattern))
        #print("file_getSubDirFromPath - str_midToEnd - sPathFile: " + str(sPathFile) + " - sReturn: " + str(sReturn))
@@ -1215,7 +1229,7 @@ def file_getSubDirFromPath(sPathFile, sPattern, bRemoveFileName=True):
                #sReturn = str_getSubStringFromOcur(sReturn, sReturnT, 0)
                sReturn = files_getPathFromLastOcurrencePattern(sReturn, sReturnT)
 
-    #print("file_getSubDirFromPath RESULT - sPathFile: " + str(sPathFile) + " - sReturn: " + str(sReturn))
+    print("file_getSubDirFromPath RESULT - sPathFile: " + str(sPathFile) + " - sReturn: " + str(sReturn))
 
     #FOR TESTING
     #sFile = str("D:/Temp/vbp/GSMApp/Digitel-Ricardo/Backup/DIG00071.inp")
@@ -1225,6 +1239,9 @@ def file_getSubDirFromPath(sPathFile, sPattern, bRemoveFileName=True):
     #sPathSubdir = file_getSubDirFromPath("G:\\Carlos\\Valid\\RegionalTechnicalManager\\OperatingSystems\\Samsung\\Base0043_0100\\Valid", "G:\\Carlos")
     #print("sPathSubdir: " + str(sPathSubdir))
     #exit(0)
+
+    #if str_CountPattern(sReturn, file_s2Puntos) > 1:
+    #    exit(0)
 
     if sReturn == sSlash:
         sReturn = ""
@@ -1391,12 +1408,12 @@ def files_CopyFiles_CopyFromTo_PreparePathTo(sPathTo, sFilePath, sPathFileSubdir
     if sPathInit != "" and sPathFileSubdir=="":
        sPathFileSubdir = file_getSubDirFromPath(sFilePath, sPathInit) 
 
-    #print("files_CopyFiles_CopyFromTo_PreparePathTo - sPathTo: " + str(sPathTo) + " - sFilePath: " + str(sFilePath) + " - sPathFileSubdir: " + str(sPathFileSubdir))
+    print("files_CopyFiles_CopyFromTo_PreparePathTo - sPathTo: " + str(sPathTo) + " - sFilePath: " + str(sFilePath) + " - sPathFileSubdir: " + str(sPathFileSubdir))
 
     sPathToParent = file_PathAndFile_GetParent(sPathTo)
     sFilePathParent = file_PathAndFile_GetParent(sFilePath)
 
-    #print("files_CopyFiles_CopyFromTo_PreparePathTo - sPathToParent: " + str(sPathToParent) + " - sFilePathParent: " + str(sFilePathParent))
+    print("files_CopyFiles_CopyFromTo_PreparePathTo - sPathToParent: " + str(sPathToParent) + " - sFilePathParent: " + str(sFilePathParent))
 
     #EXAMPLE 1
     #sFilePath: D:\Temp\vbp\7Bits\7Bits.exe
@@ -1437,29 +1454,30 @@ def files_CopyFiles_CopyFromTo_PreparePathTo(sPathTo, sFilePath, sPathFileSubdir
         if sFilePathParent != "":
             
             #THIS CHECK IS BECAUSE "D" as DRIVER
-            if sFilePathParentPlus1 != "" and sDosPuntos not in sFilePathParentPlus1:
+            #if sFilePathParentPlus1 != "" and sDosPuntos in sFilePathParentPlus1:
+            if sFilePathParentPlus1 != "":
                
                if sFilePathParentPlus1 not in sFilePathParent and sFilePathParentPlus1 not in sPathTo:
                   sFilePathParent = sFilePathParentPlus1 + sSlash + sFilePathParent
 
-        #print("files_CopyFiles_CopyFromTo_PreparePathTo - 1 - sTemp: " + str(sTemp) + " - sFilePathParent: " + str(sFilePathParent) + " - sFilePathParentPlus1: " + str(sFilePathParentPlus1))
+        print("files_CopyFiles_CopyFromTo_PreparePathTo - 1 - sTemp: " + str(sTemp) + " - sFilePathParent: " + str(sFilePathParent) + " - sFilePathParentPlus1: " + str(sFilePathParentPlus1))
 
     if (sFilePathParent not in sPathToParent) and (sFilePathParent not in sPathTo):
        sPathTo = sPathTo + sSlash + sFilePathParent
-       #print("files_CopyFiles_CopyFromTo_PreparePathTo - 2 - sPathTo: " + str(sPathTo) + " - sFilePathParent: " + str(sFilePathParent) + " - sPathToParent: " + str(sPathToParent))
+       print("files_CopyFiles_CopyFromTo_PreparePathTo - 2 - sPathTo: " + str(sPathTo) + " - sFilePathParent: " + str(sFilePathParent) + " - sPathToParent: " + str(sPathToParent))
 
     if sPathFileSubdir != "":
         sPathTo =  sPathTo + sSlash + sPathFileSubdir
-        #print("files_CopyFiles_CopyFromTo_PreparePathTo - 3 - sPathTo: " + str(sPathTo) + " - sPathFileSubdir: " + str(sPathFileSubdir))
+        print("files_CopyFiles_CopyFromTo_PreparePathTo - 3 - sPathTo: " + str(sPathTo) + " - sPathFileSubdir: " + str(sPathFileSubdir))
 
-    #print("files_CopyFiles_CopyFromTo_PreparePathTo - sPathTo: " + str(sPathTo))
+    print("files_CopyFiles_CopyFromTo_PreparePathTo - sPathTo: " + str(sPathTo))
     sPathTo = file_fNormalPathForWindowsLinux(sPathTo)
     sPathTo = file_addSlashToPathIfNeeded(sPathTo)
 
     #CLEAN ":" JUST IN CASE WRONG PATH CREATED
     sPathTo = files_PathClean2Puntos(sPathTo)
 
-    #print("files_CopyFiles_CopyFromTo_PreparePathTo - sPathTo: " + str(sPathTo))
+    print("files_CopyFiles_CopyFromTo_PreparePathTo - sPathTo: " + str(sPathTo))
 
 
     #*******************************************************************************************************************************************
@@ -1511,7 +1529,7 @@ def files_PathClean2Puntos(sPathTo):
 
     nDosPuntos = str_CountPattern(sPathTo, file_s2Puntos)
     if nDosPuntos > 2:
-        print("files_PathClean2Puntos - sPathTo: " + str(sPathTo))
+        #print("files_PathClean2Puntos - INIT - sPathTo: " + str(sPathTo))
         #G:\Temp\D\:\Temp\vbp\NET\FilesCopy
         sDosPuntosSplit = sPathTo.split(file_s2Puntos)
         sPathTo = ""
@@ -1520,9 +1538,35 @@ def files_PathClean2Puntos(sPathTo):
             sPathTo = sPathTo + sDosPuntosSplit[n]
             if n == 0:
                 sPathTo = sPathTo + file_s2Puntos
+            else:
+                # G:\Temp\\Temp\vbp\NET\FilesCo
+                #print("files_PathClean2Puntos - 1 - sPathTo: " + str(sPathTo))
+                if str_right(sPathTo, len(file_slashdouble)) == file_slashdouble:
+                    sPathTo = str_left(sPathTo, len(sPathTo)-2)
+                #print("files_PathClean2Puntos - 2 - sPathTo: " + str(sPathTo))
+                if str_right(sPathTo, (len(file_slashdouble*2))) == (file_slashdouble + file_slashdouble):
+                    sPathTo = str_left(sPathTo, len(sPathTo) - (len(file_slashdouble)*2))    
+
             n = n + 1  
-        print("files_PathClean2Puntos - sPathTo: " + str(sPathTo))
-        exit(0)
+
+        if (file_slashdouble + file_slashdouble) in sPathTo:
+            #sPathTo: G:\Temp\\Temp\vbp\NET\FilesCopy
+            sTemp = str_getSubStringFromOcur(sPathTo, str(file_slashdouble + file_slashdouble), 0)
+            stempLater = str_midToEnd(sPathTo, len(sTemp)+len(file_slashdouble + file_slashdouble))
+            #print("files_PathClean2Puntos - 3 - sTemp: " + str(sTemp) + " - stempLater: " + str(stempLater))
+            sTemp = str_getSubStringFromOcur(sTemp, file_slashdouble, -1)
+            stempBefore = str_getSubStringFromOcur(sPathTo, sTemp, 0)
+            #print("files_PathClean2Puntos - 4 - sTemp: " + str(sTemp) + " - stempBefore: " + str(stempBefore))
+            sPathTo = stempBefore + stempLater
+
+
+        #print("files_PathClean2Puntos - FINAL - sPathTo: " + str(sPathTo))
+        #exit(0)
+
+    #TESTING
+    #sPath = "G:\\Temp\\D\\:\\Temp\\vbp\\NET\\FilesCopy"
+    #sPathToResult = files_PathClean2Puntos(sPath)
+    #print("\n*** " + str(n) + " - sPathToResult: " + str(sPathToResult) + " - sPath: " + str(sPath) + "\n\n")
 
     return sPathTo
 
