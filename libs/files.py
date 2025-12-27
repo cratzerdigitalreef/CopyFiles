@@ -534,7 +534,8 @@ def file_PathAndFile_GetSeparated(sPathAndFile):
      
     #print("file_PathAndFile_GetSeparated - sPathAndFile = " + str(sPathAndFile))
     #print("file_PathAndFile_GetSeparated - sPath = " + str(sPath))
-    #print("file_PathAndFile_GetSeparated - sFile = " + str(sFile))
+    #print("file_PathAndFile_GetSeparated - tFiles = " + str(tFiles))
+    #print("file_PathAndFile_GetSeparated - sFileName = " + str(sFileName))
 
     sExt = ""
     if sFileName != "":
@@ -1407,8 +1408,10 @@ def files_CopyFiles_CopyFromTo_PreparePathTo(sPathTo, sFilePath, sPathFileSubdir
 
     if sPathInit != "" and sPathFileSubdir=="":
        sPathFileSubdir = file_getSubDirFromPath(sFilePath, sPathInit) 
+    if sPathInit == "" and sPathFileSubdir!="":
+       sPathInit = str_left(sFilePath, len(sFilePath) - len(sPathFileSubdir))
 
-    print("files_CopyFiles_CopyFromTo_PreparePathTo - sPathTo: " + str(sPathTo) + " - sFilePath: " + str(sFilePath) + " - sPathFileSubdir: " + str(sPathFileSubdir))
+    print("files_CopyFiles_CopyFromTo_PreparePathTo - INIT - sPathTo: " + str(sPathTo) + " - sFilePath: " + str(sFilePath) + " - sPathFileSubdir: " + str(sPathFileSubdir) + " - sPathInit: " + str(sPathInit))
 
     sPathToParent = file_PathAndFile_GetParent(sPathTo)
     sFilePathParent = file_PathAndFile_GetParent(sFilePath)
@@ -1455,9 +1458,9 @@ def files_CopyFiles_CopyFromTo_PreparePathTo(sPathTo, sFilePath, sPathFileSubdir
             
             #THIS CHECK IS BECAUSE "D" as DRIVER
             #if sFilePathParentPlus1 != "" and sDosPuntos in sFilePathParentPlus1:
-            if sFilePathParentPlus1 != "":
+            if sFilePathParentPlus1 != "" and sPathInit != "":
                
-               if sFilePathParentPlus1 not in sFilePathParent and sFilePathParentPlus1 not in sPathTo:
+               if sFilePathParentPlus1 not in sFilePathParent and sFilePathParentPlus1 not in sPathTo and sFilePathParentPlus1 not in sPathInit:
                   sFilePathParent = sFilePathParentPlus1 + sSlash + sFilePathParent
 
         print("files_CopyFiles_CopyFromTo_PreparePathTo - 1 - sTemp: " + str(sTemp) + " - sFilePathParent: " + str(sFilePathParent) + " - sFilePathParentPlus1: " + str(sFilePathParentPlus1))
@@ -1477,7 +1480,7 @@ def files_CopyFiles_CopyFromTo_PreparePathTo(sPathTo, sFilePath, sPathFileSubdir
     #CLEAN ":" JUST IN CASE WRONG PATH CREATED
     sPathTo = files_PathClean2Puntos(sPathTo)
 
-    print("files_CopyFiles_CopyFromTo_PreparePathTo - sPathTo: " + str(sPathTo))
+    print("files_CopyFiles_CopyFromTo_PreparePathTo - END - sPathTo: " + str(sPathTo))
 
 
     #*******************************************************************************************************************************************
