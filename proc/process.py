@@ -462,7 +462,7 @@ def process_CopyFiles_sub(logFile, mainWindow, procWindows, lstSource, lstDestin
           #PREPARING A PANDAS DICT WITH THE PREVIOUS LIST
           #DONE NOW BECAUSE MEMORY PROBLEMS WITH LARGE DATA
           if (n & file_nRefresh) == 0:
-             dict_df_file = file_pandasFileRecord_CreateDicWithFileLstAddingStats(dict_df_file, lstFiles, lstFilesPathSubdir)
+             dict_df_file = file_pandasFileRecord_CreateDicWithFileLstAddingStats(dict_df_file, lstFiles, lstFilesPathSubdir, lstSourceAtInit)
              sSourceLast = lstSource[n-1]
              lstSource = []
 
@@ -516,7 +516,7 @@ def process_CopyFiles_sub(logFile, mainWindow, procWindows, lstSource, lstDestin
 
        #print("LAST - lstFiles length: " + str(len(lstFiles)) + "\n" + str(lstFiles))
        #ADD THE LAST REMANENT
-       dict_df_file = file_pandasFileRecord_CreateDicWithFileLstAddingStats(dict_df_file, lstFiles, lstFilesPathSubdir)
+       dict_df_file = file_pandasFileRecord_CreateDicWithFileLstAddingStats(dict_df_file, lstFiles, lstFilesPathSubdir, lstSourceAtInit)
 
        process_GblRecord_Clean()
        process_GblMessage_Clean()
@@ -526,7 +526,7 @@ def process_CopyFiles_sub(logFile, mainWindow, procWindows, lstSource, lstDestin
        #------------------------------------------------------------------------------------------------------------------
        #PREPARING A PANDAS DICT WITH THE PREVIOUS LIST
        #DONE BEFORE BECAUSE MEMORY PROBLEMS WITH LARGE DATA
-       #dict_df_file = file_pandasFileRecord_CreateDicWithFileLstAddingStats(lstFiles, lstFilesPathSubdir)
+       #dict_df_file = file_pandasFileRecord_CreateDicWithFileLstAddingStats(lstFiles, lstFilesPathSubdir, lstFilesPathSubdir, lstSourceAtInit)
 
        #GENERATE A CSV FILE WITH PANDAS DF
        today = datetime.now()
@@ -589,21 +589,34 @@ def process_CopyFiles_sub(logFile, mainWindow, procWindows, lstSource, lstDestin
               sProcessing = sProcessing + str_GetENTER() + str_GetENTER() + "Source File:" + str_GetENTER() + sPathFileFrom
               sProcessing = sProcessing + " - Path Subdir: " + sPathFileSubdir
               sProcessing = sProcessing + " - Parent: " + sPathFileFromParent
+              sPathInit = file_dic_pandasFileRecord_get_path_from_init_ByRowNro(dict_df_file, n)
+              sProcessing = sProcessing + " - Path from Init: " + sPathInit
+
               sProcessing = sProcessing + str_GetENTER() + str_GetENTER() + "Data from Sourth File:" + sPrint
 
               sProcessing = sProcessing + str_GetENTER() + str_GetENTER() + "Destination without processing: " +  lstDestination[m]
-              sPathFileTo = files_CopyFiles_CopyFromTo_PreparePathTo(lstDestination[m], sPathFileFrom, sPathFileSubdir, sSlash)
+              
+              #PREPARE PATH TO TAKING INTO ACCOUNT DESTINATION, PATH FROM, AND PATH INIT
+              #sPathFileTo = files_CopyFiles_CopyFromTo_PreparePathTo(lstDestination[m], sPathFileFrom, sPathFileSubdir, "", sSlash)
+              sPathFileTo = files_CopyFiles_CopyFromTo_PreparePathTo(lstDestination[m], sPathFileFrom, sPathFileSubdir, sPathInit, sSlash)
+
               sProcessing = sProcessing + str_GetENTER() + "Destination after processing: " +  sPathFileTo
 
-              #if n > 50:
-              #   process_GbStop_Set(True)
+              #SET DESTINATION END 
+              sPathEndTemp = file_dic_pandasFileRecord_get_path_endByRowNro(dict_df_file, n)
+              if sPathEndTemp != "":
+                 sPathEndTemp = sPathEndTemp + file_sSeparaFileTo + lstDestination[m]
+                 #MORE THAN ONE PATH END
+                 file_dic_pandasFileRecord_set_path_end(dict_df_file, n, sPathEndTemp)
+              else:    
+                 #ONE PATH END DESTINATION
+                 file_dic_pandasFileRecord_set_path_end(dict_df_file, n, lstDestination[m])
 
-              #SET DESTINATION END WITHOUT PATH
-              file_dic_pandasFileRecord_set_path_end(dict_df_file, n, lstDestination[m])
-
+              #COPY FILE FROM - TO
               bError, sError = process_CopyFiles_CopyFromTo(dict_df_file, n, sPathFileFrom, sPathFileTo, logFile)
               sFileStatus = str(file_dic_pandasFileRecord_get_status(dict_df_file, n))
 
+              #PREPARE STATUS
               sProcessing = sProcessing + str_GetENTER() + "Status: " +  sFileStatus
               if sError != "":
                  sProcessing = sProcessing + str_GetENTER() + "Error: " +  sError
@@ -785,6 +798,7 @@ def process_CopyFiles_CopyFromTo(df, nRecord, sFilePath, sPathTo, logFile=""):
 
     sToPathFile = file_fNormalPathForWindowsLinux(sPathTo + sFileName)
 
+    #SAVE PATH TO IN DATA FRAME
     sToPathFileTemp = file_dic_pandasFileRecord_get_path_toByRowNro(df, nRecord)
     if sToPathFileTemp != "":
         sToPathFileTemp = sToPathFileTemp + file_sSeparaFileTo + sToPathFile
