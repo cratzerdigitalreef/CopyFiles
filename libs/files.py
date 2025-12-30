@@ -331,8 +331,21 @@ def file_fFileIsExe():
 # Path Manipulation: 
 # When constructing file paths, you might encounter situations where you accidentally include "//" in the path string. 
 # Python's os.path module provides functions to normalize paths, effectively collapsing multiple forward slashes into single ones.
+# Example: 
+# sPath: "D:\\Temp\\vbp/Algorithms\\Algorithms.PDM" => Return ""D:\\Temp\\vbp\\Algorithms\\Algorithms.PDM""
+# sPath: "D:/Temp/vbp\\Algorithms\\Algorithms.PDM" => Return ""D:\\Temp\\vbp\\Algorithms\\Algorithms.PDM""
 #---------------------------------------------------------------------------------------------------------
 def file_fNormalPathForWindowsLinux(sPath):
+
+    #TESTING:
+    #sPath = "D:\\Temp\\vbp/Algorithms\\Algorithms.PDM"
+    #sPathReturn = file_fNormalPathForWindowsLinux(sPath)
+    #print("sPath: " + str(sPath) + " - sPathReturn: " + str(sPathReturn))
+
+    #sPath = "D:/Temp/vbp\\Algorithms\\Algorithms.PDM"
+    #sPathReturn = file_fNormalPathForWindowsLinux(sPath)
+    #print("sPath: " + str(sPath) + " - sPathReturn: " + str(sPathReturn))
+
     return os.path.normpath(sPath)     
 
 #---------------------------------------------------------------------------------------------------------
@@ -745,6 +758,9 @@ def file_pandasFileRecord_CreateDicWithFileLstAddingStats(dfInput, lstFiles, lst
              bFound, file_size, creation_date, modification_date, access_date, bDirectory = file_getFileState(lstFiles[n])
 
              if bFound and file_size != "":
+               
+               lstFiles[n] = file_fNormalPathForWindowsLinux(lstFiles[n])
+
                # SAVE IN A DICT 
                file_record = {}
                file_record[file_dic_path_file] = str(lstFiles[n])
@@ -774,20 +790,12 @@ def file_pandasFileRecord_CreateDicWithFileLstAddingStats(dfInput, lstFiles, lst
                #SAVE THE FROM PATH FROM INIT LIST
                if len(lstFilesFromInit) > 0:
                    
-                   #BECAUSE DIFFERENT SLASH MANAGED IN OS
-                   sSlashlstFilesFromInit = file_getFileSlash(lstFilesFromInit[0])
-                   sSlashlstFiles = file_getFileSlash(lstFiles[n])
-                   sSlash = sSlashlstFiles
-                   bReplaceSlash = False
-                   if sSlashlstFilesFromInit != sSlashlstFiles:
-                      bReplaceSlash = True
-
                    m = 0
                    while m < len(lstFilesFromInit):
-                       #print("lstFiles[n]: " + str(lstFiles[n]) + " - str(lstFilesFromInit[m]): " + str(lstFilesFromInit[m]))
+                       #print("file_record[file_dic_path_from_init]: " + str(file_record[file_dic_path_from_init]))
 
-                       if bReplaceSlash:
-                          lstFilesFromInit[m] = str_Replace(lstFilesFromInit[m], sSlashlstFilesFromInit, sSlash)
+                       #BECAUSE DIFFERENT SLASH MANAGED IN OS
+                       lstFilesFromInit[m]  = file_fNormalPathForWindowsLinux(lstFilesFromInit[m])
 
                        if lstFilesFromInit[m] in lstFiles[n]:
                            file_record[file_dic_path_from_init] = str(lstFilesFromInit[m])
@@ -795,6 +803,9 @@ def file_pandasFileRecord_CreateDicWithFileLstAddingStats(dfInput, lstFiles, lst
                            break
                        m = m + 1
 
+                   if  file_record[file_dic_path_from_init] == "":
+                       print("ERROR !!! It was not possible to get 'file_dic_path_from_init'. file_record[file_dic_path_from_init]: " + str(file_record[file_dic_path_from_init]) + " - lstFilesFromInit: " + str(lstFilesFromInit))
+                       exit(0)
                #print("file_record[file_dic_path_from_init]: " + str(file_record[file_dic_path_from_init]))
 
                #LAST COLUMN IS ALWAYS STATUS
@@ -1484,7 +1495,8 @@ def files_CopyFiles_CopyFromTo_PreparePathTo(sPathTo, sFilePath, sPathFileSubdir
     if sFileInit != "":
        sPathTo = sPathTo + sSlash + sFileInit
     else:
-        print("ERROR!!! files_CopyFiles_CopyFromTo_PreparePathTo - sFileInit = " + str(sFileInit) + " - sPathInit: " + str(sPathInit))   
+        print("files_CopyFiles_CopyFromTo_PreparePathTo - INIT - sPathTo: " + str(sPathTo) + " - sFilePath: " + str(sFilePath) + " - sPathFileSubdir: " + str(sPathFileSubdir) + " - sPathInit: " + str(sPathInit))
+        print("ERROR!!! sFileInit is nothing. files_CopyFiles_CopyFromTo_PreparePathTo - sFileInit = " + str(sFileInit) + " - sPathInit: " + str(sPathInit))   
         exit(0)
 
     if sPathFileSubdir != "":

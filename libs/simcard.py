@@ -119,8 +119,10 @@ sSimcard_3GPP23048_DesAfter = "After 3GPP 23.048 MSL processing"
 # SIMCARD - CONSTANT VALUES - MSL (Minimum Security Level)
 sSimcard_sDefTAR_COTA = "435041" # COTA = 0x43 50 41 = 'CPA'
 sSimcard_sDefTAR_COTA_Name = "COTA"
+sSimcard_sDefTAR_COTA_Name_Hexa =  bytes_StrToHexa(sSimcard_sDefTAR_COTA_Name)
 sSimcard_sDefTAR_SAPAUTH = "415448" # SAPAUTH = 0x41 54 48 = 'ATH'
 sSimcard_sDefTAR_SAPAUTH_Name = "AUTH"
+sSimcard_sDefTAR_SAPAUTH_Name_Hexa =  bytes_StrToHexa(sSimcard_sDefTAR_SAPAUTH_Name)
 sSimcard_sDefTPDA = "05 81 06 01 F4" # COTA AMX = 60104
 sSimcard_3GPP51014_SMS_TPDU_tag = "0B"
 sSimcard_BERTLV_SMPP_download_tag = "D1"
@@ -3190,46 +3192,8 @@ def COTA_processSMS(sSMS, sTAR=sSimcard_sDefTAR_COTA):
           sSMS = str_midToEnd(sSMS, 8)
           bSAPAUTH = True
        
-       #Data length in bytes
-       nIMEILen = 8
-       nLBrowserLen = 1
-       nICCIDLen = 10
-       nIMSILen = 9
-       nLOCILen = 9
-       nACCTechLen = 1
+       sIMEI, sLaunchSupported, sICCID, sIMSI, sLOCI, sACCTECH = simcard_processSMSData_AutoProvisioning(sSMS)
 
-       sICCID = ""
-       sIMSI = ""
-       sLOCI = ""
-       sACCTECH = ""
-
-       bProcessed = False              
-       if (len(sSMS)//2) == (nIMEILen + nLBrowserLen + nICCIDLen + nIMSILen):
-          bProcessed = True
-          if bSAPAUTH:
-              sICCID = str_left(sSMS,nICCIDLen*2)
-              sIMSI = str_mid(sSMS,(nICCIDLen*2),nIMSILen*2)
-              sIMEI = str_mid(sSMS,(nICCIDLen*2)+(nIMSILen*2),nIMEILen*2)
-              sLaunchSupported = str_mid(sSMS,(nICCIDLen*2)+(nIMSILen*2)+(nIMEILen*2),2)
-          else:
-              sIMEI = str_left(sSMS,nIMEILen*2)
-              sLaunchSupported = str_mid(sSMS,nIMEILen*2,2)
-              sICCID = str_mid(sSMS,(nIMEILen*2)+2,nICCIDLen*2)
-              sIMSI = str_mid(sSMS,(nIMEILen*2)+2+(nICCIDLen*2),nIMSILen*2)
-
-       if (len(sSMS)//2) == (nIMEILen + nLBrowserLen + nICCIDLen + nIMSILen + nLOCILen + nACCTechLen):
-          bProcessed = True
-          sIMEI = str_left(sSMS,nIMEILen*2)
-          sLaunchSupported = str_mid(sSMS,nIMEILen*2,2)
-          sICCID = str_mid(sSMS,(nIMEILen*2)+2,nICCIDLen*2)
-          sIMSI = str_mid(sSMS,(nIMEILen*2)+2+(nICCIDLen*2),nIMSILen*2)
-          sLOCI = str_mid(sSMS,(nIMEILen*2)+2+(nICCIDLen*2)+(nIMSILen*2),nLOCILen*2)
-          sACCTECH = str_mid(sSMS,(nIMEILen*2)+2+(nICCIDLen*2)+(nIMSILen*2)+(nLOCILen*2),nACCTechLen*2)
-
-       if not bProcessed:       
-          sLaunchSupported = str_right(sSMS,2)
-          sIMEI = str_left(str_right(sSMS,18),16)
-       
        if sICCID != "" and sIMSI != "":
           sLog = sLog + sFieldSepara + simcard_EF_ICCID_Interpret(sICCID, True) 
           sLog = sLog + sFieldSepara + simcard_EF_IMSI_Interpret(sIMSI, True)
@@ -3270,7 +3234,6 @@ def COTA_processSMS(sSMS, sTAR=sSimcard_sDefTAR_COTA):
              
        #sLog = sLog + " ***"
        log_writeWordsInColorGreen(sLog)
-
        
     return sLog
 
@@ -7473,5 +7436,66 @@ def simcard_selectReaderToWork(sSelectReaderToWork=""):
 def simcard_getSelectedReader():
     global sSimcard_ReaderSelected
     return str(sSimcard_ReaderSelected)
+
+# simcard_processSMSData_AutoProvisioning ---------------------------------------------------------------------------------------------------------------------------------------------------------
+def simcard_processSMSData_AutoProvisioning(sSMS, bSAPAUTH=False):
+
+    sIMEI = ""
+    sLaunchSupported = ""
+    sICCID = ""
+    sIMSI = ""
+    sLOCI = ""
+    sACCTECH = ""
+
+    if sSMS == "":
+       return sIMEI, sLaunchSupported, sICCID, sIMSI, sLOCI, sACCTECH
+
+    if sSimcard_sDefTAR_COTA_Name_Hexa in sSMS:
+       sSMS = str_getSubStringFromOcurFirst(sSMS, sSimcard_sDefTAR_COTA_Name_Hexa)
+
+    #Data length in bytes
+    nIMEILen = 8
+    nLBrowserLen = 1
+    nICCIDLen = 10
+    nIMSILen = 9
+    nLOCILen = 9
+    nACCTechLen = 1
+
+    sICCID = ""
+    sIMSI = ""
+    sLOCI = ""
+    sACCTECH = ""
+
+    bProcessed = False             
+    #print("len(sSMS)//2: " + str(len(sSMS)//2) + " - (nIMEILen + nLBrowserLen + nICCIDLen + nIMSILen): " + str((nIMEILen + nLBrowserLen + nICCIDLen + nIMSILen))) 
+
+    if (len(sSMS)//2) == (nIMEILen + nLBrowserLen + nICCIDLen + nIMSILen):
+         bProcessed = True
+         if bSAPAUTH:
+            sICCID = str_left(sSMS,nICCIDLen*2)
+            sIMSI = str_mid(sSMS,(nICCIDLen*2),nIMSILen*2)
+            sIMEI = str_mid(sSMS,(nICCIDLen*2)+(nIMSILen*2),nIMEILen*2)
+            sLaunchSupported = str_mid(sSMS,(nICCIDLen*2)+(nIMSILen*2)+(nIMEILen*2),2)
+         else:
+            sIMEI = str_left(sSMS,nIMEILen*2)
+            sLaunchSupported = str_mid(sSMS,nIMEILen*2,2)
+            sICCID = str_mid(sSMS,(nIMEILen*2)+2,nICCIDLen*2)
+            sIMSI = str_mid(sSMS,(nIMEILen*2)+2+(nICCIDLen*2),nIMSILen*2)
+
+    if (len(sSMS)//2) == (nIMEILen + nLBrowserLen + nICCIDLen + nIMSILen + nLOCILen + nACCTechLen):
+         bProcessed = True
+         sIMEI = str_left(sSMS,nIMEILen*2)
+         sLaunchSupported = str_mid(sSMS,nIMEILen*2,2)
+         sICCID = str_mid(sSMS,(nIMEILen*2)+2,nICCIDLen*2)
+         sIMSI = str_mid(sSMS,(nIMEILen*2)+2+(nICCIDLen*2),nIMSILen*2)
+         sLOCI = str_mid(sSMS,(nIMEILen*2)+2+(nICCIDLen*2)+(nIMSILen*2),nLOCILen*2)
+         sACCTECH = str_mid(sSMS,(nIMEILen*2)+2+(nICCIDLen*2)+(nIMSILen*2)+(nLOCILen*2),nACCTechLen*2)
+
+    if not bProcessed:       
+       sLaunchSupported = str_right(sSMS,2)
+       sIMEI = str_left(str_right(sSMS,18),16)
+      
+    return sIMEI, sLaunchSupported, sICCID, sIMSI, sLOCI, sACCTECH
+    
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------
 
