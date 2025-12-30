@@ -17,10 +17,10 @@
    <widget class="QPushButton" name="pbProcess">
     <property name="geometry">
      <rect>
-      <x>500</x>
-      <y>320</y>
-      <width>75</width>
-      <height>23</height>
+      <x>494</x>
+      <y>312</y>
+      <width>81</width>
+      <height>31</height>
      </rect>
     </property>
     <property name="font">
@@ -294,6 +294,32 @@
      </rect>
     </property>
     <layout class="QVBoxLayout" name="verticalLayoutLogFile"/>
+   </widget>
+   <widget class="QPushButton" name="pbSave">
+    <property name="geometry">
+     <rect>
+      <x>380</x>
+      <y>300</y>
+      <width>75</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Save</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pbOpen">
+    <property name="geometry">
+     <rect>
+      <x>300</x>
+      <y>300</y>
+      <width>75</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Open</string>
+    </property>
    </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">

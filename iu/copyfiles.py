@@ -272,6 +272,22 @@ class CopyFilesHomeScreen:
             print(sErrorNotExist + "QPushButton pbClean")   
 
         #---------------------------------------------------------------------------------------------------------
+        # BUTTON OPEN
+        self.btn_open = self.window.findChild(QPushButton, "pbOpen") 
+        if self.btn_open: # Check if the object exists
+           self.btn_open.clicked.connect(self.CmdOpen)
+        else:
+            print(sErrorNotExist + "QPushButton pbOpen")   
+
+        #---------------------------------------------------------------------------------------------------------
+        # BUTTON SAVE
+        self.btn_save = self.window.findChild(QPushButton, "pbSave") 
+        if self.btn_save: # Check if the object exists
+           self.btn_save.clicked.connect(self.CmdSave)
+        else:
+            print(sErrorNotExist + "QPushButton pbSave")   
+
+        #---------------------------------------------------------------------------------------------------------
         # BUTTON CLEAN LOG
         self.btn_clean_log = self.window.findChild(QPushButton, "pbCleanLog") 
         if self.btn_clean_log: # Check if the object exists
@@ -686,6 +702,8 @@ class CopyFilesHomeScreen:
         pyqt_EnableDisable(self.btn_destination_get, bNotRunning)
         pyqt_EnableDisable(self.btn_destination_del, bNotRunning)
         pyqt_EnableDisable(self.btn_clean, bNotRunning)
+        pyqt_EnableDisable(self.btn_open, bNotRunning)
+        pyqt_EnableDisable(self.btn_save, bNotRunning)
         pyqt_EnableDisable(self.btn_clean_log, bNotRunning)
         pyqt_EnableDisable(self.btn_exit, bNotRunning)
 
@@ -695,12 +713,17 @@ class CopyFilesHomeScreen:
         return                             
 
     #---------------------------------------------------------------------------------------------------------
-    def CmdClean(self):
+    def CmdClean(self, bMsg=True):
 
         if self.modelSource.rowCount() <= 0 and self.modelDestination.rowCount() <= 0:
-           sWarning = "WARNING!!! There is nothing to clean in both Grids."
-           log_writeWordsInColorYellow(sWarning)
-           pyqt_MsgBox_Warning("Clean Grids", sWarning)
+           
+           if bMsg:
+
+              sWarning = "WARNING!!! There is nothing to clean in both Grids."
+              log_writeWordsInColorYellow(sWarning)
+
+              pyqt_MsgBox_Warning("Clean Grids", sWarning)
+           
            return
 
         self.modelSource.clean_table(self.tv_source)
@@ -719,6 +742,51 @@ class CopyFilesHomeScreen:
             
         pyqt_TextBoxSetText(self.txt_log, "")
         return
+
+    #---------------------------------------------------------------------------------------------------------
+    def CmdOpen(self):
+        self.CmdOpenSave(False)
+
+    #---------------------------------------------------------------------------------------------------------
+    def CmdSave(self):
+        self.CmdOpenSave(True)
+
+    #---------------------------------------------------------------------------------------------------------
+    def CmdOpenSave(self, bSave=True):
+
+        sTitle = "Save"
+        if not bSave:
+           sTitle = "Open"
+
+        sTitle = sTitle + " paths"
+        sPath = self.sApp_Path
+        sFilters = "XML Files (*.xml);;All Files (*);;"
+
+        lstFiles = pyqt_OpenFileDlg(self.window, sTitle, sPath, sFilters, False, bSave, False)
+
+        sFile = ""
+        if len(lstFiles) > 0:
+            sFile = str(lstFiles)
+
+        #print("CmdOpenSave - sFile: " + str(sFile) + " - lstFiles: " + str(lstFiles))    
+
+        if sFile != "":
+           
+           sMsg = "Process for '" + sTitle + "' executed "
+           bResult = True
+
+           if bSave:
+              bResult = self.xml_save_grid(sFile)
+           else:
+              bResult = self.xml_get_grid_paths(sFile, True)
+    
+           if bResult:
+               sMsg = sMsg + "SUCCESSFULLY !!!\n\nCheck file: " + str(sFile)
+               pyqt_MsgBox_Info(sTitle, sMsg)
+           else:    
+               sMsg = sMsg + "with ERRORs !!!\n\nCheck file: " + str(sFile)
+               pyqt_MsgBox_Warning(sTitle, sMsg)
+
 
     #---------------------------------------------------------------------------------------------------------
     def openFilesDlg(self, bSource):
@@ -805,29 +873,7 @@ class CopyFilesHomeScreen:
         #APP REFERENCE
         xml_Save_Default_Value(self.sApp_XML_PathAndFile, self.sXML_APDU_VERSION, app_ver + "_" + app_ver_date, app_name, app_name_des)
 
-        #SOURCE 
-        nCountSource = self.modelSource.rowCount()
-        xml_Save_Default_Value(self.sApp_XML_PathAndFile, self.sXML_PATH_SOURCE_TOTAL, str(nCountSource))
-        #self.sPathSource  = self.sApp_Path 
-        n = 0
-        while n < nCountSource:
-              sData = self.modelSource.getDataByRowCol(n, 0)
-              sHeader = self.sXML_PATH_SOURCE + str(n)
-              xml_Save_Default_Value(self.sApp_XML_PathAndFile, sHeader, sData)
-              self.sPathSource = sData
-              n = n + 1
-
-        #DESTINATION
-        nCountDestination = self.modelDestination.rowCount()
-        xml_Save_Default_Value(self.sApp_XML_PathAndFile, self.sXML_PATH_DESTINATION_TOTAL, str(nCountDestination))
-        #self.sPathDestination  = self.sApp_Path 
-        n = 0
-        while n < nCountDestination:
-              sData = self.modelDestination.getDataByRowCol(n, 0)
-              sHeader = self.sXML_PATH_DESTINATION + str(n)
-              xml_Save_Default_Value(self.sApp_XML_PathAndFile, sHeader, sData)
-              self.sPathDestination = sData
-              n = n + 1
+        self.xml_save_grid(self.sApp_XML_PathAndFile)
 
         #APP LAST PATH USED - SOURCE
         xml_Save_Default_Value(self.sApp_XML_PathAndFile, self.sXML_PATH_DEFAULT_SOURCE, self.sPathSource )
@@ -837,25 +883,56 @@ class CopyFilesHomeScreen:
         return
 
     #---------------------------------------------------------------------------------------------------------
+    # XML SAVE AND GET - PATH FILE
+    #---------------------------------------------------------------------------------------------------------
+    def xml_save_grid(self, sPathFile):
+
+        sTitle = "Save Paths"
+
+        if sPathFile == "":
+            sMsg = "No file defined for saving source and destination paths. Path and File: " + str(sPathFile)
+            pyqt_MsgBox_Warning(sTitle, sMsg)
+            return False
+       
+        nCountSource = self.modelSource.rowCount()
+        nCountDestination = self.modelDestination.rowCount()
+        
+        if nCountSource <= 0 or nCountDestination <= 0:
+            sMsg = "Source or Destination do not have paths to save. Source paths count: " + str(nCountDestination) + " - Destination paths count: " + str(nCountDestination)
+            pyqt_MsgBox_Warning(sTitle, sMsg)
+            return False
+
+        #SOURCE 
+        #nCountSource = self.modelSource.rowCount()
+        xml_Save_Default_Value(sPathFile, self.sXML_PATH_SOURCE_TOTAL, str(nCountSource))
+        #self.sPathSource  = self.sApp_Path 
+        n = 0
+        while n < nCountSource:
+              sData = self.modelSource.getDataByRowCol(n, 0)
+              sHeader = self.sXML_PATH_SOURCE + str(n)
+              xml_Save_Default_Value(sPathFile, sHeader, sData)
+              self.sPathSource = sData
+              n = n + 1
+
+        #DESTINATION
+        #nCountDestination = self.modelDestination.rowCount()
+        xml_Save_Default_Value(sPathFile, self.sXML_PATH_DESTINATION_TOTAL, str(nCountDestination))
+        #self.sPathDestination  = self.sApp_Path 
+        n = 0
+        while n < nCountDestination:
+              sData = self.modelDestination.getDataByRowCol(n, 0)
+              sHeader = self.sXML_PATH_DESTINATION + str(n)
+              xml_Save_Default_Value(sPathFile, sHeader, sData)
+              self.sPathDestination = sData
+              n = n + 1
+
+        return True
+    
+    #---------------------------------------------------------------------------------------------------------
     def xml_get(self):
 
-        #SOURCE TOTALS
-        self.nPathSourceTotal = 0 
-        self.sPathSourceTotal = xml_Load_Default_Value(self.sApp_XML_PathAndFile, self.sXML_PATH_SOURCE_TOTAL, str(self.nPathSourceTotal))
-        if valid_nro_IsCharValidNro(self.sPathSourceTotal, True):
-           self.nPathSourceTotal = int(self.sPathSourceTotal)
-
-        #print("xml_get - Total Source: " + str(self.nPathSourceTotal))
-        self.xml_get_grid(True, self.nPathSourceTotal)
-
-        #DESTINATION TOTALS
-        self.nPathDestinationTotal = 0 
-        self.sPathDestinationTotal = xml_Load_Default_Value(self.sApp_XML_PathAndFile, self.sXML_PATH_DESTINATION_TOTAL, str(self.nPathDestinationTotal))
-        if valid_nro_IsCharValidNro(self.sPathDestinationTotal, True):
-           self.nPathDestinationTotal = int(self.sPathDestinationTotal)
-
-        #print("xml_get - Total Destination: " + str(self.nPathDestinationTotal))
-        self.xml_get_grid(False, self.nPathDestinationTotal)
+        #FILL GRIDs
+        self.xml_get_grid_paths(self.sApp_XML_PathAndFile, False)
 
         #GET LAST PATHS
         self.sPathSource = xml_Load_Default_Value(self.sApp_XML_PathAndFile, self.sXML_PATH_DEFAULT_SOURCE, self.sApp_Path)
@@ -864,7 +941,46 @@ class CopyFilesHomeScreen:
         return
 
     #---------------------------------------------------------------------------------------------------------
-    def xml_get_grid(self, bSource=True, nTotal=0):
+    def xml_get_grid_paths(self, sPathFile, bMsg=True):
+
+        sTitle = "Open Paths"
+
+        if sPathFile == "":
+            if bMsg:
+               sMsg = "No file defined for opening source and destination paths. Path and File: " + str(sPathFile)
+               pyqt_MsgBox_Warning(sTitle, sMsg)
+            return False
+
+        self.CmdClean(False)
+
+        #SOURCE TOTALS
+        self.nPathSourceTotal = 0 
+        self.sPathSourceTotal = xml_Load_Default_Value(sPathFile,  self.sXML_PATH_SOURCE_TOTAL, str(self.nPathSourceTotal))
+        if valid_nro_IsCharValidNro(self.sPathSourceTotal, True):
+           self.nPathSourceTotal = int(self.sPathSourceTotal)
+
+        #print("xml_get - Total Source: " + str(self.nPathSourceTotal))
+        self.xml_get_grid(sPathFile, True, self.nPathSourceTotal)
+
+        #DESTINATION TOTALS
+        self.nPathDestinationTotal = 0 
+        self.sPathDestinationTotal = xml_Load_Default_Value(sPathFile, self.sXML_PATH_DESTINATION_TOTAL, str(self.nPathDestinationTotal))
+        if valid_nro_IsCharValidNro(self.sPathDestinationTotal, True):
+           self.nPathDestinationTotal = int(self.sPathDestinationTotal)
+
+        #print("xml_get - Total Destination: " + str(self.nPathDestinationTotal))
+        self.xml_get_grid(sPathFile, False, self.nPathDestinationTotal)
+
+        if self.nPathSourceTotal > 0 and self.nPathDestinationTotal > 0:
+            return True
+        else:
+            if bMsg:
+               sMsg = "Paths for Source and/or Destination do not exit. Total Paths for Source: " + str(self.nPathSourceTotal) + ", Total Paths for Destination: " + str(self.nPathDestinationTotal)
+               pyqt_MsgBox_Warning(sTitle, sMsg)
+            return False
+
+    #---------------------------------------------------------------------------------------------------------
+    def xml_get_grid(self, sPathFile, bSource=True, nTotal=0):
 
         #print("xml_get_grid - Total: " + str(nTotal))
         bOut = False
@@ -877,7 +993,7 @@ class CopyFilesHomeScreen:
 
               #print("xml_get_grid - sHeader: " + str(sHeader))
 
-              sData = xml_Load_Default_Value(self.sApp_XML_PathAndFile, sHeader, "")
+              sData = xml_Load_Default_Value(sPathFile, sHeader, "")
               #print("xml_get_grid - sData: " + str(sData))
 
               if sData == "":

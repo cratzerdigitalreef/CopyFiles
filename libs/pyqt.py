@@ -155,6 +155,8 @@ def pyqt_OpenFileDlgMoreFiles(parent, sTitle, sPath, sFilters="All Files (*)"):
 #---------------------------------------------------------------------------------------------------------
 # IT IS ALWAYS RETURNED A LIST WITH SELECTED FILES/DIRS
 # IF NOTHING IS SELECTED, THE LIST IS EMPTY WITH []
+# EXAMPLE for FILTERS:
+#                     sFilters = "XML Files (*.xml);;All Files (*);;"
 def pyqt_OpenFileDlg(parent, sTitle, sPath, sFilters="All Files (*)", bDirOnly=False, bSave=False, bMoreFiles=False):
     # Open the file dialog
     # getOpenFileName returns a tuple: (filename, filter)
