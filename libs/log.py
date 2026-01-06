@@ -23,8 +23,8 @@ dic_colorlog = {
 nValue = float(0)
 
 # log_create ----------------------------------------------------------------------------------------------------------
-def log_create(sPath, sFileName, sProcess = "", bAppend = False,sVerbose=True):
-    return log_create_WithPath(sPath, sFileName, sProcess, bAppend,sVerbose)
+def log_create(sPath, sFileName, sProcess = "", bAppend = False,bPrint=True):
+    return log_create_WithPath(sPath, sFileName, sProcess, bAppend,bPrint)
 
 # log_create_path ----------------------------------------------------------------------------------------------------------
 def log_create_path(sPath):
@@ -43,16 +43,26 @@ def log_join_path_file(sPath, sFile):
     return os.path.join(sPath, sFile)
 
 # log_create_WithPath ----------------------------------------------------------------------------------------------------------
-def log_create_WithPath(sPath, sFileName, sProcess, bAppend, sVerbose=True):
+def log_create_WithPath(sPath, sFileName, sProcess, bAppend, bPrint=True, bFileNameWithDate=True, bFileNameWithTime=False):
     #Create directory in case that not exists
     log_basename=os.path.basename(sPath)
     if not os.path.exists(os.path.join(sPath,"logs_"+log_basename)):
         os.mkdir(os.path.join(sPath,"logs_"+log_basename))
 
     today = datetime.now()
-    today_f = today.strftime("%Y-%m-%d")
+    today_f = ""
+    if bFileNameWithDate:
+       today_f = today.strftime("%Y-%m-%d")
+    if bFileNameWithTime:
+       today_f = today.strftime("%Y-%m-%d_%H%M%S")
+    
     today_prn = today.strftime("%Y-%m-%d %H:%M:%S")
-    sFileOut = os.path.join(sPath,"logs_"+log_basename,sFileName + "_" + str(today_f) + ".txt")
+
+    if today_f != "":
+       sFileName = sFileName + "_" + str(today_f)
+    sFileName = sFileName + ".txt"
+
+    sFileOut = os.path.join(sPath,"logs_"+log_basename, sFileName)
     
     sMode = "w"
     if bAppend == True:
@@ -65,16 +75,16 @@ def log_create_WithPath(sPath, sFileName, sProcess, bAppend, sVerbose=True):
 
     
     if sProcess != "":
-       log_write(sFileOut, "PROCESS " + sProcess + ". STARTED: " + str(today_prn),sVerbose=sVerbose)
+       log_write(sFileOut, "PROCESS " + sProcess + ". STARTED: " + str(today_prn),bPrint=bPrint)
     file2write.close()
 
     sLog = str_RepeatString(100, "-")
-    log_write(sFileOut, sLog,sVerbose=sVerbose)
+    log_write(sFileOut, sLog,bPrint=bPrint)
 
     return sFileOut
   
 # log_writeWithLineNro ----------------------------------------------------------------------------------------------------------
-def log_writeWithLineNro(sFileName, sData, bPrint):
+def log_writeWithLineNro(sFileName, sData, bPrint=True, nNroLine=0):
     file2write=open(sFileName, 'a')
     sLine = ""
     if nNroLine > 0:
@@ -86,14 +96,14 @@ def log_writeWithLineNro(sFileName, sData, bPrint):
        
     sLine = sLine + sData
     file2write.write(sLine + "\n")
-    if bPrint == True:
+    if bPrint:
        print(sLine)
     file2write.close()
     return nNroLine + 1    
 
 # log_writeLine ----------------------------------------------------------------------------------------------------------
-def log_writeLine(sFileName, sData, bPrint):
-    log_writeWithLineNro(sFileName, sData, 0, bPrint)
+def log_writeLine(sFileName, sData, bPrint=True, nNroLine=0):
+    log_writeWithLineNro(sFileName, sData, bPrint, 0)
 
 
 # log_write_Normal ----------------------------------------------------------------------------------------------------------
@@ -112,7 +122,7 @@ def log_write_WarningInYellow(sFileName, sData):
 
     
 # log_write ----------------------------------------------------------------------------------------------------------
-def log_write(sFileName, sData, sType='Normal', sVerbose = True, bDate = True):
+def log_write(sFileName, sData, sType='Normal', bPrint = True, bDate = True):
     """
     To color, add the variable 'sType'\n
     Example:\n
@@ -121,14 +131,14 @@ def log_write(sFileName, sData, sType='Normal', sVerbose = True, bDate = True):
     sType = 'error' => Red\n
     sType = 'ok' => Green\n
     """
-    log_writeWithDateTime(sFileName, sData, sVerbose, sType, bDate)
+    log_writeWithDateTime(sFileName, sData, bPrint, sType, bDate)
 
 # log_writeNoPrint ----------------------------------------------------------------------------------------------------------
 def log_writeNoPrint(sFileName, sData):
     log_writeWithDateTime(sFileName, sData, False)
 
 # log_writeWithDateTime ----------------------------------------------------------------------------------------------------------
-def log_writeWithDateTime(sFileName, sData, bPrint, sType, bDate):
+def log_writeWithDateTime(sFileName, sData, bPrint=True, sType="Normal", bDate=True):
 
     sLine = ""
 
@@ -192,7 +202,7 @@ def log_writeWordsInColor(sData, sType='info'):
     if sType in dic_colorlog:
        sColor = dic_colorlog.get(sType)
        #print("sType: " + str(sType))
-       print(getattr(Fore, sColor)+ sData)
+       print(getattr(Fore, sColor) + sData)
     else:
        print(sData)
     colorama.deinit()
