@@ -1474,7 +1474,7 @@ def files_CopyFiles_CopyFromTo_PreparePathTo(sPathTo, sFilePath, sPathFileSubdir
     if sPathInit == "" and sPathFileSubdir!="":
        sPathInit = str_left(sFilePath, len(sFilePath) - len(sPathFileSubdir))
 
-    #print("files_CopyFiles_CopyFromTo_PreparePathTo - INIT - sPathTo: " + str(sPathTo) + " - sFilePath: " + str(sFilePath) + " - sPathFileSubdir: " + str(sPathFileSubdir) + " - sPathInit: " + str(sPathInit))
+    print("files_CopyFiles_CopyFromTo_PreparePathTo - INIT - sPathTo: " + str(sPathTo) + " - sFilePath: " + str(sFilePath) + " - sPathFileSubdir: " + str(sPathFileSubdir) + " - sPathInit: " + str(sPathInit))
 
     #NOT USED PER NOW
     #sPathToParent = file_PathAndFile_GetParent(sPathTo)
@@ -1483,8 +1483,7 @@ def files_CopyFiles_CopyFromTo_PreparePathTo(sPathTo, sFilePath, sPathFileSubdir
     if sPathInit != "":
        sFileInit = file_PathAndFile_GetFileName(sPathInit)
 
-    #files_CopyFiles_CopyFromTo_PreparePathTo - INIT - sPathTo: G:\Temp - sFilePath: D:\Temp\vbp\NET\FilesCopy\.vs\FilesCopy\v15 - sPathFileSubdir: \FilesCopy\.vs\FilesCopy - sPathInit: D:\Temp\vbp\NET
-    #files_CopyFiles_CopyFromTo_PreparePathTo - sPathToParent: G: - sFilePathParent: FilesCopy - sFileInit: NET
+    print("files_CopyFiles_CopyFromTo_PreparePathTo - sFileInit: " + str(sFileInit))
 
     #ADDED NAME BETWEEN PATH TO AND SUBDIR
     #EXAMPLE:
@@ -1493,25 +1492,27 @@ def files_CopyFiles_CopyFromTo_PreparePathTo(sPathTo, sFilePath, sPathFileSubdir
     #sPathTo = "G:\\Temp"
     #sFileInit = "NET"
     if sFileInit != "":
-       sPathTo = sPathTo + sSlash + sFileInit
+       sPathToInit = str_right(sPathTo, len(sFileInit))
+       if sPathToInit != sFileInit:
+          sPathTo = sPathTo + sSlash + sFileInit
     else:
         print("files_CopyFiles_CopyFromTo_PreparePathTo - INIT - sPathTo: " + str(sPathTo) + " - sFilePath: " + str(sFilePath) + " - sPathFileSubdir: " + str(sPathFileSubdir) + " - sPathInit: " + str(sPathInit))
         print("ERROR!!! sFileInit is nothing. files_CopyFiles_CopyFromTo_PreparePathTo - sFileInit = " + str(sFileInit) + " - sPathInit: " + str(sPathInit))   
         exit(0)
 
+    print("files_CopyFiles_CopyFromTo_PreparePathTo - sPathTo: " + str(sPathTo))
+
     if sPathFileSubdir != "":
         sPathTo = sPathTo + sSlash + sPathFileSubdir
 
-    #print("files_CopyFiles_CopyFromTo_PreparePathTo - sPathTo: " + str(sPathTo))
-
-    #print("files_CopyFiles_CopyFromTo_PreparePathTo - sPathTo: " + str(sPathTo))
+    print("files_CopyFiles_CopyFromTo_PreparePathTo - sPathTo: " + str(sPathTo))
     sPathTo = file_fNormalPathForWindowsLinux(sPathTo)
     sPathTo = file_addSlashToPathIfNeeded(sPathTo)
 
     #CLEAN ":" JUST IN CASE WRONG PATH CREATED
     #sPathTo = files_PathClean2Puntos(sPathTo)
 
-    #print("files_CopyFiles_CopyFromTo_PreparePathTo - END - sPathTo: " + str(sPathTo))
+    print("files_CopyFiles_CopyFromTo_PreparePathTo - END - sPathTo: " + str(sPathTo))
 
     #*******************************************************************************************************************************************
     #TESTING
