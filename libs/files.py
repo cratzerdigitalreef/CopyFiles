@@ -1239,8 +1239,10 @@ def file_compare(sPathFileSource, sPathFileDestination, bValidateDateCreation=Fa
               sDif = sDif + " Source file Date Creation '" + sFromFileDateCreation + "' is different from Destination file Date Creation '" + sToFileDateCreation + "'."
         if sFromFileDateModif != sToFileDateModif:
             sDif = sDif + " Source file Date Modification '" + sFromFileDateModif + "' is different from Destination file Date Modification '" + sToFileDateModif + "'."
-        if sFromFileDateAccess != sToFileDateAccess:
-            sDif = sDif + " Source file Date Access '" + sFromFileDateAccess + "' is different from Destination file Date Access '" + sToFileDateAccess + "'."
+
+        #BECAUSE DATA ACCESS IS RIGHT NOW    
+        #if sFromFileDateAccess != sToFileDateAccess:
+        #    sDif = sDif + " Source file Date Access '" + sFromFileDateAccess + "' is different from Destination file Date Access '" + sToFileDateAccess + "'."
 
         if sDif != "":
             return False, sError + sDif
@@ -1474,7 +1476,7 @@ def files_CopyFiles_CopyFromTo_PreparePathTo(sPathTo, sFilePath, sPathFileSubdir
     if sPathInit == "" and sPathFileSubdir!="":
        sPathInit = str_left(sFilePath, len(sFilePath) - len(sPathFileSubdir))
 
-    print("files_CopyFiles_CopyFromTo_PreparePathTo - INIT - sPathTo: " + str(sPathTo) + " - sFilePath: " + str(sFilePath) + " - sPathFileSubdir: " + str(sPathFileSubdir) + " - sPathInit: " + str(sPathInit))
+    #print("files_CopyFiles_CopyFromTo_PreparePathTo - INIT - sPathTo: " + str(sPathTo) + " - sFilePath: " + str(sFilePath) + " - sPathFileSubdir: " + str(sPathFileSubdir) + " - sPathInit: " + str(sPathInit))
 
     #NOT USED PER NOW
     #sPathToParent = file_PathAndFile_GetParent(sPathTo)
@@ -1483,7 +1485,7 @@ def files_CopyFiles_CopyFromTo_PreparePathTo(sPathTo, sFilePath, sPathFileSubdir
     if sPathInit != "":
        sFileInit = file_PathAndFile_GetFileName(sPathInit)
 
-    print("files_CopyFiles_CopyFromTo_PreparePathTo - sFileInit: " + str(sFileInit))
+    #print("files_CopyFiles_CopyFromTo_PreparePathTo - sFileInit: " + str(sFileInit))
 
     #ADDED NAME BETWEEN PATH TO AND SUBDIR
     #EXAMPLE:
@@ -1500,19 +1502,19 @@ def files_CopyFiles_CopyFromTo_PreparePathTo(sPathTo, sFilePath, sPathFileSubdir
         print("ERROR!!! sFileInit is nothing. files_CopyFiles_CopyFromTo_PreparePathTo - sFileInit = " + str(sFileInit) + " - sPathInit: " + str(sPathInit))   
         exit(0)
 
-    print("files_CopyFiles_CopyFromTo_PreparePathTo - sPathTo: " + str(sPathTo))
+    #print("files_CopyFiles_CopyFromTo_PreparePathTo - sPathTo: " + str(sPathTo))
 
     if sPathFileSubdir != "":
         sPathTo = sPathTo + sSlash + sPathFileSubdir
 
-    print("files_CopyFiles_CopyFromTo_PreparePathTo - sPathTo: " + str(sPathTo))
+    #print("files_CopyFiles_CopyFromTo_PreparePathTo - sPathTo: " + str(sPathTo))
     sPathTo = file_fNormalPathForWindowsLinux(sPathTo)
     sPathTo = file_addSlashToPathIfNeeded(sPathTo)
 
     #CLEAN ":" JUST IN CASE WRONG PATH CREATED
     #sPathTo = files_PathClean2Puntos(sPathTo)
 
-    print("files_CopyFiles_CopyFromTo_PreparePathTo - END - sPathTo: " + str(sPathTo))
+    #print("files_CopyFiles_CopyFromTo_PreparePathTo - END - sPathTo: " + str(sPathTo))
 
     #*******************************************************************************************************************************************
     #TESTING
