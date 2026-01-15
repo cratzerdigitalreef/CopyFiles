@@ -415,7 +415,7 @@ def process_CopyFiles_sub(logFile, mainWindow, procWindows, lstSource, lstDestin
                           sLastPath = lstFilesTemp[m]
 
                        #sPath, sPathSubdir, sSlash = file_GetPath_From_Next(lstFilesTemp[m], lstSource[n])
-                       sPathSubdir = file_getSubDirFromPath(lstFilesTemp[m], lstSource[n]) 
+                       sPathSubdir = file_getSubDirFromPath(lstFilesTemp[m], lstSource[n], True, m) 
                        #ADDED FOR SOURCE PATH FOR FILES TO BE PREOCESSED
                        sProcessing = "Getting files - Iteration: " + process_CalculateNofTotal(n, nSource)
                        sProcessing = sProcessing + " - Files found [" + str_AddThousandToNumber(str(m+1)) + "]:"
@@ -549,6 +549,7 @@ def process_CopyFiles_sub(logFile, mainWindow, procWindows, lstSource, lstDestin
        nCols = 0
        n = 0
        sSlash = ""
+       nRow = 0
     
        #------------------------------------------------------------------------------------------------------------------
        # READING PANDAS DATA FRAME
@@ -598,7 +599,7 @@ def process_CopyFiles_sub(logFile, mainWindow, procWindows, lstSource, lstDestin
               
               #PREPARE PATH TO TAKING INTO ACCOUNT DESTINATION, PATH FROM, AND PATH INIT
               #sPathFileTo = files_CopyFiles_CopyFromTo_PreparePathTo(lstDestination[m], sPathFileFrom, sPathFileSubdir, "", sSlash)
-              sPathFileTo = files_CopyFiles_CopyFromTo_PreparePathTo(lstDestination[m], sPathFileFrom, sPathFileSubdir, sPathInit, sSlash)
+              sPathFileTo = files_CopyFiles_CopyFromTo_PreparePathTo(lstDestination[m], sPathFileFrom, sPathFileSubdir, sPathInit, sSlash, nRow)
 
               sProcessing = sProcessing + str_GetENTER() + "Destination after processing: " +  sPathFileTo
 
@@ -664,8 +665,10 @@ def process_CopyFiles_sub(logFile, mainWindow, procWindows, lstSource, lstDestin
 
               m = m + 1
           #--------------------------------------------------------------------------------------------------------------------------------
+          nRow = nRow + 1
 
           n = n + 1 
+
     #------------------------------------------------------------------------------------------------------------------
 
     #UPDATE CSV FILE

@@ -1240,9 +1240,8 @@ def file_compare(sPathFileSource, sPathFileDestination, bValidateDateCreation=Fa
         if sFromFileDateModif != sToFileDateModif:
             sDif = sDif + " Source file Date Modification '" + sFromFileDateModif + "' is different from Destination file Date Modification '" + sToFileDateModif + "'."
 
-        #BECAUSE DATA ACCESS IS RIGHT NOW    
-        #if sFromFileDateAccess != sToFileDateAccess:
-        #    sDif = sDif + " Source file Date Access '" + sFromFileDateAccess + "' is different from Destination file Date Access '" + sToFileDateAccess + "'."
+        if sFromFileDateAccess != sToFileDateAccess:
+            sDif = sDif + " Source file Date Access '" + sFromFileDateAccess + "' is different from Destination file Date Access '" + sToFileDateAccess + "'."
 
         if sDif != "":
             return False, sError + sDif
@@ -1276,7 +1275,7 @@ def file_compare(sPathFileSource, sPathFileDestination, bValidateDateCreation=Fa
 #         3)
 #         \Valid\DegionalTechnicalManager\OperatingSystems\Samsung\Base0043_0100\
 #---------------------------------------------------------------------------------------------------------
-def file_getSubDirFromPath(sPathFile, sPattern, bRemoveFileName=True):
+def file_getSubDirFromPath(sPathFile, sPattern, bRemoveFileName=True, nItem=0):
     sReturn = ""
 
     sSlash = file_getFileSlash(sPathFile)
@@ -1284,18 +1283,19 @@ def file_getSubDirFromPath(sPathFile, sPattern, bRemoveFileName=True):
     if sPattern == sSlash:
         return sReturn
 
-    #print("file_getSubDirFromPath INIT - sPathFile: " + str(sPathFile) + " - sPattern: " + str(sPattern))
+    #print("file_getSubDirFromPath INIT [" + str(nItem) + "] - sPathFile: " + str(sPathFile) + " - sPattern: " + str(sPattern))
     if sPattern in sPathFile:
        sReturn = str_midToEnd(sPathFile, len(sPattern))
-       #print("file_getSubDirFromPath - str_midToEnd - sPathFile: " + str(sPathFile) + " - sReturn: " + str(sReturn))
+       #print("file_getSubDirFromPath [" + str(nItem) + "] - str_midToEnd - sPathFile: " + str(sPathFile) + " - sReturn: " + str(sReturn))
 
        if bRemoveFileName and sReturn != "":
            sReturnT = file_PathAndFile_GetFileName(sReturn)
            if sReturnT != "":
+               #print("file_getSubDirFromPath [" + str(nItem) + "] - sReturnT: " + str(sReturnT) + " - sReturn: " + str(sReturn))
                #sReturn = str_getSubStringFromOcur(sReturn, sReturnT, 0)
                sReturn = files_getPathFromLastOcurrencePattern(sReturn, sReturnT)
 
-    #print("file_getSubDirFromPath RESULT - sPathFile: " + str(sPathFile) + " - sReturn: " + str(sReturn))
+    #print("file_getSubDirFromPath [" + str(nItem) + "] RESULT - sPathFile: " + str(sPathFile) + " - sReturn: " + str(sReturn))
 
     #FOR TESTING
     #sFile = str("D:/Temp/vbp/GSMApp/Digitel-Ricardo/Backup/DIG00071.inp")
@@ -1394,24 +1394,32 @@ def files_getPathFromLastOcurrencePattern(sPath, sPattern):
     if sPath == "" or sPattern == "":
         return sPath
 
+    #print("files_getPathFromLastOcurrencePattern INIT - sPath: " + str(sPath) + " - sPattern: " + str(sPattern) + " - sSlash: " + str(sSlash))
+
     sPatternSlash = sPattern
     if str_left(sPattern, len(sSlash)) != sSlash:
         #THIS IS BECAUSE THE CASE 
         #Path: G:\Carlos\DigitalReef\GitHub\.metadata\.plugins\org.eclipse.core.resources\.history\f
         #Pattern: f
         #It must be analized "\f" and not only "f" to avoid getting "G:\Carlos\DigitalRee"
+        #print("files_getPathFromLastOcurrencePattern LEFT - sPath: " + str(sPath) + " - sSlash: " + str(sSlash) + " - sPattern: " + str(sPattern))
         if (sSlash + sPattern) in sPath:
            sPatternSlash = sSlash + sPattern
+
+        #print("files_getPathFromLastOcurrencePattern LEFT - sPath: " + str(sPath) + " - sPatternSlash: " + str(sPatternSlash))
+
     if str_right(sPattern, len(sSlash)) != sSlash:
         #THIS IS BECAUSE THE CASE 
         #Path: G:\Carlos\Valid\RegionalTechnicalManager\OperatingSystems\ST\ST32F-M.pdf
         #Pattern: ST
         #It must be analized "\ST\" and not only "\ST"
+        #print("files_getPathFromLastOcurrencePattern RIGHT- sPath: " + str(sPath) + " - sSlash: " + str(sSlash) + " - sPattern: " + str(sPattern))
         if (sPattern + sSlash) in sPath:
            sPatternSlash = sPatternSlash + sSlash
+        #print("files_getPathFromLastOcurrencePattern RIGHT - sPath: " + str(sPath) + " - sPatternSlash: " + str(sPatternSlash))
 
     lstTemp = sPath.split(sPatternSlash)
-    #print("files_getPathFromLastOcurrencePattern - 1 - sPath: " + str(sPath) + " - lstTemp: " + str(lstTemp))
+    #print("files_getPathFromLastOcurrencePattern - 1 - sPath: " + str(sPath) + " - lstTemp: " + str(lstTemp) + " - Total Items lstTemp= " + str(len(lstTemp)))
         
     sReturn = ""
     if len(lstTemp) > 2:
@@ -1425,13 +1433,21 @@ def files_getPathFromLastOcurrencePattern(sPath, sPattern):
     
        # len(lstTemp)-1 => -1 because the last item is not needed to be preocessed
        while n < (len(lstTemp)-1):
-             sReturn = sReturn + lstTemp[n]
+
+             #ADDED SLASH BECUASE:
+             #ANOTHER EXAMPLE
+             #sPath = \VariosOwn\DEPTOS\Gascon\Alquiler\Inquilinos\2018_Forti\2018 - sPattern: 2018
+
+             sReturn = sReturn + lstTemp[n] + sSlash
     
              # len(lstTemp)-2 => -2 because the separator is needed but not at the last item
              if n < (len(lstTemp)-2):
                 #sReturn = sReturn + sSlash + sPattern 
                 sReturn = sReturn + sPattern 
                 #break
+
+             #print("files_getPathFromLastOcurrencePattern - sReturn [" + str(n) + "]: " + str(sReturn))
+
              n = n + 1
 
             #bExit = True    
@@ -1467,16 +1483,18 @@ def files_getPathFromLastOcurrencePattern(sPath, sPattern):
 # Returns: Path for detination
 #        "G:\\Temp\\FilesCopy\\.vs\\FilesCopy"
 #---------------------------------------------------------------------------------------------------------
-def files_CopyFiles_CopyFromTo_PreparePathTo(sPathTo, sFilePath, sPathFileSubdir="", sPathInit="", sSlash=file_slashdouble):
+def files_CopyFiles_CopyFromTo_PreparePathTo(sPathTo, sFilePath, sPathFileSubdir="", sPathInit="", sSlash=file_slashdouble, nOccurence=0):
 
     #sDosPuntos = ":"
+
+    #print("files_CopyFiles_CopyFromTo_PreparePathTo - INIT[" + str(nOccurence) + "]- sPathTo: " + str(sPathTo) + " - sFilePath: " + str(sFilePath) + " - sPathFileSubdir: " + str(sPathFileSubdir) + " - sPathInit: " + str(sPathInit))
 
     if sPathInit != "" and sPathFileSubdir=="":
        sPathFileSubdir = file_getSubDirFromPath(sFilePath, sPathInit) 
     if sPathInit == "" and sPathFileSubdir!="":
        sPathInit = str_left(sFilePath, len(sFilePath) - len(sPathFileSubdir))
 
-    #print("files_CopyFiles_CopyFromTo_PreparePathTo - INIT - sPathTo: " + str(sPathTo) + " - sFilePath: " + str(sFilePath) + " - sPathFileSubdir: " + str(sPathFileSubdir) + " - sPathInit: " + str(sPathInit))
+    #print("files_CopyFiles_CopyFromTo_PreparePathTo [" + str(nOccurence) + "]- sPathTo: " + str(sPathTo) + " - sFilePath: " + str(sFilePath) + " - sPathFileSubdir: " + str(sPathFileSubdir) + " - sPathInit: " + str(sPathInit))
 
     #NOT USED PER NOW
     #sPathToParent = file_PathAndFile_GetParent(sPathTo)
@@ -1485,7 +1503,7 @@ def files_CopyFiles_CopyFromTo_PreparePathTo(sPathTo, sFilePath, sPathFileSubdir
     if sPathInit != "":
        sFileInit = file_PathAndFile_GetFileName(sPathInit)
 
-    #print("files_CopyFiles_CopyFromTo_PreparePathTo - sFileInit: " + str(sFileInit))
+    #print("files_CopyFiles_CopyFromTo_PreparePathTo [" + str(nOccurence) + "]- sFileInit: " + str(sFileInit))
 
     #ADDED NAME BETWEEN PATH TO AND SUBDIR
     #EXAMPLE:
@@ -1498,23 +1516,23 @@ def files_CopyFiles_CopyFromTo_PreparePathTo(sPathTo, sFilePath, sPathFileSubdir
        if sPathToInit != sFileInit:
           sPathTo = sPathTo + sSlash + sFileInit
     else:
-        print("files_CopyFiles_CopyFromTo_PreparePathTo - INIT - sPathTo: " + str(sPathTo) + " - sFilePath: " + str(sFilePath) + " - sPathFileSubdir: " + str(sPathFileSubdir) + " - sPathInit: " + str(sPathInit))
-        print("ERROR!!! sFileInit is nothing. files_CopyFiles_CopyFromTo_PreparePathTo - sFileInit = " + str(sFileInit) + " - sPathInit: " + str(sPathInit))   
+        print("files_CopyFiles_CopyFromTo_PreparePathTo - INIT [" + str(nOccurence) + "] - sPathTo: " + str(sPathTo) + " - sFilePath: " + str(sFilePath) + " - sPathFileSubdir: " + str(sPathFileSubdir) + " - sPathInit: " + str(sPathInit))
+        print("ERROR!!! sFileInit is nothing. files_CopyFiles_CopyFromTo_PreparePathTo [" + str(nOccurence) + "] - sFileInit = " + str(sFileInit) + " - sPathInit: " + str(sPathInit))   
         exit(0)
 
-    #print("files_CopyFiles_CopyFromTo_PreparePathTo - sPathTo: " + str(sPathTo))
+    #print("files_CopyFiles_CopyFromTo_PreparePathTo [" + str(nOccurence) + "] - sPathTo: " + str(sPathTo))
 
     if sPathFileSubdir != "":
         sPathTo = sPathTo + sSlash + sPathFileSubdir
 
-    #print("files_CopyFiles_CopyFromTo_PreparePathTo - sPathTo: " + str(sPathTo))
+    #print("files_CopyFiles_CopyFromTo_PreparePathTo [" + str(nOccurence) + "] - sPathTo: " + str(sPathTo))
     sPathTo = file_fNormalPathForWindowsLinux(sPathTo)
     sPathTo = file_addSlashToPathIfNeeded(sPathTo)
 
     #CLEAN ":" JUST IN CASE WRONG PATH CREATED
     #sPathTo = files_PathClean2Puntos(sPathTo)
 
-    #print("files_CopyFiles_CopyFromTo_PreparePathTo - END - sPathTo: " + str(sPathTo))
+    #print("files_CopyFiles_CopyFromTo_PreparePathTo [" + str(nOccurence) + "] - END - sPathTo: " + str(sPathTo))
 
     #*******************************************************************************************************************************************
     #TESTING
