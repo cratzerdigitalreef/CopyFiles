@@ -10,7 +10,8 @@ a = Analysis(
     ],
     hiddenimports=[
     'customtkinter','_cffi_backend','colorama','prettytable',
-    'pycryptodome','pytz','tzlocal','CTkMessagebox', 'pyqt', 'numpy'
+    'pycryptodome','pytz','tzlocal','CTkMessagebox', 'pyqt', 'numpy',
+    'win32net'
     ],
     hookspath=[],
     hooksconfig={},
