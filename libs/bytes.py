@@ -170,37 +170,11 @@ def bytes_HexaStrToListNumbers(val, sSepara):
 
 # bytes_IsHexaValid ----------------------------------------------------------------------------------------------------------------------
 def bytes_IsHexaValid(hexa):
-    #print("Hexa: " + hexa)
-    if hexa is None:
-       return False
-    hexa = str_TrimCleanSpaces(hexa).upper()   
-    
-    if len(hexa) % 2 != 0:
-       return False
-       
-    nLen = len(hexa)
-    i=0
-    while i < nLen:
-          s = hexa[i:i+1]
-          if not bytes_IsCharValidHex(s):
-             return False
-          i=i+1
-    return True
+    return str_IsHexaValid(hexa)
 
 # bytes_IsCharValidHex ----------------------------------------------------------------------------------------------------------------------
 def bytes_IsCharValidHex(schar):
-    schar = schar.upper()
-    nLen = len(schar)
-    n = 0
-    for i in schar:
-        #print("Hexa Char: " + i)
-        if i in ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F']:
-           n = n + 1
-           
-    if n==nLen:
-       return True
-    else:
-       return False                  
+    return str_IsCharValidHex(schar)
 
 # bytes_ListNumbersToHexa ----------------------------------------------------------------------------------------------------------------------
 def bytes_ListNumbersToHexa(lstNros):

@@ -87,8 +87,9 @@ countries_dic = [
 
 # --------------------------------------------------------------------------------
 # COTA - SAP POPUP VALUES
-sCOTA_COTA = "COTA"
-sCOTA_AUTH = "AUTH"
+sCOTA_COTA = sSimcard_sDefTAR_COTA_Name
+sCOTA_AUTH = sSimcard_sDefTAR_SAPAUTH_Name 
+sCOTA_SARM = sSimcard_sDefTAR_SAPROAM_Name
 sCOTA_PopUpOK = "31"
 sCOTA_PopUpNOK = "30"
 sCOTA_PopUpOK_des = "OK"
@@ -680,6 +681,12 @@ def COTAProfile(sLogFileName,oCardservice, sTPDA = "", sCota_ver = ""):
                                 "D4", "D5", "D6", "D7", "FULL", "F7", "D8", "D9", "DC"]
          COTAgetFeatSupported(listFeatSupported, sCota_ver, dic_feat)
          return dic_feat
+      case 'SARM0100':
+         listFeatSupported = ["F8", "FA", "FB", "FE", "CampaignID", "F6",
+                                "MultiSHA1", 
+                                "D4", "D5", "D6", "D7", "FULL", "F7", "DD"]
+         COTAgetFeatSupported(listFeatSupported, sCota_ver, dic_feat)
+         return dic_feat
       case _:
          if not sCota_ver:
             sLog = 'The Applet Version is empty!'
@@ -1139,9 +1146,9 @@ def cota_validate_proactive_command(log_file_name, response, cmd, tpda):
         sys.exit()
 
 # COTACmd_sendEnvelope_ResponseFirstByteCommand ---------------------------------------------------------------------------------------------------------------------------------------------------------
-def COTACmd_sendEnvelope_ResponseFirstByteCommand(cardservice, sLogFileName, sCmd, sTPDAParam, sAPDU, sTAR="43 50 41", bNetworkOKOrChangeIMEIOrChangeMCCMNC=True, sMCC="", sMNC=""):
+def COTACmd_sendEnvelope_ResponseFirstByteCommand(cardservice, sLogFileName, sCmd, sTPDAParam, sAPDU, sTAR=sSimcard_sDefTAR_COTA, bNetworkOKOrChangeIMEIOrChangeMCCMNC=True, sMCC="", sMNC=""):
     return simcardCmd_sendEnvelope_ResponseFirstByteCommand(cardservice, sLogFileName, sCmd, sTPDAParam, sAPDU, sTAR, bNetworkOKOrChangeIMEIOrChangeMCCMNC, sMCC, sMNC)
-         
+
 # COTACmd_sendEnvelopeConcat -----------------------------------------------------------------------------------------------------------------------------------------------
 def COTACmd_sendEnvelopeConcat(cardservice, sLogFileName, sTPDAParam , sCMD):
     sReturn, sReturnDes = simcardCmd_sendEnvelopeConcat(cardservice, sLogFileName, sCMD, sTPDAParam)
@@ -1236,7 +1243,161 @@ def SAPCmdF7_Interpret(sData, sTPDA=""):
     sReturn = sReturn + str_GetENTER() 
            
     return sReturn    
- 
+
+# SAPCmdDD_Interpret -----------------------------------------------------------------------------------------------------------------------------------------------
+def SAPCmdDD_Interpret(sData, sTPDA=""):
+    
+    sDataT = str_SpacesOut(sData).upper()
+    sTPDA = str_SpacesOut(sTPDA).upper()
+    
+    sCmd = "DD"
+    
+    tMSISDNs = []
+
+    sReturn = "Data in hexadecimal: 0x" +  str_AddSpaceHexa(sData) 
+
+    if sTPDA!="":
+       #Getting data after TPDA
+       sTemp = str_getSubStringFromOcur(sDataT, sTPDA, 1)
+       sReturn = sReturn + str_GetENTER() + "TPDA: 0x" + str_AddSpaceHexa(sTPDA)
+       
+       #Next 2 bytes are PID and DCS
+       n = 0
+       sReturn = sReturn + str_GetENTER() + "PID - Protocol ID: 0x" + str_mid(sTemp, n, 2)
+       n = n + 2
+       sReturn = sReturn + str_GetENTER() + "DCS - Data Coding Scheme: 0x" + str_mid(sTemp, n, 2)
+       n = n + 2
+       
+       #Next byte is length
+       sReturn = sReturn + str_GetENTER() + "SMS length: 0x" + str(str_mid(sTemp, n, 2)) + " - Decimal: " + str(bytes_HexaToNro(str_mid(sTemp, n, 2))) + " bytes."
+       n = n + 2
+       
+       sDataT = str_midToEnd(sTemp, n)
+
+    #Example for Data
+    #Received:
+    #SMPP  9. *** 0. SMS Data: 0x01 02 DD 45 17 00 00 00 00 00 00 00 0F 00 04 00 04 83 81 08 91 45 19 31 80 05 16 F9 17 00 00 00 00 00 00 00 0F 00 03 00 03 83 81 08 91 45 19 31 80 05 16 F8 14 00 00 00 00 00 00 00 0C 00 02 00 02 83 81 05 91 51 42 33 F6 - length: 73 bytes (0x49) (characters: 146) - ASCII: ___E_________________E_1_____________________E_1_____________________QB3_ 
+    #Where:
+    #01 02 = Campaign Number
+    #DD = Command
+    #45 = Lenth = 69 bytes
+    #17 = Length = 23 bytes
+    #00 00 00 00 00 00 00 = Date Time and Time Zone
+    #0F = Length = 15 bytes
+    #00 04 = Counter Call Connected
+    #00 04 = Counter Call Disconnecte
+    #83 81 = Source and Origin => 83 = network, 81 = uicc
+    #08 91 45 19 31 80 05 16 F9 = MSISDN
+    #17 = Length = 23 bytes
+    #00 00 00 00 00 00 00 = Date Time and Time Zone
+    #0F = Length = 15 bytes
+    #00 03 = Counter Call Connected
+    #00 03 = Counter Call Disconnected
+    #83 81 = Source and Origin => 83 = network, 81 = uicc
+    #08 91 45 19 31 80 05 16 F8 = MSISDN
+    #14 = Length = 20 bytes
+    #00 00 00 00 00 00 00 = Date Time and Time Zone
+    #0C = length = 12 bytes
+    #00 02 = Counter Call Connected
+    #00 02 = Counter Call Disconnecte
+    #83 81 = Source and Origin => 83 = network, 81 = uicc
+    #05 91 51 42 33 F6 = MSISDN
+
+    if str_left(sDataT, 2) != sCmd:
+       #There is campaign id
+       sReturn = sReturn + str_GetENTER() + "Command " + sCmd + " received with campaign ID: " + str_SpaceHexa(str_left(sDataT, 4))
+       sDataT = str_midToEnd(sDataT, 4)
+
+    n = 0
+    sTemp = str_left(sDataT, 2)
+    #print("sTemp: " + sTemp)
+    n = n + 2	
+    if sTemp == sCmd:
+       sReturn = sReturn + str_GetENTER() + "Command " + sCmd + " received OK."     
+    else:
+       #This is because APK called. The command "F7" is not in the data returned.
+       n = 0   
+    
+    #Next byte is length
+    sCmdLenTotal = str_mid(sDataT, n, 2)
+    nCmdLenTotal = int(bytes_HexaToNro(sCmdLenTotal))
+    sReturn = sReturn + str_GetENTER() + "Total Calls length: 0x" + sCmdLenTotal + " - Decimal: " + str(nCmdLenTotal) + " bytes."
+    if nCmdLenTotal == 0:
+       sReturn = sReturn + str_GetENTER() + "Applet CALLs buffer is empty, cleanned."
+    else:   
+       sReturn = sReturn + str_GetENTER() + "IMPORTANT: All calls are informed like LIFO - last in/first out - first call is the last one executed."
+    n = n + 2
+
+    #Because it is taken each character per analysis
+    nCmdLenTotal = nCmdLenTotal * 2
+          
+    nCmd = 0
+
+    while n < nCmdLenTotal:
+               
+          nCmd = nCmd + 1
+          #print("n: " + str(n))
+               
+          #Next byte is Cmd Nro - length
+          sCmdLen = str_mid(sDataT, n, 2)
+          n = n + 2
+          nCmdLen = int(bytes_HexaToNro(sCmdLen))
+          sTemp = str_mid(sDataT, n, nCmdLen * 2)
+          sReturn = sReturn + str_GetENTER() + str_GetENTER() + "Call " + str(nCmd) + " - length with Date Time: 0x" + sCmdLen + " - Decimal: " + str(nCmdLen) + " bytes."
+          sReturn = sReturn + str_GetENTER() + "Call " + str(nCmd) + " - total data: 0x" + str_AddSpaceHexa(sTemp) + " - ASCII: " + bytes_HexaToASCII(sTemp)
+          
+          # PLoci response for date/time is always 7 bytes
+          sDateTime = str_left(sTemp, 14)
+          sCall = str_midToEnd(sTemp, 14)
+          if sDateTime != "":
+             sReturn = sReturn + str_GetENTER() + "Call " + str(nCmd) + " - date-time: 0x" + str_AddSpaceHexa(sDateTime) + " - Interpreted: " + fPLociGetDateTimeFromSIM(sDateTime)
+          if sCall != "":   
+             sReturn = sReturn + str_GetENTER() + "Call " + str(nCmd) + " - data: 0x" + str_AddSpaceHexa(sCall) + " - ASCII: " + bytes_HexaToASCII(sCall)
+
+          if sCall != "":
+             m = 0
+             #Call data length
+             sCallLen = str_mid(sCall, m, 2)
+             m = m + 2
+             nCallLen = int(bytes_HexaToNro(sCallLen))
+             sReturn = sReturn + str_GetENTER() + "Call " + str(nCmd) + " - length: 0x" + sCallLen + " - Decimal: " + str(nCallLen) + " bytes."
+
+             #Counter Call Connected
+             sCallConn = str_mid(sCall, m, 4)
+             sReturn = sReturn + str_GetENTER() + "Call " + str(nCmd) + " - Call Connected Counter: 0x" + str_AddSpaceHexa(sCallConn) + " - Decimal: " + str_AddThousandToNumber(str(bytes_HexaToNro(sCallConn))) + "."
+             m = m + 4
+
+             #Counter Call Diconnected
+             sCallDisConn = str_mid(sCall, m, 4)
+             sReturn = sReturn + str_GetENTER() + "Call " + str(nCmd) + " - Call Disconnected Counter: 0x" + str_AddSpaceHexa(sCallDisConn) + " - Decimal: " + str_AddThousandToNumber(str(bytes_HexaToNro(sCallDisConn))) + "."
+             m = m + 4
+          
+             #Source and Destination Call
+             sCallSourceDest = str_mid(sCall, m, 4)
+             sReturn = sReturn + str_GetENTER() + "Call " + str(nCmd) 
+             sReturn = sReturn + " - Source " + simcard_deviceIdentities_Des(str_left(sCallSourceDest, 2), True) 
+             sReturn = sReturn + str_GetENTER() + "Call " + str(nCmd) 
+             sReturn = sReturn + " - Destination " + simcard_deviceIdentities_Des(str_right(sCallSourceDest, 2), True) 
+             m = m + 4
+             
+             #Call MSISDN
+             sCallMSISDN = str_midToEnd(sCall, m)
+             sReturn = sReturn + str_GetENTER() + "Call " + str(nCmd) 
+             sMSISDNDes, sMSISDNNro = simcard_MSISDN_TPDA_InterpretOnlyDes(sCallMSISDN, True)
+             sReturn = sReturn + " - " + sMSISDNDes
+             if sMSISDNNro != "":
+                tMSISDNs.append(sMSISDNNro)
+
+
+          n = n + (nCmdLen * 2)
+
+    if nCmd > 0:
+      sReturn = sReturn + str_GetENTER() + str_GetENTER() + "Total calls processed: " + str(nCmd) + "."
+    
+    sReturn = sReturn + str_GetENTER() 
+           
+    return sReturn, tMSISDNs    
+
  # SAPCOTASMSProvisioning_Interpret -----------------------------------------------------------------------------------------------------------------------------------------------
 def SAPCOTASMSProvisioning_Interpret(sData):
     return COTA_processSMS(sData)
@@ -1410,7 +1571,7 @@ def cota_SAP_CampaignResponse_Interpret(sHex):
 
     sReturn = ""
     if sCOTAVer != "":
-        sReturn = sReturn + sCOTA + " version: " + sCOTAVer + sSepara
+        sReturn = sReturn + sCOTA_COTA + " version: " + sCOTAVer + sSepara
     if sPopUpResult != "":
         sReturn = sReturn + "PopUp Result: " + sPopUpResult + sSepara
     if sIMEIHex != "":
@@ -1437,9 +1598,12 @@ def COTA_GetAppletVersion(sHexa):
     sApplet = ""
     if str_instrBool(sHexaASCII, sCOTA_COTA):
        sApplet = sCOTA_COTA
-    else:
-       if str_instrBool(sHexaASCII, sCOTA_AUTH):
-          sApplet = sCOTA_AUTH
+
+    if str_instrBool(sHexaASCII, sCOTA_AUTH):
+       sApplet = sCOTA_AUTH
+
+    if str_instrBool(sHexaASCII, sCOTA_SARM):
+       sApplet = sCOTA_SARM
 
     if sApplet != "":
        sReturn = str_getSubStringFromOcur(sHexaASCII, sApplet, 1)

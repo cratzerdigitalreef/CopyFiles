@@ -154,10 +154,11 @@ def log_writeWithDateTime(sFileName, sData, bPrint=True, sType="Normal", bDate=T
     if sFileName!= "":
        file2write=open(sFileName, 'a')
        file2write.write(sLine + "\n")
+       file2write.close()
     
     if bPrint:
        log_writeWordsInColor(sLine, sType)
-    file2write.close()
+       
     return sLine    
 
 # log_writePrintOnlyInfo ----------------------------------------------------------------------------------------------------------

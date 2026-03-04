@@ -15,6 +15,7 @@ ota_sDef_FileNameSepara = "_"
 
 ota_9000 = "9000"
 ota_6101 = "6101"
+ota_RPADU = "RAPDU"
 
 ota_sDef_SIMSupplierThales = "Thales"
 ota_sDef_SIMSupplierValid = "Valid"
@@ -22,8 +23,13 @@ ota_sDef_SIMSupplierGyD = "GyD"
 ota_sDef_SIMSupplierIdemia = "Idemia"
 ota_sDef_SIMSupplierWordCards = "WorldCards"
 ota_sDef_SIMSupplierNXP = "NXP"
+ota_sDef_SIMSupplierEaglefly = "Eaglefly"
 
-ota_sDef_SIMSupplierValidGyDIdemia = ota_sDef_SIMSupplierValid + ota_sDef_SIMSupplierGyD + ota_sDef_SIMSupplierIdemia + ota_sDef_SIMSupplierWordCards + ota_sDef_SIMSupplierNXP
+ota_sDef_SIMSupplierValidGyDIdemia = ota_sDef_SIMSupplierValid + ota_sDef_SIMSupplierGyD + ota_sDef_SIMSupplierIdemia + ota_sDef_SIMSupplierWordCards + ota_sDef_SIMSupplierNXP + ota_sDef_SIMSupplierEaglefly
+ota_sDef_SIMSupplierNoValidNoThales = ota_sDef_SIMSupplierGyD + ota_sDef_SIMSupplierIdemia + ota_sDef_SIMSupplierWordCards + ota_sDef_SIMSupplierNXP + ota_sDef_SIMSupplierEaglefly
+
+ota_sDef_SIMSupplierValidGyDIdemia_9000 = ota_RPADU + ota_sDef_FileNameSepara + ota_9000 + ota_sDef_FileNameSepara + ota_sDef_SIMSupplierGyD + ota_sDef_SIMSupplierIdemia + ota_sDef_SIMSupplierWordCards + ota_sDef_SIMSupplierNXP + ota_sDef_SIMSupplierEaglefly
+ota_sDef_SIMSupplierValidGyDIdemia_6101 = ota_RPADU + ota_sDef_FileNameSepara + ota_6101 + ota_sDef_FileNameSepara + ota_sDef_SIMSupplierValid + ota_sDef_SIMSupplierGyD + ota_sDef_SIMSupplierIdemia + ota_sDef_SIMSupplierWordCards + ota_sDef_SIMSupplierNXP + ota_sDef_SIMSupplierEaglefly
 
 ota_sDef_OTAExtThales = ".script"
 ota_sDef_OTAExtValid = ".xml"
@@ -98,7 +104,7 @@ def ota_OTAForDeletePackageAndInstance(OTAScriptsName, sPathOut, sAIDPackage, sA
        ota_ThalesOTAPlatformClassicFooter(sFileNameProc)
 
     # -------------------------------------------------------------------------------------------------------------------------------
-    # VALID, GyD e IDEMIA
+    # VALID, GyD e IDEMIA - CLASSIC OTA
     sFileNameProc = sFileName
     sFileNameProc = sFileNameProc + ota_sDef_FileNameSepara + ota_sDef_OTAClassic
     sFileNameProc = sFileNameProc + ota_sDef_FileNameSepara + ota_sDef_SIMSupplierValidGyDIdemia
@@ -118,7 +124,7 @@ def ota_OTAForDeletePackageAndInstance(OTAScriptsName, sPathOut, sAIDPackage, sA
     # THALES
     sFileNameProc = sFileName
     sFileNameProc = sFileNameProc + ota_sDef_FileNameSepara + ota_sDef_OTAAdvanced
-    sFileNameProc = sFileNameProc + ota_sDef_FileNameSepara + ota_sDef_SIMSupplierThales
+    sFileNameProc = sFileNameProc + ota_sDef_FileNameSepara + ota_sDef_SIMSupplierThales + ota_RPADU + ota_9000
     sFileNameProc = sFileNameProc + sExt
     
     sFileNameProc = ota_FileCreate(sPathOut, sFileNameProc, ota_ThalesOTAPlatformAdvancedHeader())
@@ -133,10 +139,10 @@ def ota_OTAForDeletePackageAndInstance(OTAScriptsName, sPathOut, sAIDPackage, sA
        ota_ThalesOTAPlatformAdvancedFooter(2, sFileNameProc, ota_sDef_SIMSupplierThales)
 
     # -------------------------------------------------------------------------------------------------------------------------------
-    # VALID, GyD e IDEMIA
+    # VALID - THALES ADVANCED OTA - RAPDU 6101
     sFileNameProc = sFileName
     sFileNameProc = sFileNameProc + ota_sDef_FileNameSepara + ota_sDef_OTAAdvanced
-    sFileNameProc = sFileNameProc + ota_sDef_FileNameSepara + ota_sDef_SIMSupplierValidGyDIdemia
+    sFileNameProc = sFileNameProc + ota_sDef_FileNameSepara + ota_sDef_SIMSupplierValidGyDIdemia_6101
     sFileNameProc = sFileNameProc + sExt
     
     sFileNameProc = ota_FileCreate(sPathOut, sFileNameProc, ota_ThalesOTAPlatformAdvancedHeader())
@@ -149,6 +155,24 @@ def ota_OTAForDeletePackageAndInstance(OTAScriptsName, sPathOut, sAIDPackage, sA
        tOTAAdvanced.append(sAPDUDelPackage)
        ota_ThalesOTAPlatformAdvancedAPDU(tOTAAdvanced, sFileNameProc)
        ota_ThalesOTAPlatformAdvancedFooter(1, sFileNameProc, ota_sDef_SIMSupplierValidGyDIdemia)
+
+    # -------------------------------------------------------------------------------------------------------------------------------
+    # IDEMIA - GYD - ETC - ADVANCED THALES OTA - RAPDU 9000
+    sFileNameProc = sFileName
+    sFileNameProc = sFileNameProc + ota_sDef_FileNameSepara + ota_sDef_OTAAdvanced
+    sFileNameProc = sFileNameProc + ota_sDef_FileNameSepara + ota_sDef_SIMSupplierValidGyDIdemia_9000
+    sFileNameProc = sFileNameProc + sExt
+    
+    sFileNameProc = ota_FileCreate(sPathOut, sFileNameProc, ota_ThalesOTAPlatformAdvancedHeader())
+
+    tOTAAdvanced = []
+        
+    if sFileNameProc != "":
+ 
+      # tOTAAdvanced.append(sAPDUDelInstance) => NOT USED BECAUSE IT IS ONLY DELETED THE PACKAGE AND RELATIVES
+       tOTAAdvanced.append(sAPDUDelPackage)
+       ota_ThalesOTAPlatformAdvancedAPDU(tOTAAdvanced, sFileNameProc)
+       ota_ThalesOTAPlatformAdvancedFooter(1, sFileNameProc, ota_sDef_SIMSupplierNoValidNoThales)
 
     # -------------------------------------------------------------------------------------------------------------------------------
     # VALID OTA PLATFORM
@@ -393,7 +417,7 @@ def ota_OTAForLoadPackageAndInstallApplet(OTAScriptsName, sOTAScriptsAmount, sPa
     # THALES
     sFileNameProc = sFileNameThales
     sFileNameProc = sFileNameProc + ota_sDef_FileNameSepara + ota_sDef_OTAAdvanced
-    sFileNameProc = sFileNameProc + ota_sDef_FileNameSepara + ota_sDef_SIMSupplierThales
+    sFileNameProc = sFileNameProc + ota_sDef_FileNameSepara + ota_sDef_SIMSupplierThales + ota_RPADU + ota_9000
     sFileNameProc = sFileNameProc + ota_sDef_OTAExtThales
     
     sFileNameProc = ota_FileCreate(sPathOut, sFileNameProc, ota_ThalesOTAPlatformAdvancedHeader())
@@ -401,10 +425,21 @@ def ota_OTAForLoadPackageAndInstallApplet(OTAScriptsName, sOTAScriptsAmount, sPa
     ota_ThalesOTAPlatformAdvancedFooter(len(lstAPDUs), sFileNameProc, ota_sDef_SIMSupplierThales)
 
     # -------------------------------------------------------------------------------------------------------------------------------
-    # VALID, GyD e IDEMIA
+    # GyD, IDEMIA and Others - RAPDU 9000
     sFileNameProc = sFileNameThales
     sFileNameProc = sFileNameProc + ota_sDef_FileNameSepara + ota_sDef_OTAAdvanced
-    sFileNameProc = sFileNameProc + ota_sDef_FileNameSepara + ota_sDef_SIMSupplierValidGyDIdemia
+    sFileNameProc = sFileNameProc + ota_sDef_FileNameSepara + ota_sDef_SIMSupplierValidGyDIdemia_9000
+    sFileNameProc = sFileNameProc + ota_sDef_OTAExtThales
+    
+    sFileNameProc = ota_FileCreate(sPathOut, sFileNameProc, ota_ThalesOTAPlatformAdvancedHeader())
+    ota_ThalesOTAPlatformAdvancedAPDU(lstAPDUs, sFileNameProc)
+    ota_ThalesOTAPlatformAdvancedFooter(len(lstAPDUs), sFileNameProc, ota_sDef_SIMSupplierNoValidNoThales)
+
+    # -------------------------------------------------------------------------------------------------------------------------------
+    # VALID, GyD e IDEMIA - RAPDU 6101
+    sFileNameProc = sFileNameThales
+    sFileNameProc = sFileNameProc + ota_sDef_FileNameSepara + ota_sDef_OTAAdvanced
+    sFileNameProc = sFileNameProc + ota_sDef_FileNameSepara + ota_sDef_SIMSupplierValidGyDIdemia_6101
     sFileNameProc = sFileNameProc + ota_sDef_OTAExtThales
     
     sFileNameProc = ota_FileCreate(sPathOut, sFileNameProc, ota_ThalesOTAPlatformAdvancedHeader())
@@ -691,16 +726,17 @@ def ota_ThalesOTAPlatformAdvancedFooter(nCommands, sPathFileName="", sSIMSupplie
     
     sPoR = "2302"
     
+    sAOTA_RAPDU = ota_9000
+    if sSIMSupplierRef != "":
+        if ota_sDef_SIMSupplierValid.upper() in sSIMSupplierRef.upper():
+           sAOTA_RAPDU = ota_6101
+       
     if nCommands > 0:
        
        n = 0
        while n < nCommands:
        
-             sRet = sRet + sPoR
-             if ota_sDef_SIMSupplierThales.upper() in sSIMSupplierRef.upper():
-                sRet = sRet + ota_9000
-             else:
-                sRet = sRet + ota_6101
+             sRet = sRet + sPoR + sAOTA_RAPDU
                    
              n = n + 1
        

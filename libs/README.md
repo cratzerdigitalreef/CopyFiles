@@ -1,4 +1,4 @@
-# smartcard-python-libs-
+# smartcard-python-libs
 
 Libraries used in different projects, such as:
 - https://github.com/Digita1Reef/APDU-Transmitter-python/tree/main
@@ -10,5 +10,3 @@ Libraries used in different projects, such as:
 - https://github.com/Digita1Reef/applet-sapauth-qafrmw/tree/qa
 - https://github.com/Digita1Reef/applet-sapauth-qafrmw/tree/master
 - https://github.com/Digita1Reef/SMPP-Transmitter-python
-
-

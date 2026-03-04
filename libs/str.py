@@ -639,9 +639,15 @@ def str_ListToStringWithSeparator(lst, ssep):
     return out
      
 # str_AddSpaceHexa ----------------------------------------------------------------------------------------------------------------------
-def str_AddSpaceHexa(sstr):
+def str_AddSpaceHexa(sstr, bValidateHexa=False):
+
     nTogether = 2
     sstr = str(sstr)
+
+    if bValidateHexa:
+       if not str_IsHexaValid(sstr):
+          return sstr
+
     if sstr[:2].upper() == "0X":
        nTogether = 4
     
@@ -649,10 +655,10 @@ def str_AddSpaceHexa(sstr):
     return sOut
 
 # str_SpaceHexa ----------------------------------------------------------------------------------------------------------------------
-def str_SpaceHexa(sstr):
+def str_SpaceHexa(sstr, bValidateHexa=False):
     sstr =str_SpacesOut(sstr)
     #print("sstr: " + sstr)
-    return str_AddSpaceHexa(sstr)
+    return str_AddSpaceHexa(sstr, bValidateHexa)
 
 # str_AddCharToString ----------------------------------------------------------------------------------------------------------------------
 def str_AddCharToString(sstr, nTogether, sChar):
@@ -1338,5 +1344,39 @@ def str_CalculateNofTotal(nItem, nTotal):
     sTotal = str_AddThousandToNumber(str(nItem)) + " of total " + str_AddThousandToNumber(str(nTotal)) + " - processing = % " + sPorcentage
     
     return sTotal
+
+# str_IsHexaValid ----------------------------------------------------------------------------------------------------------------------
+def str_IsHexaValid(hexa):
+    #print("Hexa: " + hexa)
+    if hexa is None:
+       return False
+    hexa = str_TrimCleanSpaces(hexa).upper()   
+    
+    if len(hexa) % 2 != 0:
+       return False
+       
+    nLen = len(hexa)
+    i=0
+    while i < nLen:
+          s = hexa[i:i+1]
+          if not str_IsCharValidHex(s):
+             return False
+          i=i+1
+    return True
+
+# str_IsCharValidHex ----------------------------------------------------------------------------------------------------------------------
+def str_IsCharValidHex(schar):
+    schar = schar.upper()
+    nLen = len(schar)
+    n = 0
+    for i in schar:
+        #print("Hexa Char: " + i)
+        if i in ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F']:
+           n = n + 1
+           
+    if n==nLen:
+       return True
+    else:
+       return False                  
 
 #------------------------------------------------------------------------------------

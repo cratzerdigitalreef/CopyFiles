@@ -192,12 +192,12 @@ def apk_processSHA1(sLogFileName, sRes, sSHA1):
              nLen = nLen * 2
              sSHA1Data = str_mid(sData, 2, nLen)
              
-             log_write(sLogFileName, "SHA-1 in the applet COTA/SAP: '" + sSHA1Data + ". Reference from Response: " + str(nOcur))
+             log_write(sLogFileName, "SHA-1 in the applet ARA-M: '" + sSHA1Data + ". Reference from Response: " + str(nOcur))
              
              if sSHA1Data == "":
                 return False
              else:
-                sLog = "SHA-1 in the applet COTA/SAP: '" + sSHA1Data + "' is"
+                sLog = "SHA-1 in the applet ARA-M: '" + sSHA1Data + "' is"
                 if sSHA1Data == sSHA1:
                    # SHA-1 IS IN DATA RETRIEVED FROM APPLET COTA
                    bFound = True
@@ -342,7 +342,7 @@ def apk_APDU_FA(cardservice, sLogFileName, sChannel, sMSISDN=""):
    return bReturn
  
 # apk_APDU -----------------------------------------------------------------------------------------------------------
-def apk_APDU(cardservice, sLogFileName, sChannel, sAPDU, sDes):
+def apk_APDU(cardservice, sLogFileName, sChannel, sAPDU, sDes, sAppletAID=""):
     
    #Command '82 02 FC AA 00'
    #Class '82'
@@ -360,7 +360,7 @@ def apk_APDU(cardservice, sLogFileName, sChannel, sAPDU, sDes):
    sLog = "APDU "
    if sDes != "":
       sLog = sLog + "for " + sDes + " " 
-   sLog = sLog + "to be sent from APK to Applet COTA/SAP: 0x" + str_SpaceHexa(sAPDU)
+   sLog = sLog + "to be sent from APK to Applet: 0x" + str_SpaceHexa(sAPDU)
    sAPDUASCII = bytes_HexaToASCII(sAPDU)
    if sAPDUASCII != "":
       sLog = sLog + " - ASCII: " + bytes_HexaToASCII(sAPDU) 
@@ -368,7 +368,7 @@ def apk_APDU(cardservice, sLogFileName, sChannel, sAPDU, sDes):
    
    log_write_InfoInBlue(sLogFileName, sLog)
       
-   sResAndSW1SW2 = simcard_Select_ARAM_SendAPDU(cardservice, sLogFileName, sChannel, sAPDU)
+   sResAndSW1SW2 = simcard_Select_ARAM_SendAPDU(cardservice, sLogFileName, sChannel, sAPDU, sAppletAID)
    sLog = "APDU Response from Applet COTA/SAP to APK: " + simcard_DataResponseDesHexaAndASCII(sResAndSW1SW2, True)
    log_write_InfoInBlue(sLogFileName, sLog)
 
