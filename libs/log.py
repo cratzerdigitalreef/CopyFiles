@@ -119,6 +119,8 @@ def log_write_OKInGreen(sFileName, sData):
     log_write(sFileName, sData, sType='success')
 def log_write_WarningInYellow(sFileName, sData):
     log_write(sFileName, sData, sType='warning')
+def log_write_DebugInMagenta(sFileName, sData):
+    log_write(sFileName, sData, sType='debug')
 
     
 # log_write ----------------------------------------------------------------------------------------------------------

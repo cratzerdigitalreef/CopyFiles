@@ -970,11 +970,15 @@ def bytes_BinaryDataFromFileToHEXA(sBinary):
     return sData
     
 # bytes_LengthDescription ------------------------------------------------------------------------------------------------------
-def bytes_LengthDescription(sLenInHexa):
+def bytes_LengthDescription(sLenInHexa, sDes=""):
     sLenInHexa = str_SpacesOut(sLenInHexa)
     sReturn = ""
     if len(sLenInHexa) > 0:
-       sReturn = "Length = 0x" + str_SpaceHexa(str(sLenInHexa))
+       if sDes != "":
+           sReturn = sReturn + sDes
+       else:
+           sReturn = sReturn + "Length"    
+       sReturn = sReturn + " = 0x" + str_SpaceHexa(str(sLenInHexa))
        sReturn = sReturn + " - in decimal = " + str(bytes_HexaToNro(sLenInHexa))
     return sReturn
 

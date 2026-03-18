@@ -681,10 +681,17 @@ def COTAProfile(sLogFileName,oCardservice, sTPDA = "", sCota_ver = ""):
                                 "D4", "D5", "D6", "D7", "FULL", "F7", "D8", "D9", "DC"]
          COTAgetFeatSupported(listFeatSupported, sCota_ver, dic_feat)
          return dic_feat
+      case 'COTA0507':
+         listFeatSupported = ["F0", "F1", "F2", "F4", "F5", "F8", "F9", "FA", "FB", "FC", "FD", "FE", "E2",
+                                "F1F0", "F2F0", "UCS2", "PopUpRetries", "AutoPopUpbyIMEI", "CampaignID", "F6",
+                                "MultiSHA1", "F0Priority",
+                                "D4", "D5", "D6", "D7", "FULL", "F7", "D8", "D9", "DC", "DE"]
+         COTAgetFeatSupported(listFeatSupported, sCota_ver, dic_feat)
+         return dic_feat
       case 'SARM0100':
          listFeatSupported = ["F8", "FA", "FB", "FE", "CampaignID", "F6",
                                 "MultiSHA1", 
-                                "D4", "D5", "D6", "D7", "FULL", "F7", "DD"]
+                                "D4", "D5", "D6", "D7", "FULL", "F7", "DD", "DE"]
          COTAgetFeatSupported(listFeatSupported, sCota_ver, dic_feat)
          return dic_feat
       case _:
@@ -1158,51 +1165,15 @@ def COTACmd_sendEnvelopeConcat(cardservice, sLogFileName, sTPDAParam , sCMD):
 # SAPCmdF7_Interpret -----------------------------------------------------------------------------------------------------------------------------------------------
 def SAPCmdF7_Interpret(sData, sTPDA=""):
     
-    sDataT = str_SpacesOut(sData).upper()
-    sTPDA = str_SpacesOut(sTPDA).upper()
-    
     sCmd = "F7"
-    
-    sReturn = "Data in hexadecimal: 0x" +  str_AddSpaceHexa(sData) 
+    sDataT, sReturnSMS, nCmdLenTotal = SAPCOTASMS_Interpret_GetData(sData, sTPDA, sCmd)
 
-    if sTPDA!="":
-       #D0 49 81 03 01 13 00 82 02 81 83 0B 3E 05 00 05 81 06 01 F4 00 04 34 F7 32 18 42 11 62 21 64 21 29 4A 41 31 41 81 41 41 45 31 43 4F 54 41 30 35 30 36 18 42 11 62 21 54 94 29 4A 41 31 41 81 41 41 45 31 43 4F 54 41 30 35 30 36
-       
-       #Getting data after TPDA
-       sTemp = str_getSubStringFromOcur(sDataT, sTPDA, 1)
-       sReturn = sReturn + str_GetENTER() + "TPDA: 0x" + str_AddSpaceHexa(sTPDA)
-       
-       #Next 2 bytes are PID and DCS
-       n = 0
-       sReturn = sReturn + str_GetENTER() + "PID - Protocol ID: 0x" + str_mid(sTemp, n, 2)
-       n = n + 2
-       sReturn = sReturn + str_GetENTER() + "DCS - Data Coding Scheme: 0x" + str_mid(sTemp, n, 2)
-       n = n + 2
-       
-       #Next byte is length
-       sReturn = sReturn + str_GetENTER() + "SMS length: 0x" + str(str_mid(sTemp, n, 2)) + " - Decimal: " + str(bytes_HexaToNro(str_mid(sTemp, n, 2))) + " bytes."
-       n = n + 2
-       
-       sDataT = str_midToEnd(sTemp, n)
+    sReturn = "Data in hexadecimal: 0x" +  str_AddSpaceHexa(sData) 
+    if sReturnSMS != "":
+       sReturn = sReturn + str_GetENTER() + sReturnSMS
 
     n = 0
-    sTemp = str_left(sDataT, 2)
-    #print("sTemp: " + sTemp)
-    n = n + 2	
-    if sTemp == sCmd:
-       sReturn = sReturn + str_GetENTER() + "Command " + sCmd + " received OK."     
-    else:
-       #This is because APK called. The command "F7" is not in the data returned.
-       n = 0   
     
-    #Next byte is length
-    sCmdLenTotal = str_mid(sDataT, n, 2)
-    nCmdLenTotal = int(bytes_HexaToNro(sCmdLenTotal))
-    sReturn = sReturn + str_GetENTER() + "Total Command length: 0x" + sCmdLenTotal + " - Decimal: " + str(nCmdLenTotal) + " bytes."
-    if nCmdLenTotal == 0:
-       sReturn = sReturn + " - Applet SMS buffer is empty, cleanned."
-    n = n + 2
-
     #Because it is taken each character per analysis
     nCmdLenTotal = nCmdLenTotal * 2
           
@@ -1254,25 +1225,11 @@ def SAPCmdDD_Interpret(sData, sTPDA=""):
     
     tMSISDNs = []
 
-    sReturn = "Data in hexadecimal: 0x" +  str_AddSpaceHexa(sData) 
+    sDataT, sReturnSMS, nCmdLenTotal = SAPCOTASMS_Interpret_GetData(sData, sTPDA, sCmd)
 
-    if sTPDA!="":
-       #Getting data after TPDA
-       sTemp = str_getSubStringFromOcur(sDataT, sTPDA, 1)
-       sReturn = sReturn + str_GetENTER() + "TPDA: 0x" + str_AddSpaceHexa(sTPDA)
-       
-       #Next 2 bytes are PID and DCS
-       n = 0
-       sReturn = sReturn + str_GetENTER() + "PID - Protocol ID: 0x" + str_mid(sTemp, n, 2)
-       n = n + 2
-       sReturn = sReturn + str_GetENTER() + "DCS - Data Coding Scheme: 0x" + str_mid(sTemp, n, 2)
-       n = n + 2
-       
-       #Next byte is length
-       sReturn = sReturn + str_GetENTER() + "SMS length: 0x" + str(str_mid(sTemp, n, 2)) + " - Decimal: " + str(bytes_HexaToNro(str_mid(sTemp, n, 2))) + " bytes."
-       n = n + 2
-       
-       sDataT = str_midToEnd(sTemp, n)
+    sReturn = "Data in hexadecimal: 0x" +  str_AddSpaceHexa(sData) 
+    if sReturnSMS != "":
+       sReturn = sReturn + str_GetENTER() + sReturnSMS
 
     #Example for Data
     #Received:
@@ -1302,35 +1259,15 @@ def SAPCmdDD_Interpret(sData, sTPDA=""):
     #00 02 = Counter Call Disconnecte
     #83 81 = Source and Origin => 83 = network, 81 = uicc
     #05 91 51 42 33 F6 = MSISDN
-
-    if str_left(sDataT, 2) != sCmd:
-       #There is campaign id
-       sReturn = sReturn + str_GetENTER() + "Command " + sCmd + " received with campaign ID: " + str_SpaceHexa(str_left(sDataT, 4))
-       sDataT = str_midToEnd(sDataT, 4)
-
-    n = 0
-    sTemp = str_left(sDataT, 2)
-    #print("sTemp: " + sTemp)
-    n = n + 2	
-    if sTemp == sCmd:
-       sReturn = sReturn + str_GetENTER() + "Command " + sCmd + " received OK."     
-    else:
-       #This is because APK called. The command "F7" is not in the data returned.
-       n = 0   
     
     #Next byte is length
-    sCmdLenTotal = str_mid(sDataT, n, 2)
-    nCmdLenTotal = int(bytes_HexaToNro(sCmdLenTotal))
-    sReturn = sReturn + str_GetENTER() + "Total Calls length: 0x" + sCmdLenTotal + " - Decimal: " + str(nCmdLenTotal) + " bytes."
-    if nCmdLenTotal == 0:
-       sReturn = sReturn + str_GetENTER() + "Applet CALLs buffer is empty, cleanned."
-    else:   
+    if nCmdLenTotal > 0:
        sReturn = sReturn + str_GetENTER() + "IMPORTANT: All calls are informed like LIFO - last in/first out - first call is the last one executed."
-    n = n + 2
 
     #Because it is taken each character per analysis
     nCmdLenTotal = nCmdLenTotal * 2
           
+    n = 0
     nCmd = 0
 
     while n < nCmdLenTotal:
@@ -1398,7 +1335,110 @@ def SAPCmdDD_Interpret(sData, sTPDA=""):
            
     return sReturn, tMSISDNs    
 
- # SAPCOTASMSProvisioning_Interpret -----------------------------------------------------------------------------------------------------------------------------------------------
+# SAPCmdDE_Interpret -----------------------------------------------------------------------------------------------------------------------------------------------
+def SAPCmdDE_Interpret(sData, sTPDA=""):
+    
+    sCmd = "DE"
+    sDataT, sReturnSMS, nCmdLenTotal = SAPCOTASMS_Interpret_GetData(sData, sTPDA, sCmd)
+
+    sReturn = "Data in hexadecimal: 0x" +  str_AddSpaceHexa(sData) 
+    if sReturnSMS != "":
+       sReturn = sReturn + str_GetENTER() + sReturnSMS
+
+    n = 0
+
+    if nCmdLenTotal > 0:
+      
+      nIncrement = 2
+      sRepeatTimes = str_mid(sDataT, n, nIncrement)
+      n = n + nIncrement
+      sRepeatTimesExec = str_mid(sDataT, n, nIncrement)
+      n = n + nIncrement
+
+      nIncrement = 4
+      sRepeatStatusCommands = str_mid(sDataT, n, nIncrement)
+      n = n + nIncrement
+      sRepeatStatusCommandsExec = str_mid(sDataT, n, nIncrement)
+      n = n + nIncrement
+
+      nIncrement = 2
+      sRepeatSendSMSNot = str_mid(sDataT, n, nIncrement)
+      n = n + nIncrement
+
+      sRepeatCmd = ""
+      sRepeatCmd = str_midToEnd(sDataT, n)
+
+      if sRepeatTimes != "":
+         sReturn = sReturn + str_GetENTER() + bytes_LengthDescription(sRepeatTimes, "Repeat Times")
+      if sRepeatTimesExec != "":
+         sReturn = sReturn + str_GetENTER() + bytes_LengthDescription(sRepeatTimesExec, "Repeat Times Executed")
+      if sRepeatStatusCommands != "":
+         sReturn = sReturn + str_GetENTER() + bytes_LengthDescription(sRepeatStatusCommands, "Status Commands")
+      if sRepeatStatusCommandsExec != "":
+         sReturn = sReturn + str_GetENTER() + bytes_LengthDescription(sRepeatStatusCommandsExec, "Status Commands Executed")
+
+      if sRepeatSendSMSNot != "":
+         sReturn = sReturn + str_GetENTER() + "Send SMS for command in each repetition: 0x" + sRepeatSendSMSNot + " - "
+         if sRepeatSendSMSNot == "31":
+            sReturn = sReturn + "No"
+         else:
+            sReturn = sReturn + "Yes"
+
+      if sRepeatCmd != "":
+         sReturn = sReturn + str_GetENTER() + "Command to be repeated: 0x" + str_SpaceHexa(sRepeatCmd) + " - Command length: " + str(len(sRepeatCmd)//2) + " bytes."
+
+    return sReturn, sRepeatTimes, sRepeatTimesExec, sRepeatStatusCommands, sRepeatStatusCommandsExec, sRepeatSendSMSNot, sRepeatCmd
+
+# SAPCOTASMS_Interpret_GetData -----------------------------------------------------------------------------------------------------------------------------------------------
+def SAPCOTASMS_Interpret_GetData(sData, sTPDA="", sCmd=""):
+    
+    sReturn = ""
+
+    sDataT = str_SpacesOut(sData).upper()
+    sTPDA = str_SpacesOut(sTPDA).upper()
+
+    if sTPDA!="":
+       #D0 49 81 03 01 13 00 82 02 81 83 0B 3E 05 00 05 81 06 01 F4 00 04 34 F7 32 18 42 11 62 21 64 21 29 4A 41 31 41 81 41 41 45 31 43 4F 54 41 30 35 30 36 18 42 11 62 21 54 94 29 4A 41 31 41 81 41 41 45 31 43 4F 54 41 30 35 30 36
+       
+       #Getting data after TPDA
+       sTemp = str_getSubStringFromOcur(sDataT, sTPDA, 1)
+       sReturn = sReturn + str_GetENTER() + "TPDA: 0x" + str_AddSpaceHexa(sTPDA)
+       
+       #Next 2 bytes are PID and DCS
+       n = 0
+       sReturn = sReturn + str_GetENTER() + "PID - Protocol ID: 0x" + str_mid(sTemp, n, 2)
+       n = n + 2
+       sReturn = sReturn + str_GetENTER() + "DCS - Data Coding Scheme: 0x" + str_mid(sTemp, n, 2)
+       n = n + 2
+       
+       #Next byte is length
+       sReturn = sReturn + str_GetENTER() + "SMS length: 0x" + str(str_mid(sTemp, n, 2)) + " - Decimal: " + str(bytes_HexaToNro(str_mid(sTemp, n, 2))) + " bytes."
+       n = n + 2
+       
+       sDataT = str_midToEnd(sTemp, n)
+
+    if sCmd != "":
+      if str_left(sDataT, 2) != sCmd:
+         #There is campaign id
+         sReturn = sReturn + str_GetENTER() + "Command campaign ID: " + str_SpaceHexa(str_left(sDataT, 4))
+         sDataT = str_midToEnd(sDataT, 4)
+
+      if str_left(sDataT, 2) == sCmd:   
+         sReturn = sReturn + str_GetENTER() + "Command '" + sCmd + "' received."
+         sDataT = str_midToEnd(sDataT, 2)
+
+    #Next byte is length
+    sCmdLenTotal = str_mid(sDataT, 0, 2)
+    nCmdLenTotal = int(bytes_HexaToNro(sCmdLenTotal))
+    sReturn = sReturn + str_GetENTER() + "Total Command length: 0x" + sCmdLenTotal + " - Decimal: " + str(nCmdLenTotal) + " bytes."
+    if nCmdLenTotal == 0:
+       sReturn = sReturn + " - Applet buffer is empty, cleanned."
+    else:
+       sDataT = str_midToEnd(sDataT, 2)
+
+    return sDataT, sReturn, nCmdLenTotal
+
+# SAPCOTASMSProvisioning_Interpret -----------------------------------------------------------------------------------------------------------------------------------------------
 def SAPCOTASMSProvisioning_Interpret(sData):
     return COTA_processSMS(sData)
 

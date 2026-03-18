@@ -420,7 +420,7 @@ def str_RemoveFirstPattern(st, pattern):
 def str_RemoveItemFromPatternList(st, pattern, nItem, bTransformToStr):
     outret = []
     out = str_getListFromStringPattern(st, pattern)
-    print(out)
+    #print(out)
     n = 0
     for i in out:
         if n!=nItem:
@@ -430,7 +430,7 @@ def str_RemoveItemFromPatternList(st, pattern, nItem, bTransformToStr):
     if nItem==-1:
        del outret[-1]
 
-    print(outret)       
+    #print(outret)       
     
     if bTransformToStr:
        out = ""
@@ -1378,5 +1378,23 @@ def str_IsCharValidHex(schar):
        return True
     else:
        return False                  
+
+# str_ListRemoveDuplicates ----------------------------------------------------------------------------------------------------------------------
+def str_ListRemoveDuplicates(tList, bSetInstruction=False):
+
+    if len(tList) <= 0:
+        return tList
+    
+    tListNew = []
+
+    if bSetInstruction:
+       tListNew = list(set(tList))
+
+    else:    
+        for lst in tList:
+            if lst not in tListNew:
+                tListNew.append(lst)
+
+    return tListNew                  
 
 #------------------------------------------------------------------------------------

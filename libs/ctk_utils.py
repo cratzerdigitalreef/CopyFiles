@@ -106,11 +106,16 @@ def ctk_utils_ObjSetData(obj, data):
     return data
 
 #---------------------------------------------------------------------------------------------------------
-# ctk_utils_ButtonSetText => Setting value to a CTkButton
+# ctk_utils_ButtonGetText => Setting value to a CTkButton
+#---------------------------------------------------------------------------------------------------------
+def ctk_utils_ButtonGetText(obj):
+    return obj.cget("text")
+#---------------------------------------------------------------------------------------------------------
+# ctk_utils_ButtonSetText => Getting value to a CTkButton
 #---------------------------------------------------------------------------------------------------------
 def ctk_utils_ButtonSetText(obj, sCaption):
     obj.configure(text=sCaption)
-    
+
 #---------------------------------------------------------------------------------------------------------
 # ctk_utils_ObjEnable => Setting Enable Object
 #---------------------------------------------------------------------------------------------------------
@@ -442,6 +447,29 @@ def ctk_utils_AskOpenFileName_Files_XML(sPath, sTitle="", bMultipleFiles=False):
         return ctk_utils_AskOpenFileName(sPath, sTitle, sType)
 
 #---------------------------------------------------------------------------------------------------------
+# ctk_utils_AskOpenFileName_Files_TXT => Open Custom TKinter Dialog for selecting one or more files with TXT files
+#---------------------------------------------------------------------------------------------------------
+def ctk_utils_AskOpenFileName_Files_TXT(sPath, sTitle="", bMultipleFiles=False):
+    sType = ""
+    if bMultipleFiles:
+        return ctk_utils_AskOpenMultipleFileNames(sPath, sTitle, sType, True)
+    else:
+        return ctk_utils_AskOpenFileName(sPath, sTitle, sType)
+
+#---------------------------------------------------------------------------------------------------------
+# ctk_utils_AskSaveFileName_File_XML => Open Custom TKinter Dialog for saving one XML file
+#---------------------------------------------------------------------------------------------------------
+def ctk_utils_AskSaveFileName_File_XML(sPath, sTitle="", sFileDefault="", bSaveConfirmOverwrite=False):
+    sType = "xml"
+    return ctk_utils_AskSaveFileName(sPath, sTitle, sType, sFileDefault, bSaveConfirmOverwrite)
+
+#---------------------------------------------------------------------------------------------------------
+# ctk_utils_AskSaveFileName_File_TXT => Open Custom TKinter Dialog for saving one TXT file
+#---------------------------------------------------------------------------------------------------------
+def ctk_utils_AskSaveFileName_File_TXT(sPath, sTitle="", sFileDefault="", bSaveConfirmOverwrite=False):
+    return ctk_utils_AskSaveFileName(sPath, sTitle, "", sFileDefault, bSaveConfirmOverwrite)
+
+#---------------------------------------------------------------------------------------------------------
 # ctk_utils_AskOpenFileName_Files_OTA => Open Custom TKinter Dialog for selecting one or more files with OTA files format
 #---------------------------------------------------------------------------------------------------------
 def ctk_utils_AskOpenFileName_Files_OTA(sPath, sTitle="", bMultipleFiles=False):
@@ -464,7 +492,11 @@ def ctk_utils_AskOpenFileName(sPath, sTitle="", file_types=""):
        sReturn = lstFiles[0]
     
     return sReturn
-       
+
+#---------------------------------------------------------------------------------------------------------
+def ctk_utils_AskSaveFileName(sPath, sTitle="", file_types="", sFileDefault="", bSaveConfirmOverwrite=False):
+    return ctk_utils_AskOpenSaveMultipleFileNames(sPath, False, sTitle, file_types, False, sFileDefault, bSaveConfirmOverwrite)
+
 #---------------------------------------------------------------------------------------------------------
 # ctk_utils_AskOpenMultipleFileNames => Open Custom TKinter Dialog for selecting one or more files
 # Example for file_types:
@@ -472,6 +504,15 @@ def ctk_utils_AskOpenFileName(sPath, sTitle="", file_types=""):
 # file_types = [("CSV Files", "*.csv"), ("Text Files", "*.txt"), ("All Files", "*.*")]
 #---------------------------------------------------------------------------------------------------------
 def ctk_utils_AskOpenMultipleFileNames(sPath, sTitle="", file_types="", bMultipleFiles=False):
+    return ctk_utils_AskOpenSaveMultipleFileNames(sPath, True, sTitle, file_types, bMultipleFiles)
+
+# ctk_utils_AskOpenSaveMultipleFileNames => Open or Save Custom TKinter Dialog for selecting one or more files
+# Example for file_types:
+# file_types = [("IJC Files", "*.ijc"), ("CAP Files", "*.cap"), ("Text Files", "*.txt"), ("All Files", "*.*")]
+# file_types = [("CSV Files", "*.csv"), ("Text Files", "*.txt"), ("All Files", "*.*")]
+# IMPORTANT!!! For save as it is only possible 1 file, not multiple
+#---------------------------------------------------------------------------------------------------------
+def ctk_utils_AskOpenSaveMultipleFileNames(sPath, bOpen=True, sTitle="", file_types="", bMultipleFiles=False, sFileDefault="", bSaveConfirmOverwrite=False):
     
     if sPath == "":
        sPath = os.path.dirname(os.path.realpath(__file__)) 
@@ -492,23 +533,34 @@ def ctk_utils_AskOpenMultipleFileNames(sPath, sTitle="", file_types="", bMultipl
        sTitle = "Select File"
 
     #print("file_types = " + str(file_types))
+    #print("ctk_utils_AskOpenSaveMultipleFileNames - sFileDefault: " + str(sFileDefault))
     
     returnFilesLst = []
-    if bMultipleFiles:
-         returnFilesLst = filedialog.askopenfilenames(
-                   initialdir=sPath, 
-                   title=sTitle,
-                   filetypes=file_types
-                   )
-    
-    else:      
-         filename = filedialog.askopenfilename(
-                   initialdir=sPath, 
-                   title=sTitle,
-                   filetypes=file_types
-                   )
-         returnFilesLst.append(filename)          
-    
+
+    if bOpen:
+        if bMultipleFiles:
+            returnFilesLst = filedialog.askopenfilenames(
+                    initialdir=sPath, 
+                    title=sTitle,
+                    filetypes=file_types
+                    )
+        
+        else:      
+            filename = filedialog.askopenfilename(
+                    initialdir=sPath, 
+                    title=sTitle,
+                    filetypes=file_types
+                    )
+            returnFilesLst.append(filename)          
+    else:
+        returnFilesLst = filedialog.asksaveasfilename(
+                    initialdir=sPath, 
+                    title=sTitle,
+                    filetypes=file_types,
+                    initialfile=sFileDefault,
+                    confirmoverwrite=bSaveConfirmOverwrite
+                    )
+            
     #print("ctk_utils_AskOpenMultipleFileNames - returnFilesLst = " + str(returnFilesLst))
     
     #FOR TESTING
