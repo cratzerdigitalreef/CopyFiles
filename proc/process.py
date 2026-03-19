@@ -734,10 +734,15 @@ def process_CopyFiles_sub(logFile, mainWindow, procWindows, lstSource, lstDestin
 
     process_GblMessage_Set(sProcessing)
 
-    if logFile != "":
-         log_write_InfoInBlue(logFile, sProcessing + sProcessingWarningErrors)
+    sSaltoLineas = "\n" + str_RepeatString(50, "-") + "\n"
+
+    sPrint = ""
+    if sProcessingWarningErrors != "":
+        sPrint = sSaltoLineas + sProcessing + sSaltoLineas + sProcessingWarningErrors + sSaltoLineas + sProcessing
     else:
-        log_writePrintOnlyInfo(sProcessing + sProcessingWarningErrors)     
+        sPrint = sSaltoLineas + sProcessing + sSaltoLineas
+
+    log_write_InfoInBlue(logFile, sPrint)
 
     return True, sProcessing
 

@@ -1,7 +1,7 @@
 # -*- coding: UTF-8 -*-
 
 app_ver = "01.00 Release 001"
-app_ver_date = "2026-01-15"
+app_ver_date = "2026-03-19"
 
 app_name_des = "Copy Files"
 app_name = "CopyFiles"
