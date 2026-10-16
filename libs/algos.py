@@ -21,6 +21,7 @@ def algo_Luhn(data):
     data = str_TrimCleanSpaces(data)
     #print("Data for Luhn: " + str(data))
     if str_IsNnro0To9FromString(data) == False:
+       print("ERROR: The value '" + data + "' is not numeric, it has alphanumeric characters. According to standard for 'Luhn algorithm', defined in Annex B of ISO/IEC 7812-1, it must be only digits.")
        return 0
        
     nLen = len(data) - 1

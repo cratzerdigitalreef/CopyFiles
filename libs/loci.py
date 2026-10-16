@@ -20,7 +20,7 @@ def loci_imeiFromHexa(sIMEIHex, bDes=False, bLuhnCheck=True):
         #WRONG IMEI
         return sIMEIHex
 
-    sLog = "IMEI to be pocessed: 0x" + str_AddSpaceHexa(imei)
+    sLog = "IMEI to be processed (standard 3GPP 23.003): 0x" + str_AddSpaceHexa(imei)
 
     imei = str_reverse(imei)
 
@@ -54,9 +54,12 @@ def loci_imeiFromHexa(sIMEIHex, bDes=False, bLuhnCheck=True):
     imeiForLuhn = imeiForLuhn[1:]
 
     Luhn = 0
-    if str_IsNnro0To9FromString(imeiForLuhn) and bLuhnCheck == True:
-        Luhn = algo_Luhn(imeiForLuhn)
-
+    if bLuhnCheck:
+       if str_IsNnro0To9FromString(imeiForLuhn):
+          Luhn = algo_Luhn(imeiForLuhn)
+       else:
+           sLog = sLog + "\nWARNING: The value '" + imeiForLuhn + "' is not numeric, it has alphanumeric characters. According to standard for 'Luhn algorithm', defined in Annex B of ISO/IEC 7812-1, it must be only digits."
+            
     sIMEIt = str(imei[1:len(imei) - 1]) + str(Luhn)
     if bDes == False and bLuhnCheck == True:
         return sIMEIt
@@ -122,7 +125,7 @@ def loci_lociFromHexa(sLOCIHex, bDes=False):
     #print(loci)
 
     sLog = sLog + "\nLOCI prepared: " + str(loci) + " (Length: " + str(len(loci)) + " hexadecimal characters - " + str(
-        len(loci) / 2) + " bytes)"
+        len(loci) // 2) + " bytes)"
 
     mcc = loci[0:4]
     mnc = loci[4:6]

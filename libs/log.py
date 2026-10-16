@@ -200,17 +200,27 @@ def log_writeWordsInColorMagenta(sData):
 # log_writeWordsInColor ----------------------------------------------------------------------------------------------------------
 def log_writeWordsInColor(sData, sType='info'):
     # Refresh color
-    #print("sType: " + str(sType))
-    colorama.init(autoreset=True, strip=False)
-    if sType in dic_colorlog:
-       sColor = dic_colorlog.get(sType)
-       #print("sType: " + str(sType))
-       print(getattr(Fore, sColor) + sData)
+    #print("sType: " + str(sType) + " - sData: " + str(sData))
+
+    #CHECKING WHETHER THE OUTPUT IS A TERMINAL
+    #print("sys.stdout.isatty() = " + str(sys.stdout.isatty()))
+
+    if log_IsTerminalStandardOutput() or sType=="":
+        if sType in dic_colorlog:
+            colorama.init(autoreset=True, strip=False)
+            sColor = dic_colorlog.get(sType)
+            #print("sType: " + str(sType))
+            print(getattr(Fore, sColor) + sData)
+            colorama.deinit()
+        else:    
+            print(sData)
     else:
        print(sData)
-    colorama.deinit()
 
-    
+# log_IsTerminalStandardOutput ----------------------------------------------------------------------------------------------------------
+def log_IsTerminalStandardOutput():
+    return sys.stdout.isatty()
+
 # log_FileAppend ----------------------------------------------------------------------------------------------------------
 def log_FileAppend(sFileName, sData):
     return log_SaveDataToFile(sFileName, sData, True)

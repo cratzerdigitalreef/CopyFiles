@@ -41,6 +41,11 @@ ctk_utils_FontSize = 14
 ctk_utils_show_windowYESNOResult = ""
 ctk_utils_window = None
 
+#COMBO BOX LONG TEXT
+ctk_utils_nComboBoxLongTextMax = 110
+ctk_utils_sComboBoxLongSepara = "..."
+ctk_utils_sComboBoxLongSeparaNro = ". "
+
 #---------------------------------------------------------------------------------------------------------
 # ctk_utils_TextBoxSet => Setting value from init in a CTkTextbox
 #---------------------------------------------------------------------------------------------------------
@@ -109,12 +114,36 @@ def ctk_utils_ObjSetData(obj, data):
 # ctk_utils_ButtonGetText => Setting value to a CTkButton
 #---------------------------------------------------------------------------------------------------------
 def ctk_utils_ButtonGetText(obj):
-    return obj.cget("text")
+    return ctk_utils_ObjBoxGetText(obj)
 #---------------------------------------------------------------------------------------------------------
 # ctk_utils_ButtonSetText => Getting value to a CTkButton
 #---------------------------------------------------------------------------------------------------------
 def ctk_utils_ButtonSetText(obj, sCaption):
+    ctk_utils_ObjSetText(obj, sCaption)
+
+#---------------------------------------------------------------------------------------------------------
+# ctk_utils_CheckBoxSetText => Setting text to a CTkCheckBox
+#---------------------------------------------------------------------------------------------------------
+def ctk_utils_CheckBoxSetText(obj, sCaption):
+    ctk_utils_ObjSetText(obj, sCaption)
+
+#---------------------------------------------------------------------------------------------------------
+# ctk_utils_ObjSetText => Setting text to an object
+#---------------------------------------------------------------------------------------------------------
+def ctk_utils_ObjSetText(obj, sCaption):
     obj.configure(text=sCaption)
+
+#---------------------------------------------------------------------------------------------------------
+# ctk_utils_CheckBoxGetText => Getting text from a CTkCheckBox 
+#---------------------------------------------------------------------------------------------------------
+def ctk_utils_CheckBoxGetText(obj):
+    return ctk_utils_ObjBoxGetText(obj)
+
+#---------------------------------------------------------------------------------------------------------
+# ctk_utils_ObjBoxGetText => Getting text from an Object 
+#---------------------------------------------------------------------------------------------------------
+def ctk_utils_ObjBoxGetText(obj):
+    return obj.cget("text")
 
 #---------------------------------------------------------------------------------------------------------
 # ctk_utils_ObjEnable => Setting Enable Object
@@ -267,7 +296,7 @@ def ctk_utils_show_window(message, sTitle = "", bFocus=True):
 
     #print("show_window - window.winfo_width(): " + str(window.winfo_width()))
     #print("show_window - len(message): " + str(len(message)))
-    if len(message) > 100:
+    if len(message) > ctk_utils_nComboBoxLongTextMax:
        nWidth = nWidth * 2
        windows_height = windows_height * 1.5
        
@@ -307,7 +336,7 @@ def ctk_utils_show_window(message, sTitle = "", bFocus=True):
     if bFocus:
        window.focus()
 
-    window.after(100, window.lift) # Workaround for bug where main window takes focus
+    window.after(ctk_utils_nComboBoxLongTextMax, window.lift) # Workaround for bug where main window takes focus
 
     # GLOBAL VARIABLE FOR WINDOWS
     #global ctk_utils_window
@@ -901,5 +930,78 @@ def ctk_center_window(window):
     window.geometry("+%d+%d" % (x, y))
 
     return
+
+#---------------------------------------------------------------------------------------------------------
+def ctk_window_maximize(window):
+
+    if file_IsOSLinux():
+        window.attributes('-zoomed', True)
+    else:
+        # This maximizes the window on start
+        window.after(0, lambda: window.state('zoomed'))
+
+#---------------------------------------------------------------------------------------------------------
+def ctk_window_minimize(window):
+    #window.iconify()
+    window.state('iconic')
+
+#---------------------------------------------------------------------------------------------------------
+def ctk_fPrepareComboBoxListLongText(lst, sCharForDes="-"):
+    
+    nNewLst = []
+
+    n = 0
+    while n < len(lst):
+
+        sLst = lst[n]
+        if len(sLst) > ctk_utils_nComboBoxLongTextMax:
+
+            sLstLong = sLst
+
+            #print("ctk_fPrepareComboBoxList - BEFORE sLst: " + str(sLstLong))
+            sLstLong = str_left(sLstLong, ctk_utils_nComboBoxLongTextMax) + ctk_utils_sComboBoxLongSepara 
+
+            if sCharForDes in sLst:
+                sBefore = str_getSubStringFromOcurFirst(sLst, sCharForDes)
+
+                sLstLong = sLstLong + str_midToEnd(sLst, len(sBefore))
+            else:    
+                sLstLong = sLstLong + str_midToEnd(sLstLong, ctk_utils_nComboBoxLongTextMax)
+
+            sLst = sLstLong
+            #print("ctk_fPrepareComboBoxList - AFTER sLst: " + str(sLst))
+
+        nNewLst.append(sLst)    
+
+        n = n + 1 
+
+    return nNewLst    
+
+#---------------------------------------------------------------------------------------------------------
+def ctk_fPrepareComboBoxListLongText_GetFromOriginal(sValue, lstOriginal):
+    
+    #print("ctk_fPrepareComboBoxListLongText_GetOriginal - sValue: " + sValue)
+
+    sReturn = sValue
+
+    sPattern = ""
+    if ctk_utils_sComboBoxLongSepara in sValue:
+       sPattern = str_getSubStringFromOcurFirst(sValue, ctk_utils_sComboBoxLongSepara)
+
+    if sPattern == "":
+        return sValue
+       
+    n = 0
+    while n < len(lstOriginal):
+
+        sLst = lstOriginal[n]
+        if str_left(sLst, len(sPattern)) == sPattern:
+            sReturn = sLst
+            break
+
+        n = n + 1 
+
+    return sReturn    
+
 #---------------------------------------------------------------------------------------------------------
 

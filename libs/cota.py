@@ -21,6 +21,7 @@ from smartcard.util import toBytes, toASCIIBytes, toASCIIString
 from colorama import Back, Fore, Style
 from simcard import *
 
+
 #------------------------------------------------------------------------------------
 # COTA Commands dictionaries
 #------------------------------------------------------------------------------------
@@ -248,127 +249,7 @@ def COTACmdProcessDataOnly(sLogFile, sCMD, sDataType, sDatat):
 # COTAURLSpecialChars => process and remove special characters in URL for COTA
 #------------------------------------------------------------------------------------
 def COTAURLSpecialChars(sURL):
-    sReturn = ""
-    
-    n = 0 
-    nLen = len(sURL)
-    
-    #print("COTAURLSpecialChars. URL: " + sURL)
-      
-    #https://www.w3schools.com/tags/ref_urlencode.ASP
-    sPorcentage = "%"
-   
-    while n < nLen:
-          sChar = str_mid(sURL, n, 1)
-          sCharCh = sPorcentage
-          sCharCh = ""
-          
-          if sChar == " ":
-             sCharCh = "20"
-             
-          #if sChar == "!":
-          #   sCharCh = "21"
-             
-          if sChar == str_GetComillaDoble():
-             sCharCh = "22"
-             
-          #if sChar == "#":
-          #   sCharCh = "23"
-             
-          #if sChar == "$":
-          #   sCharCh = "24"
-             
-          #if sChar == "%":
-          #   sCharCh = "25"
-             
-          #if sChar == "&":
-          #   sCharCh = "26"
-             
-          if sChar == "'":
-             sCharCh = "27"
-             
-          if sChar == "(":
-             sCharCh = "28"
-             
-          if sChar == ")":
-             sCharCh = "29"
-             
-          if sChar == "*":
-             sCharCh = "2A"
-             
-          if sChar == "*":
-             sCharCh = "2A"
-             
-          if sChar == "+":
-             sCharCh = "2B"
-             
-          if sChar == str_GetComillaItalic():
-             sCharCh = "2C"
-             
-          if sChar == "-":
-             sCharCh = "2D"
-             
-          #if sChar == ".":
-          #   sCharCh = "2E"
-             
-          #if sChar == "/":
-          #   sCharCh = "2F"
-             
-          #if sChar == ":":
-          #   sCharCh = "3A"
-             
-          #if sChar == ";":
-          #   sCharCh = "3B"
-             
-          if sChar == "<":
-             sCharCh = "3C"
-             
-          #if sChar == "=":
-          #   sCharCh = "3D"
-             
-          if sChar == ">":
-             sCharCh = "3E"
-             
-          #if sChar == "?":
-          #   sCharCh = "3F"
-             
-          if sChar == "@":
-             sCharCh = "40"
-             
-          if sChar == "[":
-             sCharCh = "5B"
-             
-          if sChar == "]":
-             sCharCh = "5D"
-             
-          if sChar == "^":
-             sCharCh = "5E"
-             
-          if sChar == "_":
-             sCharCh = "5F"
-             
-          if sChar == "{":
-             sCharCh = "7B"
-             
-          if sChar == "|":
-             sCharCh = "7C"
-             
-          if sChar == "}":
-             sCharCh = "7D"
-             
-          if sChar == "~":
-             sCharCh = "7E"
-
-          if sCharCh != "":
-            sChar = sPorcentage + sCharCh
-        
-          sReturn = sReturn + sChar
-        
-          n = n + 1
-
-    #print("COTAURLSpecialChars. URL return: " + sReturn)
-    return sReturn
-
+    return simcard_URLSpecialChars(sURL)
 		
 #------------------------------------------------------------------------------------
 # COTAManageEmojis => process UCS2 bytecode removing emojis with 0x
@@ -501,6 +382,10 @@ def COTAProfile(sLogFileName,oCardservice, sTPDA = "", sCota_ver = ""):
    #sCota_ver = COTACmd_sendEnvelopeFB(oCardservice, sLogFileName, sTPDA, sVerbose = False)
    #Defining the dictionary to return
    dic_feat={}
+
+   if sCota_ver != "":
+      log_write_OKInGreen(sLogFileName, "Applet Version: " + sCota_ver)
+
    match sCota_ver:
       case 'COTA0205':
          listFeatSupported = ['F0', 'F1', 'MCCMNC', 'PopUpRetries', 'FA']
@@ -682,6 +567,13 @@ def COTAProfile(sLogFileName,oCardservice, sTPDA = "", sCota_ver = ""):
          COTAgetFeatSupported(listFeatSupported, sCota_ver, dic_feat)
          return dic_feat
       case 'COTA0507':
+         listFeatSupported = ["F0", "F1", "F2", "F4", "F5", "F8", "F9", "FA", "FB", "FC", "FD", "FE", "E2",
+                                "F1F0", "F2F0", "UCS2", "PopUpRetries", "AutoPopUpbyIMEI", "CampaignID", "F6",
+                                "MultiSHA1", "F0Priority",
+                                "D4", "D5", "D6", "D7", "FULL", "F7", "D8", "D9", "DC", "DE"]
+         COTAgetFeatSupported(listFeatSupported, sCota_ver, dic_feat)
+         return dic_feat
+      case 'COTA0508':
          listFeatSupported = ["F0", "F1", "F2", "F4", "F5", "F8", "F9", "FA", "FB", "FC", "FD", "FE", "E2",
                                 "F1F0", "F2F0", "UCS2", "PopUpRetries", "AutoPopUpbyIMEI", "CampaignID", "F6",
                                 "MultiSHA1", "F0Priority",
@@ -1133,7 +1025,8 @@ def cota_validate_proactive_command(log_file_name, response, cmd, tpda):
     """
     proactive_tag = response[0:2]
     if not proactive_tag == "D0":
-        log_write_ErrorInRed(
+        #log_write_ErrorInRed(
+        log_write_WarningInYellow(
             log_file_name,
             f"""
                     We should be receiving a proactive command as a response... Exiting now. 
@@ -1150,7 +1043,11 @@ def cota_validate_proactive_command(log_file_name, response, cmd, tpda):
         str += " correct, this may mean that the current version of the applet (2.5/2.6) does not support the command sent."
 
         log_write_WarningInYellow(log_file_name, str)
-        sys.exit()
+        #sys.exit()
+        return False
+
+    return True
+
 
 # COTACmd_sendEnvelope_ResponseFirstByteCommand ---------------------------------------------------------------------------------------------------------------------------------------------------------
 def COTACmd_sendEnvelope_ResponseFirstByteCommand(cardservice, sLogFileName, sCmd, sTPDAParam, sAPDU, sTAR=sSimcard_sDefTAR_COTA, bNetworkOKOrChangeIMEIOrChangeMCCMNC=True, sMCC="", sMNC=""):
@@ -1389,6 +1286,177 @@ def SAPCmdDE_Interpret(sData, sTPDA=""):
 
     return sReturn, sRepeatTimes, sRepeatTimesExec, sRepeatStatusCommands, sRepeatStatusCommandsExec, sRepeatSendSMSNot, sRepeatCmd
 
+# SAPCmdD4_Interpret -----------------------------------------------------------------------------------------------------------------------------------------------
+def SAPCmdD4_Interpret(sData, sTPDA=""):
+    sCmdInterpret, sICCID, sIMSI, sLOCI, sACCTECH, sAppletCompleteinHexa = SAPCmdD4_InterpretComplete(sData, sTPDA)
+    return sCmdInterpret
+
+# SAPCmdD4_InterpretComplete -----------------------------------------------------------------------------------------------------------------------------------------------
+def SAPCmdD4_InterpretComplete(sData, sTPDA=""):
+    
+    sCmd = "D4"
+    sReturnSMS = ""
+    nCmdLenTotal = 0
+
+    if sTPDA != "":
+      sDataT, sReturnSMS, nCmdLenTotal = SAPCOTASMS_Interpret_GetData(sData, sTPDA, sCmd)
+    else:
+       nCmdLenTotal = len(sData) // 2
+       sDataT = sData
+
+    if str_left(sDataT, 2) != sCmd:
+       # IT MAY BE THE CAMPAIGN REFERENCE
+       sDataT = str_midToEnd(sDataT, 4)
+
+    sReturn = "Data in hexadecimal: 0x" +  str_AddSpaceHexa(sData) 
+    if sReturnSMS != "":
+       sReturn = sReturn + str_GetENTER() + sReturnSMS
+
+    sAppletName, sAppletCompleteinHexa, sAppletVersionOnly = simcard_processSMSData_AutoProvisioning_AppletVersion(sData)
+
+    sICCID = ""
+    sIMSI = ""
+    sLOCI = ""
+    sACCTECH = ""
+    sAppletCompleteinHexa = ""
+
+    n = 0
+
+    if nCmdLenTotal > 0 and sAppletName == sSimcard_sDefTAR_COTA_Name:
+
+      #print("sDataT = " + str(sDataT))
+
+      nIncrement = 2
+      sCmd = str_mid(sDataT, n, nIncrement)
+      n = n + nIncrement
+
+      nIncrement = 20
+      sICCID = str_mid(sDataT, n, nIncrement)
+      if sICCID != "":
+         sReturn = sReturn + str_GetENTER() + simcard_EF_ICCID_Interpret(sICCID, True)
+      n = n + nIncrement
+
+      nIncrement = 18
+      sIMSI = str_mid(sDataT, n, nIncrement)
+      if sIMSI != "":
+         sReturn = sReturn + str_GetENTER() + simcard_EF_IMSI_Interpret(sIMSI, True)
+      n = n + nIncrement
+
+      nIncrement = 18
+      sLOCI = str_mid(sDataT, n, nIncrement)
+      if sLOCI != "":
+         sReturn = sReturn + str_GetENTER() + "LOCI: " + sLOCI + str_GetENTER() + "LOCI INTERPRETED: " + str_GetENTER() + loci_lociFromHexa(sLOCI, True)
+      n = n + nIncrement
+
+      nIncrement = 2
+      sACCTECH = str_mid(sDataT, n, nIncrement)
+      if sACCTECH != "":
+         sReturn = sReturn + str_GetENTER() + "ACCESS TECHNOLOGY: " + sACCTECH + " - INTERPRETED: " + str_GetENTER() + fPLociACCTECHDes(sACCTECH)
+      n = n + nIncrement
+
+      sAppletName, sAppletCompleteinHexa, sAppletVersionOnly = simcard_processSMSData_AutoProvisioning_AppletVersion(sData)
+
+      sReturn = sReturn + str_GetENTER() + "APPLET '" + sAppletName + "' VERSION: " + sAppletVersionOnly + " - HEXA: 0x" + str_SpaceHexa(sAppletCompleteinHexa)
+
+    else:
+      if nCmdLenTotal > 0 and sAppletName == sSimcard_sDefTAR_SAPROAM_Name:
+         sDataT = str_midToEnd(sDataT, 2)
+         sIMEI, sLaunchSupported, sIMEIOld, sLaunchSupportedOld, sICCID, sIMSI, sIMSIOld, sAD, sADOld, sSPN, sSPNOld, sLOCI, sACCTECH, sAPPLETVersionCompleteInHexa, sDes = simcard_processSMSData_AutoProvisioning(sDataT, True, str_GetENTER())
+         sReturn = sDes
+
+    return sReturn, sICCID, sIMSI, sLOCI, sACCTECH, sAppletCompleteinHexa
+
+# SAPCmdC0_Interpret -----------------------------------------------------------------------------------------------------------------------------------------------
+def SAPCmdC0_Interpret(sData, sTPDA=""):
+    
+    sCmd = "C0"
+    sReturnSMS = ""
+    nCmdLenTotal = 0
+
+    if sTPDA != "":
+      sDataT, sReturnSMS, nCmdLenTotal = SAPCOTASMS_Interpret_GetData(sData, sTPDA, sCmd)
+    else:
+       nCmdLenTotal = len(sData) // 2
+       sDataT = sData
+
+    if str_left(sDataT, 2) != sCmd:
+       # IT MAY BE THE CAMPAIGN REFERENCE
+       sDataT = str_midToEnd(sDataT, 4)
+
+    sReturn = "Data in hexadecimal: 0x" +  str_AddSpaceHexa(sData) 
+    if sReturnSMS != "":
+       sReturn = sReturn + str_GetENTER() + sReturnSMS
+
+    if nCmdLenTotal > 0:
+
+      if sCmd in str(sDataT):
+            sTemp = str_getSubStringFromOcurFirst(sDataT, sCmd)
+            sTerminalProfile = str_midToEnd(sDataT, len(sTemp) + len(sCmd))
+            sTerminalProfileDes = bytes_LengthDescriptionAndData(sTerminalProfile)
+            sReturn = sReturn + str_GetENTER() + "\nTerminal Profile Data in SMS:\n" + sTerminalProfileDes
+
+            sInterpreted = simcardTerminalProfileParser.parse(sTerminalProfile)
+
+            sReturn = sReturn + str_GetENTER() + "\nInterpreted Terminal Profile:\n" + sInterpreted
+      
+    return sReturn
+
+# SAPCmdC1_Interpret -----------------------------------------------------------------------------------------------------------------------------------------------
+def SAPCmdC1_Interpret(sData, sTPDA=""):
+    
+    sCmd = "C1"
+    sReturnSMS = ""
+    nCmdLenTotal = 0
+
+    nPollingInterval = 0
+    sStatusSettingPollingInterval = ""
+
+    if sTPDA != "":
+      sDataT, sReturnSMS, nCmdLenTotal = SAPCOTASMS_Interpret_GetData(sData, sTPDA, sCmd)
+    else:
+       nCmdLenTotal = len(sData) // 2
+       sDataT = sData
+
+    if str_left(sDataT, 2) != sCmd:
+       # IT MAY BE THE CAMPAIGN REFERENCE
+       sDataT = str_midToEnd(sDataT, 4)
+
+    sReturn = "Data in hexadecimal: 0x" +  str_AddSpaceHexa(sData) 
+    if sReturnSMS != "":
+       sReturn = sReturn + str_GetENTER() + sReturnSMS
+
+    if nCmdLenTotal > 0:
+
+      if sCmd in str(sDataT):
+            sTemp = str_getSubStringFromOcurFirst(sDataT, sCmd)
+            sPollingInterval = str_midToEnd(sDataT, len(sTemp))
+            sPollingIntervalDes = bytes_LengthDescriptionAndData(sPollingInterval)
+            sReturn = sReturn + str_GetENTER() + "Polling Interval Data:\n" + sPollingIntervalDes
+
+            sReturn = sReturn + str_GetENTER() + "Tag: 0x" + str(str_left(sPollingInterval, 2))
+
+            sPollingInterval = str_midToEnd(sDataT, len(sCmd))
+            sPollingIntervalHexa = str_left(sPollingInterval, 2) 
+            nPollingInterval = int(bytes_HexaToNro(sPollingIntervalHexa))
+
+            sAppletName, sAppletCompleteinHexa, sAppletVersionOnly = simcard_processSMSData_AutoProvisioning_AppletVersion(sPollingInterval)
+
+            sStatusSettingPollingInterval = str_getSubStringFromOcurFirst(sPollingInterval, sAppletCompleteinHexa)
+            if sStatusSettingPollingInterval != "":
+               sStatusSettingPollingInterval = str_right(sStatusSettingPollingInterval, 4)
+               if len(str(sStatusSettingPollingInterval)) != 4:
+                  sStatusSettingPollingInterval = ""
+
+            sReturn = sReturn + str_GetENTER() + "Interpreted Polling Interval response:" 
+            sReturn = sReturn + str_GetENTER() + "Polling Interval: 0x" + str(sPollingIntervalHexa) + " (decimal: " + str(nPollingInterval) + ") seconds." 
+            if sStatusSettingPollingInterval != "":
+               sReturn = sReturn + str_GetENTER() + "Status Setting Polling Interval: 0x" + str_SpaceHexa(sStatusSettingPollingInterval) + " - ASCII: " + str(bytes_HexaToASCII(sStatusSettingPollingInterval))
+
+            if sAppletCompleteinHexa != "":
+               sReturn = sReturn + str_GetENTER() + "Applet Version: 0x" + str_SpaceHexa(sAppletCompleteinHexa) + " - ASCII: " + str(bytes_HexaToASCII(sAppletCompleteinHexa))
+      
+    return sReturn, nPollingInterval, sStatusSettingPollingInterval
+
 # SAPCOTASMS_Interpret_GetData -----------------------------------------------------------------------------------------------------------------------------------------------
 def SAPCOTASMS_Interpret_GetData(sData, sTPDA="", sCmd=""):
     
@@ -1424,7 +1492,7 @@ def SAPCOTASMS_Interpret_GetData(sData, sTPDA="", sCmd=""):
          sDataT = str_midToEnd(sDataT, 4)
 
       if str_left(sDataT, 2) == sCmd:   
-         sReturn = sReturn + str_GetENTER() + "Command '" + sCmd + "' received."
+         sReturn = sReturn + str_GetENTER() + "Command 0x" + sCmd + " received."
          sDataT = str_midToEnd(sDataT, 2)
 
     #Next byte is length
@@ -1624,6 +1692,15 @@ def cota_SAP_CampaignResponse_Interpret(sHex):
     if str_right(sReturn, len(sSepara)) == sSepara:
         sReturn = str_left(sReturn, len(sReturn) - len(sSepara))
 
+    #ADDED Autoprovisioning data
+    sIMEI, sLaunchSupported, sIMEIOld, sLaunchSupportedOld, sICCID, sIMSI, sIMSIOld, sAD, sADOld, sSPN, sSPNOld, sLOCI, sACCTECH, sAppletVersion, sDes = simcard_processSMSData_AutoProvisioning(sHex, True)
+    if sDes != "" and sICCID != "":
+       #NOT FOR COTA0209
+       sReturn = sDes    
+    else:
+       if sDes != "" and sLaunchSupported != "":
+           sReturn = sReturn + str_GetENTER() + sDes 
+
     return sReturn
 
 # COTA_GetAppletVersion ------------------------------------------------------------------------------------------------------
@@ -1723,5 +1800,423 @@ def COTA_processCmd_FC_DC(sHexa):
                       sResponse = sResponse + str_GetENTER() + sReference + " - SDK ID/APK: 0x" + str_SpaceHexa(sSDKID) + " (ASCII: " + bytes_HexaToASCII(sSDKID) + ")"
 
     return sResponse
+
+# SAPCmdDF_Interpret -----------------------------------------------------------------------------------------------------------------------------------------------
+def SAPCmdDF_Interpret(sData, sTPDA=""):
+    
+    sDataT = str_SpacesOut(sData).upper()
+    sTPDA = str_SpacesOut(sTPDA).upper()
+    nCmdLenTotal = len(sDataT)
+    
+    sCmd = "DF"
+
+    sReturn = "Data in hexadecimal: 0x" +  str_AddSpaceHexa(sData) 
+
+    if sTPDA != "":
+
+         sDataT, sReturnSMS, nCmdLenTotal = SAPCOTASMS_Interpret_GetData(sData, sTPDA, sCmd)
+
+         if sReturnSMS != "":
+            sReturn = sReturn + str_GetENTER() + sReturnSMS
+
+         #Because it is taken each character per analysis
+         nCmdLenTotal = nCmdLenTotal * 2
+    else:
+       #Go to command length
+       sDataT = str_midToEnd(sDataT, 2)
+          
+    n = 0
+    nCmd = 0
+
+    while n < nCmdLenTotal:
+               
+          #Next byte is Cmd Nro - length
+          sCmdLen = str_mid(sDataT, n, 2)
+          n = n + 2
+          nCmdLen = int(bytes_HexaToNro(sCmdLen))
+          #print("sCmdLen = " + str(sCmdLen) + " - nCmdLen = " + str(nCmdLen))
+
+          if nCmdLen == 0:
+             break
+
+          nCmd = nCmd + 1
+          #print("n: " + str(n))
+
+          sDFDataItem = str_mid(sDataT, n, nCmdLen * 2)
+          sReturn = sReturn + str_GetENTER() + str_GetENTER() + "Response " + str(nCmd) + " - length: 0x" + sCmdLen + " - Decimal: " + str(nCmdLen) + " bytes."
+          sReturn = sReturn + str_GetENTER() + "Response " + str(nCmd) + " - total data: 0x" + str_AddSpaceHexa(sDFDataItem) + " - ASCII: " + bytes_HexaToASCII(sDFDataItem)
+          
+          if nCmdLen == 4 and sDFDataItem == str_right(sDataT, 8):
+             sFile = str_left(sDFDataItem, 4)
+             #IT MAY BE AN UICC ERROR
+             sUICCException = str_right(sDFDataItem, 2)
+             sUICCException = simcard_UICCException_GetDes(sUICCException)
+             if sUICCException != "":
+                sReturn  = sReturn + str_GetENTER() + "For File: '" + str_AddSpaceHexa(sFile) + "' - " + sUICCException
+
+          #print("SAPCmdDF_Interpret - sDFDataItem: " + str(sDFDataItem))
+
+          sFCP = simcard_File_FCPAnalysis(sDFDataItem, nCmd)
+          if sFCP != "":
+               sReturn = sReturn + str_GetENTER() + sFCP
+          else:
+             
+             nSubItem = 0
+             m = 0
+
+             #print("nCmdLen: " + str(nCmdLen))
+
+             while m < (nCmdLen * 2):
+                  sCmdLenSubItem = str_mid(sDataT, n + m, 2)
+                  m = m + 2
+                  nCmdLenSubItem = int(bytes_HexaToNro(sCmdLenSubItem))
+                  sDFDataSubItem = str_mid(sDataT, n + m, nCmdLenSubItem * 2)
+
+                  #print("nCmdLenSubItem: " + str(nCmdLenSubItem))
+
+                  nSubItem = nSubItem + 1
+                  sReturn = sReturn + str_GetENTER() + "Response " + str(nCmd) + " - subitem " + str(nSubItem) + " - length: 0x" + sCmdLenSubItem + " - Decimal: " + str(nCmdLenSubItem) + " bytes."
+                  sReturn = sReturn + str_GetENTER() + "Response " + str(nCmd) + " - subitem " + str(nSubItem) + " - total data: 0x" + str_AddSpaceHexa(sDFDataSubItem) + " - ASCII: " + bytes_HexaToASCII(sDFDataSubItem)
+
+                  m = m + (nCmdLenSubItem * 2)
+
+          n = n + (nCmdLen * 2)
+
+    if nCmd > 0:
+      sReturn = sReturn + str_GetENTER() + str_GetENTER() + "Total Responses processed: " + str(nCmd) + "."
+    
+    sReturn = sReturn + str_GetENTER() 
+           
+    return sReturn
+
+# SAPCmdDF_InterpretToBeSent -----------------------------------------------------------------------------------------------------------------------------------------------
+def SAPCmdDF_InterpretToBeSent(sData):
+   sReturn = ""
+
+   bUpdFile = False
+
+   sData = str_SpacesOut(sData).upper()
+
+   if sData == "":
+      return ""
+   
+   n = 0
+
+   sReturn = sReturn + str_GetENTER() + "Command to be sent: 0x" + str_AddSpaceHexa(sData) + " - Length: " + str(len(sData)//2) + " bytes."
+
+   sDF = "DF"
+   sEF = "EF"
+   sAID = "AD"
+   sD6 = "D6"
+
+   if str_left(sData, 2) == sDF:
+      sReturn = sReturn + str_GetENTER() + "SMPP Command: 0x" + sDF + " - Read SIM files."
+      n = n + 2
+
+   if str_left(sData, 1) == "8" and str_mid(sData, 2, 2) == sDF:
+      sReturn = sReturn + str_GetENTER() + "APDU Command: 0x" + sDF + " - Read SIM files."
+      n = n + 8
+
+   sCmdLenTotal = str_mid(sData, n, 2)
+   nCmdLenTotal = int(bytes_HexaToNro(sCmdLenTotal))
+   sReturn = sReturn + str_GetENTER() + "Command length: 0x" + sCmdLenTotal + " - Decimal: " + str(nCmdLenTotal) + " bytes."
+   n = n + 2
+
+   nCmd = 1
+
+   while n < len(sData) and n < (nCmdLenTotal * 2):
+
+      sByte = str_mid(sData, n, 2)
+      n = n + 2
+      #print("sByte: " + str(sByte))
+
+      bFound = False
+
+      if sByte == sDF:
+         bFound = True
+
+         #DEDICATED FILE
+         sReturn = sReturn + str_GetENTER() + str_GetENTER() + "Command " + str(nCmd) + " - Select DF - Dedicated File: " + sByte
+
+         sCmdLen = str_mid(sData, n, 2)
+         nCmdLen = int(bytes_HexaToNro(sCmdLen))
+         sReturn = sReturn + str_GetENTER() + "Command " + str(nCmd) + " - length: 0x" + sCmdLen + " - Decimal: " + str(nCmdLen) + " bytes."
+         n = n + 2
+
+         sFile = str_mid(sData, n, (nCmdLen + 2))
+         sReturn = sReturn + str_GetENTER() + "Command " + str(nCmd) + " - Select DF - Dedicated File: " +str_AddSpaceHexa(sFile)
+         n = n + (nCmdLen * 2)
+
+      if sByte == sEF:
+         bFound = True
+
+         #ELEMENTARY FILE
+         sReturn = sReturn + str_GetENTER() + str_GetENTER() + "Command " + str(nCmd) + " - Select EF - Elementary File: " + sByte
+
+         sCmdLen = str_mid(sData, n, 2)
+         nCmdLen = int(bytes_HexaToNro(sCmdLen))
+         sReturn = sReturn + str_GetENTER() + "Command " + str(nCmd) + " - length: 0x" + sCmdLen + " - Decimal: " + str(nCmdLen) + " bytes."
+         n = n + 2
+
+         sFile = str_mid(sData, n, 4)
+         sReturn = sReturn + str_GetENTER() + "Command " + str(nCmd)
+         n = n + 4
+
+         if nCmdLen == 2:
+            sReturn = sReturn + " - Get Response"
+         else:   
+
+            sFileType = "Transparent"
+            if nCmdLen == 5:
+               sFileType = "Linear/Cyclic"
+
+            sFile = "'" + str_AddSpaceHexa(sFile) + " (" + sFileType + ")'"
+
+            sReturn = sReturn + " - Process"
+            
+            sReturn = sReturn + " for EF: " + sFile
+
+            sOffset = str_mid(sData, n, 2)
+            sReturn = sReturn + str_GetENTER() + "Command " + str(nCmd) + " - Start position for processing file " + sFile + ": 0x" +  sOffset + " - Decimal: " + str(bytes_HexaToNro(sOffset))
+            n = n + 2
+            
+            sReadLen = str_mid(sData, n, 2)
+            sReturn = sReturn + str_GetENTER() + "Command " + str(nCmd) + " - Bytes to process for file " + sFile + ": 0x" +  sReadLen + " - Decimal: " + str(bytes_HexaToNro(sReadLen))
+            n = n + 2
+
+            if nCmdLen == 5:
+               sReadRecord = str_mid(sData, n, 2)
+               sReturn = sReturn + str_GetENTER() + "Command " + str(nCmd) + " - Record to process for file " + sFile + ": 0x" +  sReadRecord + " - Decimal: " + str(bytes_HexaToNro(sReadRecord))
+               n = n + 2
+
+            sByte = str_mid(sData, n, 2)
+            if sByte == sD6:
+               bUpdFile  = True
+               n = n + 2
+               sUpdLen = str_mid(sData, n, 2)
+               nUpdLen = int(bytes_HexaToNro(sUpdLen))
+               n = n + 2
+               sUpdData = str_mid(sData, n, nUpdLen * 2)
+               n = n + (nUpdLen * 2)
+
+               sReturn = sReturn + str_GetENTER() + "Command " + str(nCmd) + " - Update " + sFile + " with TAG 0x" + sD6
+               sReturn = sReturn + " - Data length: 0x" + sUpdLen + " (decimal: " + str(nUpdLen) + ")"
+               sReturn = sReturn + " - Data: 0x" + str_AddSpaceHexa(sUpdData) + " (ASCII: " + bytes_HexaToASCII(sUpdData) + ")"
+
+         nCmd = nCmd + 1
+
+      if sByte == sAID:
+         bFound = True
+
+         #APPLET AID
+         sReturn = sReturn + str_GetENTER() + str_GetENTER() + "Command " + str(nCmd) + " - Select AID - Application Dedicated File: " + sByte
+
+         sCmdLen = str_mid(sData, n, 2)
+         nCmdLen = int(bytes_HexaToNro(sCmdLen))
+         sReturn = sReturn + str_GetENTER() + str_GetENTER() + "Command " + str(nCmd) + " length: 0x" + sCmdLen + " - Decimal: " + str(nCmdLen) + " bytes."
+         n = n + 2
+
+         sFile = str_mid(sData, n, (nCmdLen * 2))
+         sReturn = sReturn + str_GetENTER() + "Command " + str(nCmd) + " - Select ADF - Application Dedicated File: " + str_AddSpaceHexa(sFile)
+         n = n + (nCmdLen * 2)
+
+      if not bFound:
+         n = n + 2
+
+   if sReturn != "":
+      sReturn = sReturn + str_GetENTER()
+
+   return sReturn, bUpdFile
+
+# SAPCmd_InterpretSMSData -----------------------------------------------------------------------------------------------------------------------------------------------
+def SAPCmd_InterpretSMS_APDU_Data(sData, sAPDU=""):
+   sReturn = ""
+
+   #print("SAPCmd_InterpretSMS_APDU_Data - sData: " + str(sData))
+   #print("SAPCmd_InterpretSMS_APDU_Data - sAPDU: " + str(sAPDU))
+
+   sCmdAPDU = ""
+   sCmdAPDUSMPP = ""
+   sCmdWithCampaignIDAPDU = ""
+   if sAPDU != "":
+      if str_left(sAPDU, 1) == "8":
+         #IT IS AN APDU FROM SDK STARTING WITH 0x8X for example 0x80 with channel 0.
+         sCmdAPDU = str_mid(sAPDU, 2, 2)
+      else:
+         #IT IS A SMPP
+         sCmdAPDUSMPP = str_left(sAPDU, 2)   
+         nTemp = bytes_HexaToNro(sCmdAPDUSMPP)
+         if nTemp <= bytes_HexaToNro("7F"):
+            #THERE IS THE CAMPAIGN ID FOR APDU IN SMPP
+            sCmdWithCampaignIDAPDU = str_left(sAPDU, 4)   
+            sCmdAPDUSMPP = str_mid(sAPDU, 4, 2)
+
+      #print("SAPCmd_InterpretSMS_APDU_Data - sCmdAPDU: " + str(sCmdAPDU) + " - sCmdWithCampaignID: " + str(sCmdWithCampaignID))
+
+   tData = sData.split(sSimcard_SendSMSDATAPattern)
+   if sSimcard_SendSMSDATAPattern in sData:
+      n = 1
+   else:
+      n = 0
+
+   #print("SAPCmd_InterpretSMS_APDU_Data - tData: " + str(tData))
+
+   while n < len(tData):
+
+      sTemp = str_SpacesOut(tData[n])
+      if str_left(sTemp, 2).upper() == "0x":
+         sTemp = str_midToEnd(sTemp, 2)
+
+      sTemp = str_getSubStringFromOcur(sTemp.upper(), "-length".upper(), 0)
+
+      #print("SAPCmd_InterpretSMSData - sTemp 1: " + str(sTemp))
+
+      if sTemp != "":
+         #sReturn = sReturn + str_GetENTER() + "SMS Data " + str(n) + ": 0x" + sTemp
+         #print(sReturn)
+
+         #ANALYSIS FOR COMMAND INTERPRETATION WHEN THERE IS THE CASE
+         sCmdInterpret = ""
+         sCmd = str_left(sTemp, 2)
+
+         #POSSIBLE CAMPAIGN ID FOR SMS COMMAND
+         sCmdWithCampaignID = str_mid(sTemp, 4, 2)
+
+         sCmdWithCampaignIDRef = ""
+
+         bProcessed = False
+
+         sTag = "C0"
+         if not bProcessed and (sCmd == sTag or sCmdWithCampaignID == sTag or sCmdAPDU == sTag):
+            # Interpret command C0 for getting Terminal Profile.
+
+            if sCmdWithCampaignID == sTag:
+               sCmdWithCampaignIDRef = str_left(sTemp, 4)
+               sTemp = str_midToEnd(sTemp, 4)
+
+            sCmdInterpret = SAPCmdC0_Interpret(sTemp)
+            bProcessed = True
+
+         sTag = "C1"
+         if not bProcessed and (sCmd == sTag or sCmdWithCampaignID == sTag or sCmdAPDU == sTag):
+            # Interpret command C1 for getting/setting polling interval.
+
+            if sCmdWithCampaignID == sTag:
+               sCmdWithCampaignIDRef = str_left(sTemp, 4)
+               sTemp = str_midToEnd(sTemp, 4)
+
+            sCmdInterpret, nPollingInterval, sStatusSettingPollingInterval = SAPCmdC1_Interpret(sTemp)
+            bProcessed = True
+
+         sTag = "D4"
+         if not bProcessed and (sCmd == sTag or sCmdWithCampaignID == sTag or sCmdAPDU == sTag):
+            # Interpret command D4 for analyzing ICCID, IMSI, etc.
+
+            if sCmdWithCampaignID == sTag:
+               sCmdWithCampaignIDRef = str_left(sTemp, 4)
+               sTemp = str_midToEnd(sTemp, 4)
+
+            sCmdInterpret = SAPCmdD4_Interpret(sTemp)
+            bProcessed = True
+
+         sTag = "DE"
+         if not bProcessed and (sCmd == sTag or sCmdWithCampaignID == sTag or sCmdAPDU == sTag):
+            # Interpret command DE for repetitions
+
+            if sCmdWithCampaignID == sTag:
+               sCmdWithCampaignIDRef = str_left(sTemp, 4)
+               sTemp = str_midToEnd(sTemp, 4)
+
+            if sCmdAPDU!= "":
+               #IT IS AN APDU FROM SDK
+               sTemp = sCmdAPDU + sTemp
+
+            sCmdInterpret, sRepeatTimes, sRepeatTimesExec, sRepeatStatusCommands, sRepeatStatusCommandsExec, sRepeatSendSMSNot, sRepeatCmd = SAPCmdDE_Interpret(sTemp)
+            bProcessed = True
+
+         sTag = "DD"
+         if not bProcessed and (sCmd == sTag or sCmdWithCampaignID == sTag or sCmdAPDU == sTag):
+            # Interpret command DD for last calls sent
+
+            if sCmdWithCampaignID == sTag:
+               sCmdWithCampaignIDRef = str_left(sTemp, 4)
+               sTemp = str_midToEnd(sTemp, 4)
+
+            if sCmdAPDU!= "":
+               #IT IS AN APDU FROM SDK
+               sTemp = sCmdAPDU + sTemp
+
+            sCmdInterpret, tMSISDNs = SAPCmdDD_Interpret(sTemp)
+            bProcessed = True
+
+         sTag = "DF"
+         if sCmd == sTag or sCmdWithCampaignID == sTag or sCmdAPDU == sTag or sCmdAPDUSMPP == sTag:
+            # Interpret command DF for managing files
+            
+            if sCmdWithCampaignID == sTag:
+               sCmdWithCampaignIDRef = str_left(sTemp, 4)
+               sTemp = str_midToEnd(sTemp, 4)
+
+            if sCmdAPDU!= "":
+               #IT IS AN APDU FROM SDK
+               sTemp = sCmdAPDU + sTemp
+
+            #print("SAPCmd_InterpretSMSData - sTemp: " + str(sTemp))
+
+            sCmdInterpret = SAPCmdDF_Interpret(sTemp)
+            bProcessed = True
+
+         sTag = "F7"
+         if not bProcessed and (sCmd == sTag or sCmdWithCampaignID == sTag or sCmdAPDU == sTag):
+            # Interpret command F7 for SMS sent
+
+            if sCmdWithCampaignID == sTag:
+               sCmdWithCampaignIDRef = str_left(sTemp, 4)
+               sTemp = str_midToEnd(sTemp, 4)
+
+            if sCmdAPDU!= "":
+               #IT IS AN APDU FROM SDK
+               sTemp = sCmdAPDU + sTemp
+
+            sCmdInterpret = SAPCmdF7_Interpret(sTemp)
+            bProcessed = True
+
+         sTag = "FB"
+         sTag2 = "F8"
+         if not bProcessed and (sCmd == sTag or sCmdWithCampaignID == sTag or sCmdAPDU == sTag or sCmd == sTag2 or sCmdWithCampaignID == sTag2 or sCmdAPDU == sTag2 or sCmdAPDUSMPP == sTag or sCmdAPDUSMPP == sTag2):
+            # Interpret command FB and F8 the same as autoprovisioning
+
+            if (sCmdWithCampaignID == sTag or sCmdWithCampaignID == sTag2) or sCmdWithCampaignIDAPDU != "":
+               sCmdWithCampaignIDRef = str_left(sTemp, 4)
+               sTemp = str_midToEnd(sTemp, 4)
+
+            #print("FB - sTemp = " + str(sTemp) + " - sCmdWithCampaignID = " + str(sCmdWithCampaignID))
+            sCmdInterpret = simcard_processSMSData_AutoProvisioningGetDesOnly(sTemp)
+            #print("FB - sCmdInterpret = " + str(sCmdInterpret))
+
+            bProcessed = True
+
+         #if not bProcessed and (sCmd == "FC" or sCmdWithCampaignID == "FC" or sCmd == "DC" or sCmdWithCampaignID == "DC"):
+         #   # Interpret command DC or FC for SDK management
+         #   sCmdInterpret = COTA_processCmd_FC_DC(sTemp)
+         #   bProcessed = True
+
+
+         if sCmdInterpret != "":
+
+            if n > 1:
+               sReturn = sReturn + str_GetENTER()
+
+            #sReturn = sReturn + str_GetENTER() + "Process Data " + str(n) + ": 0x" + str_AddSpaceHexa(sTemp)
+            sReturn = sReturn + str_GetENTER() + "Process Data " + str(n) + ": " 
+
+            if sCmdWithCampaignIDRef != "":
+               sReturn = sReturn + str_GetENTER() + "Campaign ID: 0x" + str_AddSpaceHexa(sCmdWithCampaignIDRef) + " - Decimal: " + str(bytes_HexaToNro(sCmdWithCampaignIDRef))
+            
+            sReturn = sReturn + str_GetENTER() + sCmdInterpret
+
+      n = n + 1
+   
+   return sReturn
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------------------------

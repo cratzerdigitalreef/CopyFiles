@@ -682,10 +682,16 @@ def str_AddCharToString(sstr, nTogether, sChar):
     return sOut      
 
 # str_formatNro ----------------------------------------------------------------------------------------------------------------------
-def str_formatNro(nNro, nPaddingLeft):
+def str_formatNro(nNro, nPaddingLeft=0):
     sNro = ("{:0>" + str(nPaddingLeft) + "}").format(nNro)
     return sNro
-    
+
+# str_formatNroWithPaddingLeft ----------------------------------------------------------------------------------------------------------------------
+def str_formatNroWithPaddingLeft(nNro, nPaddingLeft=0, sPaddingChar="0"):
+    sNro = str_PaddingAddCharToTheRightLeftByNro(nNro, nPaddingLeft, sPaddingChar, True, True)
+    #print("str_formatNro - nNro: " + str(nNro) + " - nPaddingLeft: " + str(nPaddingLeft) + " - sNro: " + str(sNro))
+    return sNro
+
 # str_RepeatString ----------------------------------------------------------------------------------------------------------------------
 def str_RepeatString(nNro, sChar):
     sReturn = ""
@@ -1202,14 +1208,32 @@ def str_PaddingAddSpacesToTheRightByNro(nMaxRef, nValue):
 # Example Output: "    " => returned 4 spaces.
 #------------------------------------------------------------------------------------
 def str_PaddingAddCharToTheRightByNro(nMaxRef, sValue, sChar=" ", bAddValue=False):
+    
+    sSpaces = str_PaddingAddCharToTheRightLeftByNro(sValue, nMaxRef, sChar, bAddValue)
+    return sSpaces    
+
+#------------------------------------------------------------------------------------
+# str_PaddingAddCharToTheRightLeftByNro => Add character to the right taking into account nMaxRef - len(sValue)
+# nValue = "tes" => 3 characters length
+# nMaxRef = 7
+# sChar = ' ' (space)
+# bAddValue = False
+# bValueToTheRight = True
+# Example Input: str_PaddingAddSpacesToTheRightByNro(sValue, nMaxRef, sChar)
+# Example Output: "    " => returned 4 spaces.
+#------------------------------------------------------------------------------------
+def str_PaddingAddCharToTheRightLeftByNro(sValue, nMaxRef=0, sChar=" ", bAddValue=False, bValueToTheRight=True):
     nStrSpaces =  int(nMaxRef) - int(len(sValue))
     sSpaces = ""
     if nStrSpaces > 0:
        sSpaces = str_RepeatString(nStrSpaces, sChar)
        
     if bAddValue:
-       sSpaces = sSpaces + sValue
-          
+       if bValueToTheRight:
+          sSpaces = sSpaces + sValue
+       else:
+          sSpaces = sValue + sSpaces
+           
     return sSpaces    
 
 #------------------------------------------------------------------------------------

@@ -39,6 +39,8 @@ ota_sDef_OTAClassic = "OTAClassic"
 
 ota_sDef_OTAThalesScript = ota_sDef_SIMSupplierThales + "PlatformOTAScript"
 ota_sDef_OTAValidScriptOTATool = ota_sDef_SIMSupplierValid + "PlatformOTAScript"
+ota_sDef_OTAIdemiaScriptOTATool = ota_sDef_SIMSupplierIdemia + "PlatformOTAScript"
+ota_sDef_OTAGyDScriptOTATool = ota_sDef_SIMSupplierGyD + "PlatformOTAScript"
 
 #THALES PLATFORM SCRIPT CHARACTERS
 ota_sDef_OTAThalesScript_Comment = "//"
@@ -219,6 +221,98 @@ def ota_OTAForDeletePackageAndInstance(OTAScriptsName, sPathOut, sAIDPackage, sA
        
        ota_ValidOTAPlatformFooter(sFileNameProc)
        
+    # -------------------------------------------------------------------------------------------------------------------------------
+    # IDEMIA OTA PLATFORM
+    # -------------------------------------------------------------------------------------------------------------------------------
+    sSIMSupplier = ota_sDef_SIMSupplierThales
+    sExt = ota_sDef_OTAExtValid
+    
+    sFileName = OTAScriptsName 
+    sFileName = sFileName + ota_sDef_FileNameSepara + ota_sDef_OTAIdemiaScriptOTATool
+    sFileName = sFileName + ota_sDef_FileNameSepara + sProcessFileRef
+
+    # -------------------------------------------------------------------------------------------------------------------------------
+    # IDEMIA CLASSIC OTA
+    # THALES
+    sFileNameProc = sFileName
+    sFileNameProc = sFileNameProc + ota_sDef_FileNameSepara + ota_sDef_SIMSupplierThales
+    sFileNameProc = sFileNameProc + sExt
+    
+    sFileNameProc = ota_FileCreate(sPathOut, sFileNameProc, ota_IdemiaOTAPlatformHeader(sProcessRef))
+    
+    if sFileNameProc != "":
+
+       sInfo = "DELETE Instance: " + sAIDInstance
+       ota_IdemiaOTAPlatformAPDU(sAPDUDelInstance, sInfo, sFileNameProc)
+
+       sInfo = "DELETE Package: " + sAIDPackage
+       ota_IdemiaOTAPlatformAPDU(sAPDUDelPackage, sInfo, sFileNameProc)
+       
+       ota_IdemiaOTAPlatformFooter(sFileNameProc)
+       
+    # -------------------------------------------------------------------------------------------------------------------------------
+    # IDEMIA CLASSIC OTA
+    # VALID, GyD, IDEMIA, Worldcards y NXP
+    sFileNameProc = sFileName
+    sFileNameProc = sFileNameProc + ota_sDef_FileNameSepara + ota_sDef_SIMSupplierValidGyDIdemia
+    sFileNameProc = sFileNameProc + sExt
+    
+    sFileNameProc = ota_FileCreate(sPathOut, sFileNameProc, ota_IdemiaOTAPlatformHeader(sProcessRef))
+    
+    if sFileNameProc != "":
+
+       sInfo = "DELETE Package: " + sAIDPackage
+       ota_IdemiaOTAPlatformAPDU(sAPDUDelPackage, sInfo, sFileNameProc)
+       
+       ota_IdemiaOTAPlatformFooter(sFileNameProc)
+
+    # -------------------------------------------------------------------------------------------------------------------------------
+    # GYD OTA PLATFORM
+    # -------------------------------------------------------------------------------------------------------------------------------
+    sSIMSupplier = ota_sDef_SIMSupplierThales
+    sExt = ota_sDef_OTAExtThales
+    
+    sFileName = OTAScriptsName 
+    sFileName = sFileName + ota_sDef_FileNameSepara + ota_sDef_OTAGyDScriptOTATool
+    sFileName = sFileName + ota_sDef_FileNameSepara + sProcessFileRef
+
+    # -------------------------------------------------------------------------------------------------------------------------------
+    # GYG CLASSIC OTA
+    # THALES
+    sFileNameProc = sFileName
+    sFileNameProc = sFileNameProc + ota_sDef_FileNameSepara + ota_sDef_SIMSupplierThales
+    sFileNameProc = sFileNameProc + sExt
+    
+    sFileNameProc = ota_FileCreate(sPathOut, sFileNameProc, ota_GyDOTAPlatformHeader(sProcessRef))
+    
+    if sFileNameProc != "":
+
+       sInfo = "DELETE Instance: " + sAIDInstance
+       ota_GyDOTAPlatformAPDU(sAPDUDelInstance, sInfo, sFileNameProc)
+
+       sInfo = "DELETE Package: " + sAIDPackage
+       ota_GyDOTAPlatformAPDU(sAPDUDelPackage, sInfo, sFileNameProc)
+       
+       ota_GyDOTAPlatformFooter(sFileNameProc)
+       
+    # -------------------------------------------------------------------------------------------------------------------------------
+    # IDEMIA CLASSIC OTA
+    # VALID, GyD, IDEMIA, Worldcards y NXP
+    sFileNameProc = sFileName
+    sFileNameProc = sFileNameProc + ota_sDef_FileNameSepara + ota_sDef_SIMSupplierValidGyDIdemia
+    sFileNameProc = sFileNameProc + sExt
+    
+    sFileNameProc = ota_FileCreate(sPathOut, sFileNameProc, ota_GyDOTAPlatformHeader(sProcessRef))
+    
+    if sFileNameProc != "":
+
+       sInfo = "DELETE Package: " + sAIDPackage
+       ota_GyDOTAPlatformAPDU(sAPDUDelPackage, sInfo, sFileNameProc)
+       
+       ota_GyDOTAPlatformFooter(sFileNameProc)
+
+    # -------------------------------------------------------------------------------------------------------------------------------
+
     return bReturn    
 
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -249,11 +343,15 @@ def ota_OTAForLoadPackageAndInstallApplet(OTAScriptsName, sOTAScriptsAmount, sPa
     # -------------------------------------------------------------------------------------------------------------------------------
     
     nOTAClassicFiles = 0
+
     sFileNameProcOldThales = ""
-    
     sFileNameProcThales = ""
     sFileNameProcOldValid = ""
     sFileNameProcValid = ""
+    sFileNameProcOldIdemia = ""
+    sFileNameProcIdemia = ""
+    sFileNameProcOldGyD = ""
+    sFileNameProcGyD = ""
 
     sProcessRef = "InstallApplet"
     
@@ -271,6 +369,8 @@ def ota_OTAForLoadPackageAndInstallApplet(OTAScriptsName, sOTAScriptsAmount, sPa
     nTotalBytesAll = 0
     sFileNameProcAllThales = ""
     sFileNameProcAllValid = ""
+    sFileNameProcAllIdemia = ""
+    sFileNameProcAllGyD = ""
     sFileSplitFooterDesAll = ""
 
     # -------------------------------------------------------------------------------------------------------------------------------
@@ -295,11 +395,31 @@ def ota_OTAForLoadPackageAndInstallApplet(OTAScriptsName, sOTAScriptsAmount, sPa
     sFileNameProcAllValid = sFileNameValid
     sFileNameProcAllValid = sFileNameProcAllValid + ota_sDef_OTAExtValid
     sFileNameProcAllValid = ota_FileCreate(sPathOut, sFileNameProcAllValid, ota_ValidOTAPlatformHeader(sProcessRef))
-    
+
+    # -------------------------------------------------------------------------------------------------------------------------------
+    # IDEMIA OTA PLATFORM - COMPLETE
+    # -------------------------------------------------------------------------------------------------------------------------------
+    sFileNameIdemia = OTAScriptsName 
+    sFileNameIdemia = sFileNameIdemia + ota_sDef_FileNameSepara + ota_sDef_OTAIdemiaScriptOTATool
+    sFileNameProcAllIdemia = sFileNameIdemia
+    sFileNameProcAllIdemia = sFileNameProcAllIdemia + ota_sDef_OTAExtValid
+    sFileNameProcAllIdemia = ota_FileCreate(sPathOut, sFileNameProcAllIdemia, ota_IdemiaOTAPlatformHeader(sProcessRef))
+
+    # -------------------------------------------------------------------------------------------------------------------------------
+    # GYD OTA PLATFORM - COMPLETE
+    # -------------------------------------------------------------------------------------------------------------------------------
+    sFileNameGyD = OTAScriptsName 
+    sFileNameGyD = sFileNameGyD + ota_sDef_FileNameSepara + ota_sDef_OTAGyDScriptOTATool
+    sFileNameProcAllGyD = sFileNameGyD
+    sFileNameProcAllGyD = sFileNameProcAllGyD + ota_sDef_OTAExtThales
+    sFileNameProcAllGyD = ota_FileCreate(sPathOut, sFileNameProcAllGyD, ota_GyDOTAPlatformHeader(sProcessRef))
+
     # -------------------------------------------------------------------------------------------------------------------------------
     n = 0 
     sFileNameProcThales = ""
     sFileNameProcValid = ""
+    sFileNameProcIdemia = ""
+    sFileNameProcGyD = ""
     
     while n < len(lstAPDUs) and bReturn:
     
@@ -331,6 +451,8 @@ def ota_OTAForLoadPackageAndInstallApplet(OTAScriptsName, sOTAScriptsAmount, sPa
              nOTAClassicFiles = nOTAClassicFiles + 1
              sFileNameProcOldThales = sFileNameProcThales
              sFileNameProcOldValid = sFileNameProcValid
+             sFileNameProcOldIdemia = sFileNameProcIdemia
+             sFileNameProcOldGyD = sFileNameProcGyD
              
              # -------------------------------------------------------------------------------------------------------------------------------
              # THALES OTA PLATFORM
@@ -356,6 +478,24 @@ def ota_OTAForLoadPackageAndInstallApplet(OTAScriptsName, sOTAScriptsAmount, sPa
              sFileNameProcValid = ota_FileCreate(sPathOut, sFileNameProcValid, ota_ValidOTAPlatformHeader(sProcessRef))
     
              # -------------------------------------------------------------------------------------------------------------------------------
+             # IDEMIA OTA PLATFORM
+             # -------------------------------------------------------------------------------------------------------------------------------
+             sFileNameProcIdemia = sFileNameIdemia
+             sFileNameProcIdemia = sFileNameProcIdemia + ota_sDef_FileNameSepara + sSplitRef + str(nOTAClassicFiles)
+             sFileNameProcIdemia = sFileNameProcIdemia + ota_sDef_OTAExtValid
+
+             sFileNameProcIdemia = ota_FileCreate(sPathOut, sFileNameProcIdemia, ota_IdemiaOTAPlatformHeader(sProcessRef))
+
+             # -------------------------------------------------------------------------------------------------------------------------------
+             # GYD OTA PLATFORM
+             # -------------------------------------------------------------------------------------------------------------------------------
+             sFileNameProcGyD = sFileNameGyD
+             sFileNameProcGyD = sFileNameProcGyD + ota_sDef_FileNameSepara + sSplitRef + str(nOTAClassicFiles)
+             sFileNameProcGyD = sFileNameProcGyD + ota_sDef_OTAExtThales
+
+             sFileNameProcGyD = ota_FileCreate(sPathOut, sFileNameProcGyD, ota_GyDOTAPlatformHeader(sProcessRef))
+
+             # -------------------------------------------------------------------------------------------------------------------------------
              
              if sFileNameProcOldThales != "" and ota_sDef_OTAExtThales in sFileNameProcOldThales:
                 sDes = "TOTAL COMMANDS TOGETHER: " + str(nTo - nFrom) + " - Number of SMPP for sending applet by SMS (estimation => total bytes " + str(nTotalBytes) + " / " + str(ota_nDef_OTASMPPLength) + " per SMPP): " + ota_OTAForLoadPackageAndInstallApplet_BytesTogether(nTotalBytes)
@@ -363,7 +503,9 @@ def ota_OTAForLoadPackageAndInstallApplet(OTAScriptsName, sOTAScriptsAmount, sPa
                 sDes = sDes + "\n" + sFileSplitFooterDes 
 
                 ota_ThalesOTAPlatformClassicFooter(sFileNameProcOldThales, sDes)
-                ota_ThalesOTAPlatformClassicFooter(sFileNameProcOldValid, sDes)
+                ota_ValidOTAPlatformFooter(sFileNameProcOldValid, sDes)
+                ota_IdemiaOTAPlatformFooter(sFileNameProcOldIdemia, sDes)
+                ota_GyDOTAPlatformFooter(sFileNameProcOldGyD, sDes)
 
              sFrom = sInfo       
              nFrom = n
@@ -384,7 +526,19 @@ def ota_OTAForLoadPackageAndInstallApplet(OTAScriptsName, sOTAScriptsAmount, sPa
           # -------------------------------------------------------------------------------------------------------------------------------
           ota_ValidOTAPlatformAPDU(lstAPDUs[n], sInfo, sFileNameProcValid)
           ota_ValidOTAPlatformAPDU(lstAPDUs[n], sInfo, sFileNameProcAllValid)
-          
+
+          # -------------------------------------------------------------------------------------------------------------------------------
+          # IDEMIA OTA PLATFORM - APDUs
+          # -------------------------------------------------------------------------------------------------------------------------------
+          ota_IdemiaOTAPlatformAPDU(lstAPDUs[n], sInfo, sFileNameProcIdemia)
+          ota_IdemiaOTAPlatformAPDU(lstAPDUs[n], sInfo, sFileNameProcAllIdemia)
+
+          # -------------------------------------------------------------------------------------------------------------------------------
+          # GYD OTA PLATFORM - APDUs
+          # -------------------------------------------------------------------------------------------------------------------------------
+          ota_GyDOTAPlatformAPDU(lstAPDUs[n], sInfo, sFileNameProcGyD)
+          ota_GyDOTAPlatformAPDU(lstAPDUs[n], sInfo, sFileNameProcAllGyD)
+
           # -------------------------------------------------------------------------------------------------------------------------------
           nTotalBytes = nTotalBytes + int(len(lstAPDUs[n])//2)
           nTotalBytesAll = nTotalBytesAll + int(len(lstAPDUs[n])//2)
@@ -402,6 +556,8 @@ def ota_OTAForLoadPackageAndInstallApplet(OTAScriptsName, sOTAScriptsAmount, sPa
        sDes = sDes + "\n" + sFileSplitFooterDes 
        ota_ThalesOTAPlatformClassicFooter(sFileNameProcThales, sDes)
        ota_ValidOTAPlatformFooter(sFileNameProcValid, sDes)
+       ota_IdemiaOTAPlatformFooter(sFileNameProcIdemia, sDes)
+       ota_GyDOTAPlatformFooter(sFileNameProcGyD, sDes)
 
     if nTotalBytesAll > 0:
        sDes = "ALL COMMANDS TOGETHER: " + str(len(lstAPDUs)) 
@@ -409,6 +565,8 @@ def ota_OTAForLoadPackageAndInstallApplet(OTAScriptsName, sOTAScriptsAmount, sPa
        sDes = sDes + "\n" + sFileSplitFooterDesAll 
        ota_ThalesOTAPlatformClassicFooter(sFileNameProcAllThales, sDes)
        ota_ValidOTAPlatformFooter(sFileNameProcAllValid, sDes)
+       ota_IdemiaOTAPlatformFooter(sFileNameProcAllIdemia, sDes)
+       ota_GyDOTAPlatformFooter(sFileNameProcAllGyD, sDes)
 
 
     # -------------------------------------------------------------------------------------------------------------------------------
@@ -539,6 +697,52 @@ def ota_OTAForInstallAppletOnly(OTAScriptsName, sPathOut, sAIDPackage, sAIDInsta
 
        ota_ValidOTAPlatformFooter(sFileNameProc)
        
+    # -------------------------------------------------------------------------------------------------------------------------------
+    # IDEMIA OTA PLATFORM
+    # -------------------------------------------------------------------------------------------------------------------------------
+    sExt = ota_sDef_OTAExtValid
+    
+    sFileName = OTAScriptsName 
+    sFileName = sFileName + ota_sDef_FileNameSepara + ota_sDef_OTAIdemiaScriptOTATool
+    sFileName = sFileName + ota_sDef_FileNameSepara + sProcessFileRef
+
+    # -------------------------------------------------------------------------------------------------------------------------------
+    # IDEMIA CLASSIC OTA
+    sFileNameProc = sFileName
+    sFileNameProc = sFileNameProc + sExt
+    
+    sFileNameProc = ota_FileCreate(sPathOut, sFileNameProc, ota_IdemiaOTAPlatformHeader(sProcessRef))
+    
+    if sFileNameProc != "":
+
+       ota_IdemiaOTAPlatformAPDU(sAPDUInstallForInstall, sInfo, sFileNameProc)
+
+       ota_IdemiaOTAPlatformFooter(sFileNameProc)
+
+    # -------------------------------------------------------------------------------------------------------------------------------
+    # GYD OTA PLATFORM
+    # -------------------------------------------------------------------------------------------------------------------------------
+    sExt = ota_sDef_OTAExtThales
+    
+    sFileName = OTAScriptsName 
+    sFileName = sFileName + ota_sDef_FileNameSepara + ota_sDef_OTAGyDScriptOTATool
+    sFileName = sFileName + ota_sDef_FileNameSepara + sProcessFileRef
+
+    # -------------------------------------------------------------------------------------------------------------------------------
+    # GYD CLASSIC OTA
+    sFileNameProc = sFileName
+    sFileNameProc = sFileNameProc + sExt
+    
+    sFileNameProc = ota_FileCreate(sPathOut, sFileNameProc, ota_GyDOTAPlatformHeader(sProcessRef))
+    
+    if sFileNameProc != "":
+
+       ota_GyDOTAPlatformAPDU(sAPDUInstallForInstall, sInfo, sFileNameProc)
+
+       ota_GyDOTAPlatformFooter(sFileNameProc)
+
+    # -------------------------------------------------------------------------------------------------------------------------------
+
     return bReturn    
 
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -975,5 +1179,153 @@ def ota_ScriptFileToAPDUs(sPathFile, sSeparaAPDU):
 
     return sReturn   
 
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------
+# ota_IdemiaOTAPlatformHeader 
+def ota_IdemiaOTAPlatformHeader(sProcess, sPathFileName=""):
+    
+    today = datetime.now()
+    today_prn = today.strftime("%Y/%m/%d %H:%M:%S")
+
+    sSpaces = str_RepeatString(2, " ")
+
+    sRet = "<?xml version=" + str_GetComillaDoble() + "1.0 encoding=" + str_GetComillaDoble() + "UTF-8" + str_GetComillaDoble() + "?>"
+    sRet = sRet + "\n" + ota_sDef_OTAValidScript_CommentStart + "ScriptOTA - Remote Command session. Created on " + today_prn + ota_sDef_OTAValidScript_CommentFinish
+    sRet = sRet + "\n<AdminManagement Version=" + str_GetComillaDoble() + "1.0" + str_GetComillaDoble() + ">"
+    
+    sRet = sRet + "\n" + sSpaces + "<Job ID=" + str_GetComillaDoble() + "12345" + str_GetComillaDoble()
+    #OLD
+    #sRet = sRet + " TargetAID=" + str_GetComillaDoble() + "A000000003000000" + str_GetComillaDoble() + ">"
+    #NEW
+    sRet = sRet + " TargetAID=" + str_GetComillaDoble() + "A000000151000000" + str_GetComillaDoble() + ">"
+    
+    sRet = sRet + "\n\n"
+    
+    if str(sPathFileName) != "":
+       ota_FileWrite(sPathFileName, sRet)
+       
+    return sRet
+
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------
+# ota_IdemiaOTAPlatformFooter
+def ota_IdemiaOTAPlatformFooter(sPathFileName="", sDesOptional=""):
+
+    sSpaces = str_RepeatString(2, " ")
+
+    sRet = ""
+    if sDesOptional != "":
+       sRet = sRet + sSpaces + ota_sDef_OTAValidScript_CommentStart
+       sRet = sRet + "\n" + sDesOptional
+       sRet = sRet + "\n" + ota_sDef_OTAValidScript_CommentFinish
+
+    sRet = sRet + "\n" + sSpaces + "</Job>"
+    sRet = sRet + "\n</AdminManagement>"
+
+    if str(sPathFileName) != "":
+       ota_FileWrite(sPathFileName, sRet)
+
+    return sRet
+
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------
+# ota_IdemiaOTAPlatformAPDU 
+def ota_IdemiaOTAPlatformAPDU(sAPDU, sRef, sPathFileName=""):
+
+    sData = ""
+    sAPDU = str_SpacesOut(sAPDU)
+
+    sSpaces = str_RepeatString(2, " ")
+
+    if sRef != "":
+       sData = sData + sSpaces + ota_sDef_OTAValidScript_CommentStart + sRef + ota_sDef_OTAValidScript_CommentFinish
+    
+    sData = sData + "\n" + sSpaces + "<Command"
+    if sRef != "":
+       sData = sData + " Name=" + str_GetComillaDoble() + sRef + str_GetComillaDoble()
+    sData = sData + ">"
+    sData = sData + "\n" + sSpaces + "<APDU>"
+    sData = sData + str_SpaceHexa(sAPDU)
+    sData = sData + "</APDU>"
+    sData = sData + "\n" + sSpaces + "</Command>"
+    
+    sData = sData + "\n\n"
+    
+    if str(sPathFileName) != "":
+       ota_FileWrite(sPathFileName, sData)
+
+    return sData
+
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------
+# ota_GyDOTAPlatformHeader 
+def ota_GyDOTAPlatformHeader(sProcess, sPathFileName=""):
+    
+    today = datetime.now()
+    today_prn = today.strftime("%Y/%m/%d %H:%M:%S")
+
+    sSpaces = str_RepeatString(2, " ")
+
+    
+    sRet = "# Select Security Domain (ISD)"
+    sRet = sRet + "\n" + "A4 04 00 08 A0 00 00 01 51 00 00 00 (9000);"
+
+    sRet = sRet + "\n\n" + "# Open Secure Channel"
+    sRet = sRet + "\n" + "# INITIALIZE UPDATE and EXTERNAL AUTHENTICATE automatically, KEY_SET=1."
+    sRet = sRet + "\n" + "SECURE_CHANNEL(LEVEL=ENC_AND_MAC, KEY_SET=1);"
+
+    sRet = sRet + "\n\n"
+    
+    if str(sPathFileName) != "":
+       ota_FileWrite(sPathFileName, sRet)
+       
+    return sRet
+
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------
+# ota_GyDOTAPlatformFooter
+def ota_GyDOTAPlatformFooter(sPathFileName="", sDesOptional=""):
+
+    sSpaces = str_RepeatString(2, " ")
+
+    sRet = ""
+    if sDesOptional != "":
+       sRet = sRet + "\n#"
+       
+       sDesOptionalSplit = sDesOptional.split("\n")
+       #print("ota_GyDOTAPlatformFooter - sDesOptionalSplit = " + str(len(sDesOptionalSplit)))
+
+       sDesOptional = ""
+       n = 0
+       while n < len(sDesOptionalSplit):
+          sDesOptional = sDesOptional + "\n# " + sDesOptionalSplit[n]
+          n = n + 1
+
+       sRet = sRet + sDesOptional + "\n"
+
+    sRet = sRet + "\n" + "# Close session."
+    sRet = sRet + "\n" + "EXIT;"
+
+    if str(sPathFileName) != "":
+       ota_FileWrite(sPathFileName, sRet)
+
+    return sRet
+
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------
+# ota_GyDOTAPlatformAPDU 
+def ota_GyDOTAPlatformAPDU(sAPDU, sRef, sPathFileName=""):
+
+    sData = ""
+    sAPDU = str_SpacesOut(sAPDU)
+
+    sSpaces = str_RepeatString(2, " ")
+
+    if sRef != "":
+       sData = sData + "\n# " + sRef 
+    
+    sData = sData + "\n" + str_SpaceHexa(sAPDU)
+    sData = sData + " (9000);"
+    
+    sData = sData + "\n"
+    
+    if str(sPathFileName) != "":
+       ota_FileWrite(sPathFileName, sData)
+
+    return sData
 
 # --------------------------------------------------------------------------------------------------------------------------------------------------------
